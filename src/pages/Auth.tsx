@@ -37,20 +37,43 @@ const Auth = () => {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   
+  // Test account credentials for development
+  const TEST_EMAIL = "test@fastlytics.dev";
+  const TEST_PASSWORD = "testpass123";
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate authentication process
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Welcome back!",
-        description: "You've been successfully logged in.",
-        variant: "default",
-      });
-      navigate('/');
-    }, 1500);
+    // Check against test account credentials
+    if (loginEmail === TEST_EMAIL && loginPassword === TEST_PASSWORD) {
+      // Store auth state in localStorage
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('user', JSON.stringify({
+        email: TEST_EMAIL,
+        name: 'Test User',
+        role: 'admin'
+      }));
+
+      setTimeout(() => {
+        setIsLoading(false);
+        toast({
+          title: "Welcome back!",
+          description: "You've been successfully logged in.",
+          variant: "default",
+        });
+        navigate('/');
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        setIsLoading(false);
+        toast({
+          title: "Login Failed",
+          description: "Please use the test account credentials.",
+          variant: "destructive",
+        });
+      }, 1000);
+    }
   };
   
   const handleSignup = (e: React.FormEvent) => {
