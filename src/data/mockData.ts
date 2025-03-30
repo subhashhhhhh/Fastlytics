@@ -1,111 +1,73 @@
+// Mock data for demonstration purposes
 
-// Lap times data for different drivers
-export const lapTimesData = [
-  { lap: 1, verstappen: 92.4, hamilton: 93.1, leclerc: 92.8 },
-  { lap: 2, verstappen: 91.8, hamilton: 92.5, leclerc: 92.2 },
-  { lap: 3, verstappen: 91.5, hamilton: 92.3, leclerc: 92.0 },
-  { lap: 4, verstappen: 91.3, hamilton: 92.0, leclerc: 91.9 },
-  { lap: 5, verstappen: 91.4, hamilton: 91.8, leclerc: 91.7 },
-  { lap: 6, verstappen: 91.6, hamilton: 91.7, leclerc: 91.6 },
-  { lap: 7, verstappen: 91.8, hamilton: 91.5, leclerc: 91.7 },
-  { lap: 8, verstappen: 92.0, hamilton: 91.4, leclerc: 91.9 },
-  { lap: 9, verstappen: 91.9, hamilton: 91.3, leclerc: 92.1 },
-  { lap: 10, verstappen: 91.7, hamilton: 91.2, leclerc: 92.0 },
-  { lap: 11, verstappen: 91.5, hamilton: 91.4, leclerc: 91.8 },
-  { lap: 12, verstappen: 91.3, hamilton: 91.6, leclerc: 91.5 },
-  { lap: 13, verstappen: 91.1, hamilton: 91.8, leclerc: 91.3 },
-  { lap: 14, verstappen: 91.0, hamilton: 91.7, leclerc: 91.1 },
-  { lap: 15, verstappen: 90.9, hamilton: 91.5, leclerc: 90.9 },
-];
-
-// Tire strategy data
-export const tireStrategyData = [
-  { driver: 'Verstappen', soft: 20, medium: 30, hard: 20 },
-  { driver: 'Hamilton', soft: 15, medium: 35, hard: 20 },
-  { driver: 'Leclerc', soft: 25, medium: 25, hard: 20 },
-  { driver: 'Norris', soft: 18, medium: 32, hard: 20 },
-  { driver: 'Sainz', soft: 22, medium: 28, hard: 20 },
-];
-
-// Driver performance comparison
-export const driverComparisonData = [
-  { attribute: 'Race Pace', verstappen: 95, hamilton: 92, leclerc: 90 },
-  { attribute: 'Qualifying', verstappen: 94, hamilton: 93, leclerc: 95 },
-  { attribute: 'Tire Management', verstappen: 90, hamilton: 94, leclerc: 89 },
-  { attribute: 'Wet Condition', verstappen: 96, hamilton: 95, leclerc: 87 },
-  { attribute: 'Overtaking', verstappen: 93, hamilton: 90, leclerc: 88 },
-  { attribute: 'Consistency', verstappen: 92, hamilton: 93, leclerc: 89 },
-];
-
-// Top speeds data
-export const topSpeedsData = [
-  { track: 'Monza', verstappen: 348.4, hamilton: 345.1, leclerc: 347.8 },
-  { track: 'Baku', verstappen: 341.2, hamilton: 339.5, leclerc: 340.6 },
-  { track: 'Spa', verstappen: 339.8, hamilton: 338.2, leclerc: 340.1 },
-  { track: 'Jeddah', verstappen: 337.5, hamilton: 336.9, leclerc: 338.0 },
-  { track: 'Mexico', verstappen: 335.1, hamilton: 334.8, leclerc: 333.9 },
-];
-
-// Race results
-export const raceResultsData = [
-  { 
-    event: 'Chinese GP', 
-    position: 1, 
-    driver: 'Oscar Piastri', 
-    team: 'mclaren',
-    change: 25
-  },
-  { 
-    event: 'Australian GP', 
-    position: 1, 
-    driver: 'Lando Norris', 
-    team: 'mclaren',
-    change: 25
-  },
-  { 
-    event: 'Abu Dhabi GP', 
-    position: 1, 
-    driver: 'Max Verstappen', 
-    team: 'redbull',
-    change: 25
-  },
-  { 
-    event: 'Qatar GP', 
-    position: 1, 
-    driver: 'Max Verstappen', 
-    team: 'redbull',
-    change: 25
-  }
-];
-
-// Team performance
+// Updated Team Performance Data for 2025
 export const teamPerformanceData = [
-  { 
-    team: 'McLaren', 
-    shortName: 'MCL',
-    points: 78, 
-    teamColor: 'mclaren',
-    change: 51
-  },
-  { 
-    team: 'Mercedes', 
-    shortName: 'MER',
-    points: 57, 
-    teamColor: 'mercedes',
-    change: 30
-  },
-  { 
-    team: 'Red Bull Racing', 
-    shortName: 'RBR',
-    points: 36, 
-    teamColor: 'redbull',
-    change: 18
-  },
-  { 
-    team: 'Williams', 
-    shortName: 'WIL',
-    points: 17, 
-    teamColor: 'williams',
-    change: 7
-  }
+  { team: 'McLaren', shortName: 'MCL', points: 78, change: 51, wins: 2, podiums: 3, teamColor: 'mclaren' },
+  { team: 'Mercedes', shortName: 'MER', points: 57, change: 30, wins: 0, podiums: 2, teamColor: 'mercedes' },
+  { team: 'Red Bull Racing', shortName: 'RBR', points: 36, change: 18, wins: 0, podiums: 2, teamColor: 'redbull' },
+  { team: 'Williams', shortName: 'WIL', points: 17, change: 5, wins: 0, podiums: 1, teamColor: 'williams' }, // Updated points/change based on driver sum
+  { team: 'Ferrari', shortName: 'FER', points: 17, change: 12, wins: 0, podiums: 0, teamColor: 'ferrari' },
+  { team: 'Haas', shortName: 'HAA', points: 14, change: 14, wins: 0, podiums: 0, teamColor: 'haas' },
+  { team: 'Aston Martin', shortName: 'AST', points: 10, change: 2, wins: 0, podiums: 0, teamColor: 'astonmartin' },
+  { team: 'Kick Sauber', shortName: 'SAU', points: 6, change: 0, wins: 0, podiums: 0, teamColor: 'alfaromeo' }, // Assuming Kick Sauber uses alfaromeo color
+  { team: 'Racing Bulls', shortName: 'RB', points: 3, change: 3, wins: 0, podiums: 0, teamColor: 'alphatauri' }, // Assuming RB uses alphatauri color
+  { team: 'Alpine', shortName: 'ALP', points: 0, change: 0, wins: 0, podiums: 0, teamColor: 'alpine' },
+];
+
+// New Driver Standings Data for 2025
+export const driverStandingsData = [
+  { rank: 1, name: 'Lando Norris', shortName: 'NOR', team: 'McLaren', points: 44, change: 19, wins: 1, podiums: 2, teamColor: 'mclaren' },
+  { rank: 2, name: 'Max Verstappen', shortName: 'VER', team: 'Red Bull', points: 36, change: 18, wins: 0, podiums: 2, teamColor: 'redbull' },
+  { rank: 3, name: 'George Russell', shortName: 'RUS', team: 'Mercedes', points: 35, change: 20, wins: 0, podiums: 2, teamColor: 'mercedes' },
+  { rank: 4, name: 'Oscar Piastri', shortName: 'PIA', team: 'McLaren', points: 34, change: 22, wins: 1, podiums: 1, teamColor: 'mclaren' },
+  { rank: 5, name: 'Andrea Kimi Antonelli', shortName: 'ANT', team: 'Mercedes', points: 22, change: 12, wins: 0, podiums: 0, teamColor: 'mercedes' },
+  { rank: 6, name: 'Alexander Albon', shortName: 'ALB', team: 'Williams', points: 16, change: 10, wins: 0, podiums: 1, teamColor: 'williams' },
+  { rank: 7, name: 'Esteban Ocon', shortName: 'OCO', team: 'Haas', points: 10, change: 10, wins: 0, podiums: 0, teamColor: 'haas' },
+  { rank: 8, name: 'Lance Stroll', shortName: 'STR', team: 'Aston Martin', points: 10, change: 2, wins: 0, podiums: 0, teamColor: 'astonmartin' },
+  { rank: 9, name: 'Lewis Hamilton', shortName: 'HAM', team: 'Ferrari', points: 9, change: 8, wins: 0, podiums: 0, teamColor: 'ferrari' },
+  { rank: 10, name: 'Charles Leclerc', shortName: 'LEC', team: 'Ferrari', points: 8, change: 4, wins: 0, podiums: 0, teamColor: 'ferrari' },
+  { rank: 11, name: 'Nico Hulkenberg', shortName: 'HUL', team: 'Kick Sauber', points: 6, change: 6, wins: 0, podiums: 0, teamColor: 'alfaromeo' },
+  { rank: 12, name: 'Oliver Bearman', shortName: 'BEA', team: 'Haas', points: 4, change: 4, wins: 0, podiums: 0, teamColor: 'haas' },
+  { rank: 13, name: 'Yuki Tsunoda', shortName: 'TSU', team: 'Racing Bulls', points: 3, change: 3, wins: 0, podiums: 0, teamColor: 'alphatauri' },
+  { rank: 14, name: 'Carlos Sainz', shortName: 'SAI', team: 'Williams', points: 1, change: 1, wins: 0, podiums: 0, teamColor: 'williams' },
+  { rank: 15, name: 'Pierre Gasly', shortName: 'GAS', team: 'Alpine', points: 0, change: 0, wins: 0, podiums: 0, teamColor: 'alpine' },
+  { rank: 16, name: 'Isack Hadjar', shortName: 'HAD', team: 'Racing Bulls', points: 0, change: 0, wins: 0, podiums: 0, teamColor: 'alphatauri' },
+  { rank: 17, name: 'Liam Lawson', shortName: 'LAW', team: 'Red Bull', points: 0, change: 0, wins: 0, podiums: 0, teamColor: 'redbull' },
+  { rank: 18, name: 'Jack Doohan', shortName: 'DOO', team: 'Alpine', points: 0, change: 0, wins: 0, podiums: 0, teamColor: 'alpine' },
+  { rank: 19, name: 'Gabriel Bortoleto', shortName: 'BOR', team: 'Kick Sauber', points: 0, change: 0, wins: 0, podiums: 0, teamColor: 'alfaromeo' },
+  { rank: 20, name: 'Fernando Alonso', shortName: 'ALO', team: 'Aston Martin', points: 0, change: 0, wins: 0, podiums: 0, teamColor: 'astonmartin' },
+];
+
+
+// Mock data for race results
+export const raceResultsData = [
+  { event: 'Bahrain Grand Prix', driver: 'Max Verstappen', team: 'redbull', change: 5 },
+  { event: 'Saudi Arabian Grand Prix', driver: 'Sergio Perez', team: 'redbull', change: -2 },
+  { event: 'Australian Grand Prix', driver: 'Charles Leclerc', team: 'ferrari', change: 8 },
+  { event: 'Emilia Romagna Grand Prix', driver: 'Max Verstappen', team: 'redbull', change: 3 },
+];
+
+// Mock data for lap times comparison (example)
+export const lapTimesData = [
+  { lap: 1, driverA: 95.5, driverB: 96.1 },
+  { lap: 2, driverA: 94.8, driverB: 95.2 },
+  { lap: 3, driverA: 94.5, driverB: 94.9 },
+  // ... more laps
+];
+
+// Mock data for tire strategy (example)
+export const tireStrategyData = [
+  { driver: 'VER', stints: [{ compound: 'Medium', laps: 18 }, { compound: 'Hard', laps: 40 }] },
+  { driver: 'HAM', stints: [{ compound: 'Medium', laps: 20 }, { compound: 'Hard', laps: 38 }] },
+  // ... more drivers
+];
+
+// Mock data for driver comparison radar chart (example)
+export const driverComparisonData = [
+    { attribute: 'Qualifying Pace', verstappen: 95, hamilton: 92 },
+    { attribute: 'Race Pace', verstappen: 98, hamilton: 96 },
+    { attribute: 'Consistency', verstappen: 90, hamilton: 94 },
+    { attribute: 'Tire Management', verstappen: 88, hamilton: 95 },
+    { attribute: 'Overtaking', verstappen: 96, hamilton: 93 },
+    { attribute: 'Wet Weather', verstappen: 92, hamilton: 97 },
 ];

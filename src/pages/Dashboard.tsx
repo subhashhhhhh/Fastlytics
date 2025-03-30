@@ -1,210 +1,235 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Award, Flag, Lock, Cpu, Timer, BarChart2, User, Gauge } from 'lucide-react';
+import { Award, Flag, Lock, Cpu, Timer, BarChart2, User, Gauge, ArrowRight } from 'lucide-react'; // Added ArrowRight
 import Navbar from '@/components/Navbar';
-import F1Card from '@/components/F1Card';
+import F1Card from '@/components/F1Card'; // Assuming F1Card is styled appropriately for dark theme
 import TrackProgress from '@/components/TrackProgress';
 import { Button } from "@/components/ui/button";
-import { 
-  teamPerformanceData, 
+import {
+  teamPerformanceData,
+  driverStandingsData, // Import driver standings
   raceResultsData,
 } from '@/data/mockData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils'; // Import cn for conditional classes
+import { Users } from 'lucide-react'; // Import Users icon for driver card
 
-const Index = () => {
+// Define Index component (renamed from original Index to avoid conflict if needed elsewhere)
+const Dashboard = () => {
   const navigate = useNavigate();
-  
+
   const handleRaceClick = (race: any) => {
     const raceId = race.event.toLowerCase().replace(/\s+/g, '-');
     navigate(`/race/${raceId}`);
   };
-  
+
   const handleAuthNavigate = (tabValue: 'login' | 'signup') => {
     navigate(`/auth?tab=${tabValue}`);
   };
-  
+
   return (
     // Apply the landing page background gradient
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white"> 
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white">
       <Navbar />
-      
-      <div className="container py-6">
-        {/* Title and season info */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between">
-          <div className="animate-slide-in-left">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">2025 Season Analysis</h1>
-            <p className="text-muted-foreground">Real-time F1 data and analytics dashboard</p>
-          </div>
-          
-          <div className="mt-4 md:mt-0 animate-slide-in-right flex items-center space-x-4">
-            <div className="text-right">
-              <p className="text-muted-foreground">Data Loading</p>
-              <p className="text-sm text-primary/80">Telemetry synchronized</p>
+
+      {/* Use padding instead of container for full-width potential */}
+      <div className="px-4 md:px-8 py-8">
+
+        {/* --- Header Section --- */}
+        <header className="mb-10 md:mb-12">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Use larger, bolder title */}
+            <div className="animate-slide-in-left">
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-1">Dashboard</h1>
+              <p className="text-lg text-gray-400">2025 Season Analysis Overview</p>
             </div>
-            <TrackProgress progress={85} />
-          </div>
-        </div>
-        
-        {/* Authentication CTA for premium features */}
-        <div className="mb-8 bg-gradient-to-r from-black/80 to-card/80 rounded-lg p-6 border border-border/50">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0 md:mr-6">
-              <h2 className="text-2xl font-bold mb-2">Unlock Premium F1 Analytics</h2>
-              <p className="text-muted-foreground mb-4">
-                Sign up to access all 50+ advanced features including telemetry analysis, 
-                strategy simulations, and historical comparisons.
-              </p>
-              <div className="flex space-x-4">
-                <Button className="racing-button" onClick={() => handleAuthNavigate('signup')}>
-                  <Lock className="mr-2 h-4 w-4" />
-                  Sign Up
-                </Button>
-                <Button variant="outline" onClick={() => handleAuthNavigate('login')}>
-                  Login
-                </Button>
+            {/* Keep track progress, maybe style differently if needed */}
+            <div className="mt-4 md:mt-0 animate-slide-in-right flex items-center space-x-4 p-4 bg-gray-900/50 border border-gray-700/50 rounded-lg">
+              <div className="text-right">
+                <p className="text-sm text-gray-400">Data Status</p>
+                <p className="text-xs text-red-400">Telemetry Synced</p>
               </div>
-            </div>
-            <div className="bg-card/50 p-4 rounded-lg border border-border/30 w-full md:w-auto">
-              <h3 className="text-md font-semibold mb-2 flex items-center">
-                <Lock className="h-4 w-4 mr-2 text-primary" />
-                Premium Features Include:
-              </h3>
-              <ul className="space-y-1 text-sm text-muted-foreground">
-                <li className="flex items-center">
-                  <BarChart2 className="h-3.5 w-3.5 mr-2 text-primary/70" />
-                  Tire Strategy Optimization
-                </li>
-                <li className="flex items-center">
-                  <Timer className="h-3.5 w-3.5 mr-2 text-primary/70" />
-                  Live Telemetry Access
-                </li>
-                <li className="flex items-center">
-                  <Cpu className="h-3.5 w-3.5 mr-2 text-primary/70" />
-                  AI Pace Predictions
-                </li>
-                <li className="flex items-center">
-                  <User className="h-3.5 w-3.5 mr-2 text-primary/70" />
-                  Driver Style Analysis
-                </li>
-              </ul>
+              <TrackProgress progress={85} />
             </div>
           </div>
+        </header>
+
+        {/* --- Auth CTA (Subtler) --- */}
+        {/* Consider making this conditional based on actual auth state later */}
+        <div className="mb-10 md:mb-12 p-4 md:p-6 bg-gradient-to-r from-red-600/10 via-gray-900/20 to-gray-900/10 border border-red-500/30 rounded-lg flex flex-col md:flex-row justify-between items-center gap-4 animate-fade-in">
+          <div className='flex-grow'>
+            <h2 className="text-xl font-semibold mb-1 flex items-center"><Lock className="w-5 h-5 mr-2 text-red-400"/>Unlock Premium Analytics</h2>
+            <p className="text-sm text-gray-300">
+              Access advanced telemetry, AI predictions, and strategy simulations.
+            </p>
+          </div>
+          <div className="flex gap-3 flex-shrink-0">
+            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleAuthNavigate('signup')}>
+              Sign Up
+            </Button>
+            <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => handleAuthNavigate('login')}>
+              Login
+            </Button>
+          </div>
         </div>
-        
-        {/* Key stats cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {teamPerformanceData.map((team, index) => (
-            <F1Card
-              key={team.shortName}
-              title={team.team}
-              value={`${team.points} PTS`}
-              team={team.teamColor as any}
-              icon={<Award className={`h-6 w-6 text-f1-${team.teamColor}`} />}
-              change={team.change}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-            />
-          ))}
-        </div>
-        
-        {/* Latest race results - now clickable */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 animate-fade-in">Latest Race Results</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {raceResultsData.map((race, index) => (
-              <div 
-                key={race.event}
-                onClick={() => handleRaceClick(race)}
-                className="cursor-pointer transition-transform hover:scale-105"
-              >
-                <F1Card
-                  title={race.event}
-                  value={`Winner - ${race.driver}`}
-                  team={race.team as any}
-                  icon={<Flag className={`h-6 w-6 text-f1-${race.team}`} />}
-                  change={race.change}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${(index + 4) * 100}ms` }}
-                />
+
+        {/* --- Main Content Grid --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
+
+          {/* Left Column (Team Standings & Recent Races) */}
+          <div className="lg:col-span-2 space-y-10">
+
+            {/* Team Standings Section */}
+            <section className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <div className="flex justify-between items-center mb-4">
+                 <h2 className="text-2xl font-bold">Team Standings</h2>
+                 <Button variant="link" className="text-red-400 hover:text-red-300 px-0" onClick={() => navigate('/standings/teams')}>
+                   See full standings <ArrowRight className="w-4 h-4 ml-1"/>
+                 </Button>
               </div>
-            ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                {teamPerformanceData.slice(0, 4).map((team, index) => ( // Display top 4 teams
+                  // Assuming F1Card is already styled for dark theme
+                  <F1Card
+                    key={team.shortName}
+                    title={team.team}
+                    value={`${team.points} PTS`}
+                    team={team.teamColor as any}
+                    icon={<Award className={`h-5 w-5 text-f1-${team.teamColor}`} />}
+                    change={team.change}
+                    className="bg-gray-900/80 border border-gray-700/80 hover:border-gray-600 transition-colors duration-200" // Added base dark style
+                    // style={{ animationDelay: `${index * 50}ms` }} // Adjust delay if needed
+                  />
+                ))}
+              </div>
+            </section>
+
+            {/* Driver Standings Section */}
+            <section className="animate-fade-in" style={{ animationDelay: '150ms' }}>
+               <div className="flex justify-between items-center mb-4">
+                 <h2 className="text-2xl font-bold">Driver Standings</h2>
+                  <Button variant="link" className="text-red-400 hover:text-red-300 px-0" onClick={() => navigate('/standings/drivers')}>
+                   See full standings <ArrowRight className="w-4 h-4 ml-1"/>
+                 </Button>
+               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                {driverStandingsData.slice(0, 4).map((driver, index) => ( // Display top 4 drivers
+                  <F1Card
+                    key={driver.shortName}
+                    title={driver.name}
+                    value={`${driver.points} PTS`}
+                    team={driver.teamColor as any} // Use teamColor from data
+                    icon={<Users className={`h-5 w-5 text-f1-${driver.teamColor}`} />} // Generic user icon for drivers
+                    change={driver.change}
+                    className="bg-gray-900/80 border border-gray-700/80 hover:border-gray-600 transition-colors duration-200"
+                  />
+                ))}
+              </div>
+            </section>
+
+            {/* Recent Races Section */}
+            <section className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+              <h2 className="text-2xl font-bold mb-4">Recent Race Results</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                {raceResultsData.map((race, index) => (
+                  <div
+                    key={race.event}
+                    onClick={() => handleRaceClick(race)}
+                    className="cursor-pointer group transition-transform duration-200 ease-in-out hover:scale-[1.03]" // Enhanced hover effect
+                  >
+                    <F1Card
+                      title={race.event}
+                      value={`Winner: ${race.driver}`}
+                      team={race.team as any}
+                      icon={<Flag className={`h-5 w-5 text-f1-${race.team}`} />}
+                      change={race.change}
+                      className="bg-gray-900/80 border border-gray-700/80 group-hover:border-red-500/50 transition-colors duration-200" // Added base dark style + group hover
+                      // style={{ animationDelay: `${(index + teamPerformanceData.length) * 50}ms` }} // Adjust delay
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
-        </div>
-        
-        {/* Feature categories showcase */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 animate-fade-in">Analytics Categories</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FeatureCard 
-              title="Session Analysis" 
-              description="Track evolution, weather impact, and safety car analysis"
-              icon={<Timer className="h-10 w-10 text-primary/80" />}
-              features={["Dynamic Track Evolution", "Weather Strategy", "Safety Car Delta"]}
+
+          {/* Right Column (Analytics Categories) */}
+          <aside className="lg:col-span-1 space-y-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
+            <h2 className="text-2xl font-bold mb-4">Explore Analytics</h2>
+            {/* Redesigned Feature Cards */}
+            <FeatureCardRedesigned
+              title="Session Analysis"
+              description="Track evolution, weather, safety cars"
+              icon={<Timer className="h-6 w-6 text-red-400" />}
+              linkTo="/dashboard" // Link to relevant section/page
             />
-            
-            <FeatureCard 
-              title="Driver Performance" 
-              description="Detailed driver metrics and style analysis"
-              icon={<User className="h-10 w-10 text-f1-mclaren" />}
-              features={["Throttle-Brake Overlap", "Tire Management", "Overtake Aggression"]}
+            <FeatureCardRedesigned
+              title="Driver Performance"
+              description="Metrics, styles, comparisons"
+              icon={<User className="h-6 w-6 text-blue-400" />}
+              linkTo="/drivers"
             />
-            
-            <FeatureCard 
-              title="Telemetry Physics" 
-              description="Deep dive into car performance data"
-              icon={<Gauge className="h-10 w-10 text-f1-redbull" />}
-              features={["G-Force Analysis", "Aero Efficiency", "Engine Mode Detection"]}
+            <FeatureCardRedesigned
+              title="Telemetry Deep Dive"
+              description="Car data, G-forces, ERS usage"
+              icon={<Gauge className="h-6 w-6 text-green-400" />}
+              linkTo="/dashboard" // Link to relevant section/page
             />
-          </div>
+             <FeatureCardRedesigned
+              title="Strategy Insights"
+              description="Pit stops, tire wear, simulations"
+              icon={<Cpu className="h-6 w-6 text-yellow-400" />}
+              linkTo="/dashboard" // Link to relevant section/page
+            />
+          </aside>
+
         </div>
       </div>
     </div>
   );
 };
 
-const FeatureCard = ({ 
-  title, 
-  description, 
-  icon, 
-  features 
-}: { 
-  title: string; 
-  description: string; 
+// Redesigned Feature Card Component (can be moved to its own file later)
+const FeatureCardRedesigned = ({
+  title,
+  description,
+  icon,
+  linkTo
+}: {
+  title: string;
+  description: string;
   icon: React.ReactNode;
-  features: string[];
+  linkTo: string;
 }) => {
+  const navigate = useNavigate();
   return (
-    <Card className="bg-card/80 border-border/50 hover:border-primary/30 transition-all hover:shadow-lg">
-      <CardHeader className="pb-2">
+    <Card
+      onClick={() => navigate(linkTo)}
+      className={cn(
+        "bg-gray-900/70 border-gray-700/80 hover:border-gray-600", // Base dark style
+        "cursor-pointer transition-all duration-200 ease-in-out",
+        "hover:shadow-lg hover:shadow-red-500/10 hover:-translate-y-1 group" // Hover effects
+      )}
+    >
+      <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
+          <div className="space-y-1">
+            <CardTitle className="text-lg font-semibold group-hover:text-red-400 transition-colors">{title}</CardTitle>
+            <CardDescription className="text-gray-400 text-sm">{description}</CardDescription>
           </div>
-          {icon}
+          <div className="p-2 bg-gray-800 rounded-lg border border-gray-700">
+             {icon}
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <ul className="space-y-2">
-          {features.map((feature, index) => (
-            <li key={index} className="flex items-center space-x-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-              <span className="text-sm text-muted-foreground">{feature}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 pt-4 border-t border-border/30 flex justify-between items-center">
-          <span className="text-xs text-muted-foreground">
-            <Lock className="h-3 w-3 inline mr-1" /> Premium Feature
-          </span>
-          <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">
+      <CardContent className="pt-2">
+         <div className="flex justify-end items-center text-xs text-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             Explore
-          </Button>
-        </div>
+            <ArrowRight className="w-3 h-3 ml-1"/>
+         </div>
       </CardContent>
     </Card>
   );
 };
 
-export default Index;
+
+export default Dashboard; // Ensure export name matches filename if needed

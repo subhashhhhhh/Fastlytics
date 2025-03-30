@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, XCircle, Award, ChevronRight, CreditCard } from 'lucide-react';
+import { CheckCircle2, XCircle, Award, ChevronRight, CreditCard, HelpCircle, MessageSquare } from 'lucide-react'; // Added HelpCircle, MessageSquare
 import Navbar from '@/components/Navbar';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from '@/lib/utils'; // Import cn
 
 const Subscription = () => {
   const navigate = useNavigate();
@@ -14,139 +15,119 @@ const Subscription = () => {
   };
 
   return (
-    // Apply the landing page background gradient and text color
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white">
       <Navbar />
 
-      <div className="container py-8 px-4 max-w-6xl mx-auto">
-        <div className="text-center mb-12 animate-fade-in">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 text-white">Unlock the Full Power of F1 Analytics</h1>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Choose the plan that fits your passion for Formula 1 data and insights
+      {/* Use padding instead of container */}
+      <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto">
+        {/* Header */}
+        <header className="text-center mb-12 md:mb-16 animate-fade-in">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 text-white">Choose Your Fastlytics Plan</h1>
+          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">
+            Unlock the level of F1 insight that matches your passion.
           </p>
-        </div>
+        </header>
 
-        <Tabs defaultValue="monthly" className="w-full mb-12">
-          <div className="flex justify-center mb-6">
-            <TabsList className="grid grid-cols-2 w-64 bg-gray-800">
-              <TabsTrigger value="monthly" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300">Monthly</TabsTrigger>
-              <TabsTrigger value="annual" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300">
-                Annual <span className="ml-1 text-xs bg-red-500/30 text-red-300 rounded-full px-2 py-0.5">Save 20%</span>
+        {/* Tabs for Monthly/Annual */}
+        <Tabs defaultValue="monthly" className="w-full mb-12 md:mb-16">
+          <div className="flex justify-center mb-8">
+            <TabsList className="grid grid-cols-2 w-64 bg-gray-800/80 p-1 rounded-lg">
+              <TabsTrigger value="monthly" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 rounded-md px-6 py-1.5 text-sm font-medium transition-all">Monthly</TabsTrigger>
+              <TabsTrigger value="annual" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 rounded-md px-6 py-1.5 text-sm font-medium transition-all">
+                Annual <span className="ml-1.5 text-xs bg-red-500/40 text-red-200 rounded-full px-2 py-0.5">Save 20%</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="monthly" className="mt-0">
-            <div className="grid md:grid-cols-2 gap-8">
-              <PricingCard
+          {/* Monthly Pricing */}
+          <TabsContent value="monthly" className="mt-0 animate-fade-in">
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <PricingCardRedesigned
                 title="Free"
-                description="Perfect for casual fans"
+                description="Essential insights for casual fans"
                 price="$0"
-                period="forever"
+                period="/ forever"
                 features={[
-                  "Basic safety car delta analysis",
-                  "Session timelines (flags/pit stops)",
-                  "Gear shift visualization (1 driver/session)",
-                  "Basic overtake aggression scores",
-                  "Pit stop leaderboards (time only)",
-                  "Race results for past 3 seasons",
-                  "2D telemetry track maps",
-                  "Export charts in 1080p",
-                  "Share to social media"
+                  "Basic Race Results (Last 3 Seasons)",
+                  "Limited Driver Comparisons",
+                  "Standard Chart Exports (1080p)",
+                  "Social Sharing Enabled",
                 ]}
                 limitations={[
-                  "Limited to 5 driver comparisons/month",
-                  "No fuel-adjusted pace analysis",
-                  "No tire degradation models",
-                  "Ads on download/sharing screens"
+                  "No Advanced Telemetry",
+                  "No Strategy Simulations",
+                  "Ad-Supported Downloads",
                 ]}
                 buttonText="Get Started"
                 buttonAction={() => handleAuthNavigate('signup')}
                 highlighted={false}
               />
-
-              <PricingCard
+              <PricingCardRedesigned
                 title="Premium"
-                description="For analysts & superfans"
+                description="Deep analysis for superfans & pros"
                 price="$9.99"
-                period="per month"
+                period="/ month"
                 features={[
                   "Everything in Free, plus:",
-                  "Red flag forensics & VSC simulations",
-                  "Dynamic track evolution analysis",
-                  "Throttle-brake overlap & ERS heatmaps",
-                  "Driver DNA profiling & radio sentiment",
-                  "Undercut/overcut simulations",
-                  "Fuel load reverse engineering",
-                  "3D interactive track maps",
-                  "Full telemetry archives (2010–present)",
-                  "Neural pace prediction & AI strategy",
-                  "Team workspaces & collaboration tools",
-                  "4K/vector exports",
-                  "Ad-free experience",
-                  "Priority support"
+                  "Full Historical Data (2010+)",
+                  "Unlimited Comparisons",
+                  "Advanced Telemetry & ERS Analysis",
+                  "Strategy Simulations (Undercut/Overcut)",
+                  "AI Pace Predictions",
+                  "4K & Vector Chart Exports",
+                  "Ad-Free Experience",
+                  "Priority Support",
                 ]}
                 limitations={[]}
-                buttonText="Upgrade Now"
+                buttonText="Go Premium"
                 buttonAction={() => handleAuthNavigate('signup')}
                 highlighted={true}
               />
             </div>
           </TabsContent>
 
-          <TabsContent value="annual" className="mt-0">
-            <div className="grid md:grid-cols-2 gap-8">
-              <PricingCard
+          {/* Annual Pricing */}
+          <TabsContent value="annual" className="mt-0 animate-fade-in">
+             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <PricingCardRedesigned
                 title="Free"
-                description="Perfect for casual fans"
+                description="Essential insights for casual fans"
                 price="$0"
-                period="forever"
+                period="/ forever"
                 features={[
-                  "Basic safety car delta analysis",
-                  "Session timelines (flags/pit stops)",
-                  "Gear shift visualization (1 driver/session)",
-                  "Basic overtake aggression scores",
-                  "Pit stop leaderboards (time only)",
-                  "Race results for past 3 seasons",
-                  "2D telemetry track maps",
-                  "Export charts in 1080p",
-                  "Share to social media"
+                  "Basic Race Results (Last 3 Seasons)",
+                  "Limited Driver Comparisons",
+                  "Standard Chart Exports (1080p)",
+                  "Social Sharing Enabled",
                 ]}
                 limitations={[
-                  "Limited to 5 driver comparisons/month",
-                  "No fuel-adjusted pace analysis",
-                  "No tire degradation models",
-                  "Ads on download/sharing screens"
+                  "No Advanced Telemetry",
+                  "No Strategy Simulations",
+                  "Ad-Supported Downloads",
                 ]}
                 buttonText="Get Started"
                 buttonAction={() => handleAuthNavigate('signup')}
                 highlighted={false}
               />
-
-              <PricingCard
+              <PricingCardRedesigned
                 title="Premium"
-                description="For analysts & superfans"
+                description="Deep analysis for superfans & pros"
                 price="$95.88"
-                period="per year"
+                period="/ year"
                 originalPrice="$119.88"
                 features={[
-                  "Everything in Free, plus:",
-                  "Red flag forensics & VSC simulations",
-                  "Dynamic track evolution analysis",
-                  "Throttle-brake overlap & ERS heatmaps",
-                  "Driver DNA profiling & radio sentiment",
-                  "Undercut/overcut simulations",
-                  "Fuel load reverse engineering",
-                  "3D interactive track maps",
-                  "Full telemetry archives (2010–present)",
-                  "Neural pace prediction & AI strategy",
-                  "Team workspaces & collaboration tools",
-                  "4K/vector exports",
-                  "Ad-free experience",
-                  "Priority support"
+                   "Everything in Free, plus:",
+                  "Full Historical Data (2010+)",
+                  "Unlimited Comparisons",
+                  "Advanced Telemetry & ERS Analysis",
+                  "Strategy Simulations (Undercut/Overcut)",
+                  "AI Pace Predictions",
+                  "4K & Vector Chart Exports",
+                  "Ad-Free Experience",
+                  "Priority Support",
                 ]}
                 limitations={[]}
-                buttonText="Upgrade Now"
+                buttonText="Go Premium (Annual)"
                 buttonAction={() => handleAuthNavigate('signup')}
                 highlighted={true}
               />
@@ -154,39 +135,48 @@ const Subscription = () => {
           </TabsContent>
         </Tabs>
 
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold mb-8 text-center text-white">Feature Comparison</h2>
-          <FeatureComparisonTable />
-        </div>
+        {/* Feature Comparison Table Section */}
+        <section className="mb-16 md:mb-20 animate-fade-in" style={{ animationDelay: '100ms' }}>
+          <h2 className="text-3xl font-bold mb-8 text-center text-white">Detailed Feature Comparison</h2>
+          <div className="bg-gray-900/70 border border-gray-700/80 rounded-lg overflow-hidden shadow-lg">
+             <FeatureComparisonTableRedesigned />
+          </div>
+        </section>
 
-        <div className="bg-gray-900/80 rounded-lg p-8 border border-gray-700 mb-16">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-6 md:mb-0 md:mr-8">
-              <h2 className="text-2xl font-bold mb-2 text-white">Still have questions?</h2>
-              <p className="text-gray-400 mb-4">
-                Our team is ready to help you choose the right plan for your F1 analytics needs.
-              </p>
-              <Button variant="outline" className="mr-4 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
-                View FAQ
-              </Button>
-              <Button className="bg-red-600 hover:bg-red-700 text-white">
-                Contact Support
-              </Button>
-            </div>
-            <div className="flex-shrink-0 bg-red-500/10 p-6 rounded-lg border border-red-500/30">
-              <h3 className="font-semibold mb-2 text-white">Pro Tip</h3>
-              <p className="text-sm text-red-300">
-                Try the free plan first and upgrade anytime. <br />
-                Your data and preferences will carry over seamlessly.
-              </p>
+        {/* CTA Section */}
+        <section className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <div className="bg-gradient-to-r from-gray-900 via-gray-800/80 to-gray-900 border border-gray-700 rounded-lg p-8 md:p-10">
+            <div className="grid md:grid-cols-3 gap-8 items-center">
+              <div className="md:col-span-2">
+                <h2 className="text-2xl md:text-3xl font-bold mb-3 text-white flex items-center">
+                  <HelpCircle className="w-7 h-7 mr-3 text-red-400"/>
+                  Still Have Questions?
+                </h2>
+                <p className="text-gray-300 mb-6">
+                  Our team is ready to help you choose the right plan or answer any questions about Fastlytics features.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button size="lg" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
+                    View FAQ
+                  </Button>
+                  <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5"/> Contact Support
+                  </Button>
+                </div>
+              </div>
+              <div className="hidden md:flex justify-center items-center">
+                 {/* Optional: Add a relevant graphic or icon */}
+                 <CreditCard className="w-24 h-24 text-gray-700" strokeWidth={1}/>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
 };
 
+// --- Redesigned Pricing Card ---
 interface PricingCardProps {
   title: string;
   description: string;
@@ -200,99 +190,91 @@ interface PricingCardProps {
   originalPrice?: string;
 }
 
-const PricingCard = ({
-  title,
-  description,
-  price,
-  period,
-  features,
-  limitations,
-  buttonText,
-  buttonAction,
-  highlighted,
-  originalPrice
+const PricingCardRedesigned = ({
+  title, description, price, period, features, limitations,
+  buttonText, buttonAction, highlighted, originalPrice
 }: PricingCardProps) => {
   return (
-    <Card className={`border overflow-hidden ${
-      highlighted ?
-      "border-red-500/50 shadow-lg shadow-red-500/10 relative bg-gray-900" :
-      "border-gray-700 bg-gray-900/80"
-    }`}>
+    <Card className={cn(
+      "border overflow-hidden transition-all duration-300 ease-in-out flex flex-col", // Base styles
+      highlighted
+        ? "border-red-500/60 shadow-xl shadow-red-500/15 relative bg-gray-900 scale-[1.02]" // Highlighted styles
+        : "border-gray-700 bg-gray-900/80 hover:border-gray-600 hover:shadow-lg" // Default styles
+    )}>
       {highlighted && (
-        <div className="absolute top-0 right-0 bg-red-600 text-white px-4 py-1 rounded-bl-lg text-sm font-medium">
-          Recommended
+        <div className="absolute top-0 right-0 bg-gradient-to-br from-red-500 to-red-700 text-white px-4 py-1 rounded-bl-lg text-xs font-semibold tracking-wide">
+          RECOMMENDED
         </div>
       )}
-      <CardHeader className={`pb-8 ${highlighted ? "bg-red-500/5" : ""}`}>
-        <CardTitle className="text-2xl flex items-center text-white">
-          {title === "Premium" ? <Award className="mr-2 h-5 w-5 text-red-500" /> : null}
+      <CardHeader className={cn("pb-6", highlighted ? "pt-8" : "pt-6")}> {/* Adjust padding */}
+        <CardTitle className="text-2xl font-semibold flex items-center text-white mb-1">
+          {title === "Premium" && <Award className="mr-2 h-5 w-5 text-red-400" />}
           {title}
         </CardTitle>
-        <CardDescription className="text-gray-400">{description}</CardDescription>
-        <div className="mt-4">
-          <span className="text-4xl font-bold text-white">{price}</span>
+        <CardDescription className="text-gray-400 text-sm">{description}</CardDescription>
+        <div className="mt-4 flex items-baseline gap-1">
+          <span className="text-4xl font-bold tracking-tight text-white">{price}</span>
           {originalPrice && (
-            <span className="ml-2 text-gray-500 line-through text-sm">{originalPrice}</span>
+            <span className="text-gray-500 line-through text-sm">{originalPrice}</span>
           )}
-          <span className="text-gray-400"> {period}</span>
+          <span className="text-gray-400 text-sm">{period}</span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 text-gray-300">
+      {/* Use ScrollArea if lists get long */}
+      <CardContent className="space-y-5 text-gray-300 text-sm flex-grow">
         <div>
-          <h3 className="font-medium mb-4 text-white">Included Features</h3>
-          <ul className="space-y-3">
+          <h3 className="font-medium mb-3 text-white text-base">Included Features</h3>
+          <ul className="space-y-2.5">
             {features.map((feature, index) => (
               <li key={index} className="flex items-start">
-                <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-4 w-4 text-green-500 mr-2.5 flex-shrink-0 mt-0.5" />
                 <span>{feature}</span>
               </li>
             ))}
           </ul>
         </div>
-
         {limitations.length > 0 && (
-          <div>
-            <h3 className="font-medium mb-4 text-white">Limitations</h3>
-            <ul className="space-y-3">
+          <div className="pt-5 border-t border-gray-700/50">
+            <h3 className="font-medium mb-3 text-white text-base">Limitations</h3>
+            <ul className="space-y-2.5">
               {limitations.map((limitation, index) => (
                 <li key={index} className="flex items-start">
-                  <XCircle className="h-5 w-5 text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <XCircle className="h-4 w-4 text-gray-500 mr-2.5 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-400">{limitation}</span>
                 </li>
               ))}
             </ul>
           </div>
         )}
-
-        <Button
-          className={`w-full ${highlighted ? "bg-red-600 hover:bg-red-700 text-white" : "border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"}`}
+      </CardContent>
+      <div className="p-6 pt-4 mt-auto"> {/* Footer for button */}
+         <Button
+          size="lg"
+          className={cn(
+            "w-full transition-all duration-200",
+            highlighted
+              ? "bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg"
+              : "border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+          )}
           variant={highlighted ? "default" : "outline"}
           onClick={buttonAction}
         >
           {buttonText}
-          <ChevronRight className="h-4 w-4 ml-1" />
+          <ChevronRight className="h-4 w-4 ml-1.5" />
         </Button>
-      </CardContent>
+      </div>
     </Card>
   );
 };
 
-// Define the type for a feature in the comparison table
-interface ComparisonFeature {
-  name: string;
-  free: boolean | string;
-  premium: boolean | string;
-}
 
-// Define the type for a feature category
-interface FeatureCategory {
-  title: string;
-  features: ComparisonFeature[];
-}
+// --- Redesigned Feature Comparison Table ---
+interface ComparisonFeature { name: string; free: boolean | string; premium: boolean | string; }
+interface FeatureCategory { title: string; features: ComparisonFeature[]; }
 
-const FeatureComparisonTable = () => {
-  const featureCategories: FeatureCategory[] = [ // Add type annotation
-    {
+const FeatureComparisonTableRedesigned = () => {
+  const featureCategories: FeatureCategory[] = [
+     {
       title: "Session & Event Analysis",
       features: [
         { name: "Safety car delta analysis", free: "Basic", premium: "Advanced" },
@@ -347,47 +329,47 @@ const FeatureComparisonTable = () => {
     },
   ];
 
-  // Helper function to render the check/cross icon or text
   const renderCellValue = (value: boolean | string) => {
     if (typeof value === 'boolean') {
       return value ? <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto" /> : <XCircle className="h-5 w-5 text-gray-500 mx-auto" />;
     }
-    return <span className="text-sm">{value}</span>;
+    return <span className="text-sm text-gray-300">{value}</span>;
   };
 
-  // Helper function to render the premium check/cross icon or text
   const renderPremiumCellValue = (value: boolean | string) => {
      if (typeof value === 'boolean') {
-      return value ? <CheckCircle2 className="h-5 w-5 text-red-500 mx-auto" /> : <XCircle className="h-5 w-5 text-gray-500 mx-auto" />;
+      return value ? <CheckCircle2 className="h-5 w-5 text-red-400 mx-auto" /> : <XCircle className="h-5 w-5 text-gray-500 mx-auto" />;
     }
-    return <span className="text-sm">{value}</span>;
+    return <span className="text-sm text-gray-300">{value}</span>;
   }
 
   return (
-    <div className="overflow-auto">
-      <table className="w-full border-collapse text-gray-300">
-        <thead className="bg-gray-800/50">
+    <div className="overflow-x-auto"> {/* Ensure horizontal scroll on small screens */}
+      <table className="w-full min-w-[600px] border-collapse text-gray-300">
+        <thead className="bg-gray-800/60">
           <tr>
-            <th className="text-left p-4 border-b border-gray-700 text-white font-semibold">Feature</th>
-            <th className="p-4 border-b border-gray-700 text-center text-white font-semibold">Free</th>
-            <th className="p-4 border-b border-gray-700 text-center text-white font-semibold">Premium</th>
+            <th className="text-left p-3 md:p-4 border-b border-gray-700 text-white font-semibold text-sm sticky left-0 bg-gray-800/60 z-10">Feature</th>
+            <th className="p-3 md:p-4 border-b border-gray-700 text-center text-white font-semibold text-sm w-24">Free</th>
+            <th className="p-3 md:p-4 border-b border-gray-700 text-center text-white font-semibold text-sm w-24">Premium</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-gray-700/50">
           {featureCategories.map((category, categoryIndex) => (
             <React.Fragment key={categoryIndex}>
-              <tr className="bg-gray-800/30">
-                <td colSpan={3} className="p-4 font-semibold text-white">
+              {/* Category Header Row */}
+              <tr className="bg-gray-800/40 sticky top-0 z-10"> {/* Make category header sticky */}
+                <td colSpan={3} className="p-3 md:p-4 font-semibold text-white text-base sticky left-0 bg-gray-800/40">
                   {category.title}
                 </td>
               </tr>
+              {/* Feature Rows */}
               {category.features.map((feature, featureIndex) => (
-                <tr key={`${categoryIndex}-${featureIndex}`} className="border-b border-gray-700/50">
-                  <td className="p-4">{feature.name}</td>
-                  <td className="p-4 text-center">
+                <tr key={`${categoryIndex}-${featureIndex}`} className="hover:bg-gray-800/40 transition-colors">
+                  <td className="p-3 md:p-4 text-sm sticky left-0 bg-inherit group-hover:bg-gray-800/40">{feature.name}</td>
+                  <td className="p-3 md:p-4 text-center">
                     {renderCellValue(feature.free)}
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-3 md:p-4 text-center">
                     {renderPremiumCellValue(feature.premium)}
                   </td>
                 </tr>
@@ -399,5 +381,6 @@ const FeatureComparisonTable = () => {
     </div>
   );
 };
+
 
 export default Subscription;
