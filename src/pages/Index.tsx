@@ -32,7 +32,7 @@ const Index = () => {
         {/* Title and season info */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between">
           <div className="animate-slide-in-left">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">2023 Season Analysis</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">2025 Season Analysis</h1>
             <p className="text-muted-foreground">Real-time F1 data and analytics dashboard</p>
           </div>
           

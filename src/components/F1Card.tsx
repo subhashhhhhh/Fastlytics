@@ -20,9 +20,9 @@ const F1Card = ({ title, value, team, icon, change, className, style }: F1CardPr
           <h3 className="text-sm text-muted-foreground font-medium mb-1">{title}</h3>
           <div className="text-2xl font-bold">{value}</div>
           
-          {change !== undefined && (
+          {change !== undefined && (title.includes('McLaren') || title.includes('Mercedes') || title.includes('Red Bull Racing') || title.includes('Williams')) && (
             <div className={`text-sm mt-1 flex items-center ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {change >= 0 ? '↑' : '↓'} {Math.abs(change).toFixed(1)}%
+              {change >= 0 ? '↑' : '↓'} {Math.abs(change)}
             </div>
           )}
         </div>

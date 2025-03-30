@@ -49,63 +49,63 @@ export const topSpeedsData = [
 // Race results
 export const raceResultsData = [
   { 
-    event: 'Bahrain GP', 
+    event: 'Chinese GP', 
     position: 1, 
-    driver: 'Leclerc', 
-    team: 'ferrari',
-    change: 2.4
-  },
-  { 
-    event: 'Saudi Arabian GP', 
-    position: 1, 
-    driver: 'Verstappen', 
-    team: 'redbull',
-    change: 1.3
+    driver: 'Oscar Piastri', 
+    team: 'mclaren',
+    change: 25
   },
   { 
     event: 'Australian GP', 
     position: 1, 
-    driver: 'Leclerc', 
-    team: 'ferrari',
-    change: 3.5
+    driver: 'Lando Norris', 
+    team: 'mclaren',
+    change: 25
   },
   { 
-    event: 'Emilia Romagna GP', 
+    event: 'Abu Dhabi GP', 
     position: 1, 
-    driver: 'Verstappen', 
+    driver: 'Max Verstappen', 
     team: 'redbull',
-    change: -0.7
+    change: 25
+  },
+  { 
+    event: 'Qatar GP', 
+    position: 1, 
+    driver: 'Max Verstappen', 
+    team: 'redbull',
+    change: 25
   }
 ];
 
 // Team performance
 export const teamPerformanceData = [
   { 
-    team: 'Red Bull Racing', 
-    shortName: 'RBR',
-    points: 123, 
-    teamColor: 'redbull',
-    change: 2.1
-  },
-  { 
-    team: 'Ferrari', 
-    shortName: 'FER',
-    points: 115, 
-    teamColor: 'ferrari',
-    change: 4.2
+    team: 'McLaren', 
+    shortName: 'MCL',
+    points: 78, 
+    teamColor: 'mclaren',
+    change: 51
   },
   { 
     team: 'Mercedes', 
     shortName: 'MER',
-    points: 95, 
+    points: 57, 
     teamColor: 'mercedes',
-    change: -1.5
+    change: 30
   },
   { 
-    team: 'McLaren', 
-    shortName: 'MCL',
-    points: 80, 
-    teamColor: 'mclaren',
-    change: 3.7
+    team: 'Red Bull Racing', 
+    shortName: 'RBR',
+    points: 36, 
+    teamColor: 'redbull',
+    change: 18
+  },
+  { 
+    team: 'Williams', 
+    shortName: 'WIL',
+    points: 17, 
+    teamColor: 'williams',
+    change: 7
   }
 ];

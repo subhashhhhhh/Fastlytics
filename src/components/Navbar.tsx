@@ -41,7 +41,7 @@ const Navbar = () => {
     <div className="w-full bg-card border-b border-border/50 py-3 px-6 flex items-center justify-between mb-6">
       <NavLink to="/" className="flex items-center space-x-2">
         <Flag className="h-6 w-6 text-f1-ferrari" />
-        <h1 className="text-2xl font-bold">Fast Charts F1</h1>
+        <h1 className="text-2xl font-bold">Fastlytics</h1>
       </NavLink>
       
       {/* Desktop Navigation */}
@@ -175,7 +175,7 @@ const Navbar = () => {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-2">
                     <Flag className="h-6 w-6 text-f1-ferrari" />
-                    <h2 className="text-xl font-bold">Fast Charts F1</h2>
+                    <h2 className="text-xl font-bold">Fastlytics</h2>
                   </div>
                   <DrawerClose asChild>
                     <Button variant="ghost" size="icon">

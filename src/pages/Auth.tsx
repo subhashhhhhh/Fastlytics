@@ -62,7 +62,7 @@ const Auth = () => {
       setIsLoading(false);
       toast({
         title: "Account created!",
-        description: "Your account has been successfully created. Welcome to Fast Charts F1!",
+        description: "Your account has been successfully created. Welcome to Fastlytics!",
         variant: "default",
       });
       navigate('/');
@@ -93,7 +93,7 @@ const Auth = () => {
               <Flag className="h-8 w-8 text-f1-ferrari" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-f1-ferrari via-f1-redbull to-f1-mclaren bg-clip-text text-transparent">Fast Charts F1</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-f1-ferrari via-f1-redbull to-f1-mclaren bg-clip-text text-transparent">Fastlytics</h1>
           <p className="text-muted-foreground mt-2">Your premium F1 analytics dashboard</p>
         </div>
         
@@ -187,7 +187,7 @@ const Auth = () => {
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl">Create an account</CardTitle>
                   <CardDescription>
-                    Join Fast Charts F1 and unlock premium analytics
+                    Join Fastlytics and unlock premium analytics
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
