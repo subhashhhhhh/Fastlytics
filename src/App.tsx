@@ -4,7 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard"; // Renamed from Index
+import Landing from "./pages/Landing"; // New Landing page
 import Race from "./pages/Race";
 import Drivers from "./pages/Drivers";
 import NotFound from "./pages/NotFound";
@@ -19,6 +20,14 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen flex flex-col">
     {children}
     <Footer />
+  </div>
+);
+
+// Landing layout without footer
+const LandingLayout = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen flex flex-col">
+    {children}
+    {/* No Footer here */}
   </div>
 );
 
@@ -38,9 +47,12 @@ const App = () => (
         <Routes>
           {/* Auth routes without footer */}
           <Route path="/auth" element={<AuthLayout><Auth /></AuthLayout>} />
-          
-          {/* Main routes with footer */}
-          <Route path="/" element={<MainLayout><Index /></MainLayout>} />
+
+          {/* Landing Page Route (No Footer) */}
+          <Route path="/" element={<LandingLayout><Landing /></LandingLayout>} />
+
+          {/* Main App Routes (with Footer) */}
+          <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} /> {/* Moved Dashboard route */}
           <Route path="/race/:raceId" element={<MainLayout><Race /></MainLayout>} />
           <Route path="/drivers" element={<MainLayout><Drivers /></MainLayout>} />
           <Route path="/subscription" element={<MainLayout><Subscription /></MainLayout>} />

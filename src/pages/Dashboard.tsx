@@ -25,7 +25,8 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen bg-background carbon-fiber-bg">
+    // Apply the landing page background gradient
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white"> 
       <Navbar />
       
       <div className="container py-6">

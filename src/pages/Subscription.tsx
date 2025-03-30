@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, XCircle, Award, ChevronRight, CreditCard, Lock, Zap, BarChart4, History, SlidersHorizontal } from 'lucide-react';
+import { CheckCircle2, XCircle, Award, ChevronRight, CreditCard } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,36 +8,37 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Subscription = () => {
   const navigate = useNavigate();
-  
+
   const handleAuthNavigate = (tabValue: 'login' | 'signup') => {
     navigate(`/auth?tab=${tabValue}`);
   };
 
   return (
-    <div className="min-h-screen bg-background carbon-fiber-bg">
+    // Apply the landing page background gradient and text color
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white">
       <Navbar />
-      
+
       <div className="container py-8 px-4 max-w-6xl mx-auto">
         <div className="text-center mb-12 animate-fade-in">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">Unlock the Full Power of F1 Analytics</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 text-white">Unlock the Full Power of F1 Analytics</h1>
+          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             Choose the plan that fits your passion for Formula 1 data and insights
           </p>
         </div>
-        
+
         <Tabs defaultValue="monthly" className="w-full mb-12">
           <div className="flex justify-center mb-6">
-            <TabsList className="grid grid-cols-2 w-64">
-              <TabsTrigger value="monthly">Monthly</TabsTrigger>
-              <TabsTrigger value="annual">
-                Annual <span className="ml-1 text-xs bg-primary/20 text-primary rounded-full px-2 py-0.5">Save 20%</span>
+            <TabsList className="grid grid-cols-2 w-64 bg-gray-800">
+              <TabsTrigger value="monthly" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300">Monthly</TabsTrigger>
+              <TabsTrigger value="annual" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300">
+                Annual <span className="ml-1 text-xs bg-red-500/30 text-red-300 rounded-full px-2 py-0.5">Save 20%</span>
               </TabsTrigger>
             </TabsList>
           </div>
-          
+
           <TabsContent value="monthly" className="mt-0">
             <div className="grid md:grid-cols-2 gap-8">
-              <PricingCard 
+              <PricingCard
                 title="Free"
                 description="Perfect for casual fans"
                 price="$0"
@@ -64,8 +64,8 @@ const Subscription = () => {
                 buttonAction={() => handleAuthNavigate('signup')}
                 highlighted={false}
               />
-              
-              <PricingCard 
+
+              <PricingCard
                 title="Premium"
                 description="For analysts & superfans"
                 price="$9.99"
@@ -93,10 +93,10 @@ const Subscription = () => {
               />
             </div>
           </TabsContent>
-          
+
           <TabsContent value="annual" className="mt-0">
             <div className="grid md:grid-cols-2 gap-8">
-              <PricingCard 
+              <PricingCard
                 title="Free"
                 description="Perfect for casual fans"
                 price="$0"
@@ -122,8 +122,8 @@ const Subscription = () => {
                 buttonAction={() => handleAuthNavigate('signup')}
                 highlighted={false}
               />
-              
-              <PricingCard 
+
+              <PricingCard
                 title="Premium"
                 description="For analysts & superfans"
                 price="$95.88"
@@ -153,29 +153,29 @@ const Subscription = () => {
             </div>
           </TabsContent>
         </Tabs>
-        
+
         <div className="mb-16">
-          <h2 className="text-2xl font-bold mb-8 text-center">Feature Comparison</h2>
+          <h2 className="text-2xl font-bold mb-8 text-center text-white">Feature Comparison</h2>
           <FeatureComparisonTable />
         </div>
-        
-        <div className="bg-card rounded-lg p-8 border border-border/50 mb-16">
+
+        <div className="bg-gray-900/80 rounded-lg p-8 border border-gray-700 mb-16">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="mb-6 md:mb-0 md:mr-8">
-              <h2 className="text-2xl font-bold mb-2">Still have questions?</h2>
-              <p className="text-muted-foreground mb-4">
+              <h2 className="text-2xl font-bold mb-2 text-white">Still have questions?</h2>
+              <p className="text-gray-400 mb-4">
                 Our team is ready to help you choose the right plan for your F1 analytics needs.
               </p>
-              <Button variant="outline" className="mr-4">
+              <Button variant="outline" className="mr-4 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
                 View FAQ
               </Button>
-              <Button variant="default">
+              <Button className="bg-red-600 hover:bg-red-700 text-white">
                 Contact Support
               </Button>
             </div>
-            <div className="flex-shrink-0 bg-primary/10 p-6 rounded-lg border border-primary/20">
-              <h3 className="font-semibold mb-2">Pro Tip</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="flex-shrink-0 bg-red-500/10 p-6 rounded-lg border border-red-500/30">
+              <h3 className="font-semibold mb-2 text-white">Pro Tip</h3>
+              <p className="text-sm text-red-300">
                 Try the free plan first and upgrade anytime. <br />
                 Your data and preferences will carry over seamlessly.
               </p>
@@ -200,12 +200,12 @@ interface PricingCardProps {
   originalPrice?: string;
 }
 
-const PricingCard = ({ 
-  title, 
-  description, 
-  price, 
+const PricingCard = ({
+  title,
+  description,
+  price,
   period,
-  features, 
+  features,
   limitations,
   buttonText,
   buttonAction,
@@ -214,58 +214,58 @@ const PricingCard = ({
 }: PricingCardProps) => {
   return (
     <Card className={`border overflow-hidden ${
-      highlighted ? 
-      "border-primary/50 shadow-lg shadow-primary/10 relative" : 
-      "border-border/50"
+      highlighted ?
+      "border-red-500/50 shadow-lg shadow-red-500/10 relative bg-gray-900" :
+      "border-gray-700 bg-gray-900/80"
     }`}>
       {highlighted && (
-        <div className="absolute top-0 right-0 bg-primary text-white px-4 py-1 rounded-bl-lg text-sm font-medium">
+        <div className="absolute top-0 right-0 bg-red-600 text-white px-4 py-1 rounded-bl-lg text-sm font-medium">
           Recommended
         </div>
       )}
-      <CardHeader className={`pb-8 ${highlighted ? "bg-primary/5" : ""}`}>
-        <CardTitle className="text-2xl flex items-center">
-          {title === "Premium" ? <Award className="mr-2 h-5 w-5 text-primary" /> : null}
+      <CardHeader className={`pb-8 ${highlighted ? "bg-red-500/5" : ""}`}>
+        <CardTitle className="text-2xl flex items-center text-white">
+          {title === "Premium" ? <Award className="mr-2 h-5 w-5 text-red-500" /> : null}
           {title}
         </CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardDescription className="text-gray-400">{description}</CardDescription>
         <div className="mt-4">
-          <span className="text-4xl font-bold">{price}</span>
+          <span className="text-4xl font-bold text-white">{price}</span>
           {originalPrice && (
-            <span className="ml-2 text-muted-foreground line-through text-sm">{originalPrice}</span>
+            <span className="ml-2 text-gray-500 line-through text-sm">{originalPrice}</span>
           )}
-          <span className="text-muted-foreground"> {period}</span>
+          <span className="text-gray-400"> {period}</span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 text-gray-300">
         <div>
-          <h3 className="font-medium mb-4">Included Features</h3>
+          <h3 className="font-medium mb-4 text-white">Included Features</h3>
           <ul className="space-y-3">
             {features.map((feature, index) => (
               <li key={index} className="flex items-start">
-                <CheckCircle2 className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                 <span>{feature}</span>
               </li>
             ))}
           </ul>
         </div>
-        
+
         {limitations.length > 0 && (
           <div>
-            <h3 className="font-medium mb-4">Limitations</h3>
+            <h3 className="font-medium mb-4 text-white">Limitations</h3>
             <ul className="space-y-3">
               {limitations.map((limitation, index) => (
                 <li key={index} className="flex items-start">
-                  <XCircle className="h-5 w-5 text-muted-foreground mr-2 flex-shrink-0 mt-0.5" />
-                  <span className="text-muted-foreground">{limitation}</span>
+                  <XCircle className="h-5 w-5 text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-400">{limitation}</span>
                 </li>
               ))}
             </ul>
           </div>
         )}
-        
-        <Button 
-          className={`w-full ${highlighted ? "racing-button" : ""}`}
+
+        <Button
+          className={`w-full ${highlighted ? "bg-red-600 hover:bg-red-700 text-white" : "border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"}`}
           variant={highlighted ? "default" : "outline"}
           onClick={buttonAction}
         >
@@ -277,8 +277,21 @@ const PricingCard = ({
   );
 };
 
+// Define the type for a feature in the comparison table
+interface ComparisonFeature {
+  name: string;
+  free: boolean | string;
+  premium: boolean | string;
+}
+
+// Define the type for a feature category
+interface FeatureCategory {
+  title: string;
+  features: ComparisonFeature[];
+}
+
 const FeatureComparisonTable = () => {
-  const featureCategories = [
+  const featureCategories: FeatureCategory[] = [ // Add type annotation
     {
       title: "Session & Event Analysis",
       features: [
@@ -334,44 +347,48 @@ const FeatureComparisonTable = () => {
     },
   ];
 
+  // Helper function to render the check/cross icon or text
+  const renderCellValue = (value: boolean | string) => {
+    if (typeof value === 'boolean') {
+      return value ? <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto" /> : <XCircle className="h-5 w-5 text-gray-500 mx-auto" />;
+    }
+    return <span className="text-sm">{value}</span>;
+  };
+
+  // Helper function to render the premium check/cross icon or text
+  const renderPremiumCellValue = (value: boolean | string) => {
+     if (typeof value === 'boolean') {
+      return value ? <CheckCircle2 className="h-5 w-5 text-red-500 mx-auto" /> : <XCircle className="h-5 w-5 text-gray-500 mx-auto" />;
+    }
+    return <span className="text-sm">{value}</span>;
+  }
+
   return (
     <div className="overflow-auto">
-      <table className="w-full border-collapse">
-        <thead className="bg-muted/50">
+      <table className="w-full border-collapse text-gray-300">
+        <thead className="bg-gray-800/50">
           <tr>
-            <th className="text-left p-4 border-b border-border/50">Feature</th>
-            <th className="p-4 border-b border-border/50 text-center">Free</th>
-            <th className="p-4 border-b border-border/50 text-center">Premium</th>
+            <th className="text-left p-4 border-b border-gray-700 text-white font-semibold">Feature</th>
+            <th className="p-4 border-b border-gray-700 text-center text-white font-semibold">Free</th>
+            <th className="p-4 border-b border-gray-700 text-center text-white font-semibold">Premium</th>
           </tr>
         </thead>
         <tbody>
           {featureCategories.map((category, categoryIndex) => (
             <React.Fragment key={categoryIndex}>
-              <tr className="bg-muted/20">
-                <td colSpan={3} className="p-4 font-semibold">
+              <tr className="bg-gray-800/30">
+                <td colSpan={3} className="p-4 font-semibold text-white">
                   {category.title}
                 </td>
               </tr>
               {category.features.map((feature, featureIndex) => (
-                <tr key={`${categoryIndex}-${featureIndex}`} className="border-b border-border/30">
+                <tr key={`${categoryIndex}-${featureIndex}`} className="border-b border-gray-700/50">
                   <td className="p-4">{feature.name}</td>
                   <td className="p-4 text-center">
-                    {feature.free === true ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto" />
-                    ) : feature.free === false ? (
-                      <XCircle className="h-5 w-5 text-muted-foreground mx-auto" />
-                    ) : (
-                      <span className="text-sm">{feature.free}</span>
-                    )}
+                    {renderCellValue(feature.free)}
                   </td>
                   <td className="p-4 text-center">
-                    {feature.premium === true ? (
-                      <CheckCircle2 className="h-5 w-5 text-primary mx-auto" />
-                    ) : feature.premium === false ? (
-                      <XCircle className="h-5 w-5 text-muted-foreground mx-auto" />
-                    ) : (
-                      <span className="text-sm">{feature.premium}</span>
-                    )}
+                    {renderPremiumCellValue(feature.premium)}
                   </td>
                 </tr>
               ))}

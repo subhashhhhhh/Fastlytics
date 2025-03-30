@@ -1,29 +1,17 @@
-
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { 
-  Flag, 
-  BarChart2, 
-  User, 
-  Car, 
-  Timer, 
-  Calendar, 
-  Gauge, 
-  ArrowRightLeft, 
-  Cpu, 
+import { NavLink, Link } from 'react-router-dom'; // Added Link
+import {
+  BarChart2,
+  User,
+  Car, // Changed icon
   CreditCard,
   Menu,
-  X
+  X,
+  LogOut, // Added icon
+  Settings, // Added icon
+  LayoutDashboard // Added icon
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -32,332 +20,173 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // Added DropdownMenu imports
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added Avatar imports
 
 const Navbar = () => {
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Simplified Nav Items for Dashboard
+  const navItems = [
+    { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    { name: 'Drivers', href: '/drivers', icon: <User size={18} /> },
+    { name: 'Subscription', href: '/subscription', icon: <CreditCard size={18} /> },
+    // Add other core links if needed, but keep it concise
+  ];
+
+  // Placeholder function for logout
+  const handleLogout = () => {
+    console.log("Logout clicked");
+    // Add actual logout logic here (e.g., clear auth state, redirect)
+  };
+
   return (
-    <div className="w-full bg-card border-b border-border/50 py-3 px-6 flex items-center justify-between mb-6">
-      <NavLink to="/" className="flex items-center space-x-2">
-        <Flag className="h-6 w-6 text-f1-ferrari" />
-        <h1 className="text-2xl font-bold">Fastlytics</h1>
-      </NavLink>
-      
-      {/* Desktop Navigation */}
-      <div className="hidden lg:flex items-center space-x-1">
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavLink to="/" end>
-                {({ isActive }) => (
-                  <Button variant={isActive ? "secondary" : "ghost"} className="flex items-center space-x-2">
-                    <BarChart2 size={18} />
-                    <span>Dashboard</span>
-                  </Button>
-                )}
+    // Apply styles similar to LandingNavbar
+    <nav className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-md border-b border-gray-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo/Brand - Match LandingNavbar */}
+          <Link to="/dashboard" className="flex items-center gap-2 text-white hover:text-red-500 transition-colors">
+            <Car className="h-6 w-6 text-red-500" />
+            <span className="font-bold text-xl">Fast<span className="text-red-500">lytics</span></span>
+          </Link>
+
+          {/* Desktop Navigation - Simplified */}
+          <div className="hidden md:flex items-center space-x-2">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                end={item.href === '/dashboard'} // Ensure 'end' prop for root dashboard link
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-gray-700 text-white" // Active style
+                      : "text-gray-300 hover:bg-gray-800 hover:text-white" // Inactive style
+                  )
+                }
+              >
+                {item.icon}
+                <span>{item.name}</span>
               </NavLink>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="flex items-center space-x-2">
-                <Timer size={18} />
-                <span>Analysis</span>
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid gap-3 p-4 w-[400px] md:w-[500px] grid-cols-2">
-                  <li className="col-span-2">
-                    <NavigationMenuLink asChild>
-                      <a className="block p-2 rounded-md hover:bg-accent">
-                        <div className="font-medium">Session Analysis</div>
-                        <p className="text-sm text-muted-foreground">Track evolution, weather impact, and more</p>
-                      </a>
-                    </NavigationMenuLink>
-                  </li>
-                  {sessionFeatures.slice(0, 4).map((feature) => (
-                    <ListItem key={feature.title} title={feature.title} href="#">
-                      {feature.description}
-                    </ListItem>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <NavLink to="/drivers">
-                {({ isActive }) => (
-                  <Button variant={isActive ? "secondary" : "ghost"} className="flex items-center space-x-2">
-                    <User size={18} />
-                    <span>Drivers</span>
+            ))}
+          </div>
+
+          {/* Right side: Account Dropdown & Mobile Menu Toggle */}
+          <div className="flex items-center gap-4">
+            {/* Account Dropdown (Desktop) */}
+            <div className="hidden md:block">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      {/* Placeholder - Replace with actual user image/initials */}
+                      <AvatarImage src="/placeholder-user.jpg" alt="@username" />
+                      <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
                   </Button>
-                )}
-              </NavLink>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="flex items-center space-x-2">
-                <Gauge size={18} />
-                <span>Telemetry</span>
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid gap-3 p-4 w-[400px] md:w-[500px] grid-cols-2">
-                  {telemetryFeatures.slice(0, 4).map((feature) => (
-                    <ListItem key={feature.title} title={feature.title} href="#">
-                      {feature.description}
-                    </ListItem>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="flex items-center space-x-2">
-                <ArrowRightLeft size={18} />
-                <span>Strategy</span>
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid gap-3 p-4 w-[400px] md:w-[500px] grid-cols-2">
-                  {strategyFeatures.slice(0, 4).map((feature) => (
-                    <ListItem key={feature.title} title={feature.title} href="#">
-                      {feature.description}
-                    </ListItem>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="flex items-center space-x-2">
-                <Calendar size={18} />
-                <span>Historical</span>
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid gap-3 p-4 w-[400px] md:w-[500px] grid-cols-2">
-                  {historicalFeatures.slice(0, 4).map((feature) => (
-                    <ListItem key={feature.title} title={feature.title} href="#">
-                      {feature.description}
-                    </ListItem>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <NavLink to="/subscription">
-                {({ isActive }) => (
-                  <Button variant={isActive ? "secondary" : "ghost"} className="flex items-center space-x-2">
-                    <CreditCard size={18} />
-                    <span>Pricing</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-gray-900 border-gray-700 text-white" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">Username</p>
+                      <p className="text-xs leading-none text-gray-400">user@example.com</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuItem onClick={handleLogout} className="hover:bg-red-800/80 cursor-pointer text-red-400 hover:text-red-300">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+                <DrawerTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
+                    <Menu className="h-6 w-6" />
+                    <span className="sr-only">Open menu</span>
                   </Button>
-                )}
-              </NavLink>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-      </div>
-      
-      {/* Mobile/Tablet Menu Toggle */}
-      <div className="flex items-center space-x-4">
-        <Button className="racing-button">
-          Season 2023
-        </Button>
-        
-        {isMobile && (
-          <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-            <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="h-[90vh]">
-              <div className="px-4 py-6 space-y-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center space-x-2">
-                    <Flag className="h-6 w-6 text-f1-ferrari" />
-                    <h2 className="text-xl font-bold">Fastlytics</h2>
+                </DrawerTrigger>
+                <DrawerContent className="h-[90vh] bg-gray-950 border-l-gray-800 text-white p-4">
+                  <div className="flex items-center justify-between mb-6">
+                     <Link to="/dashboard" className="flex items-center gap-2 text-white hover:text-red-500 transition-colors" onClick={() => setDrawerOpen(false)}>
+                        <Car className="h-6 w-6 text-red-500" />
+                        <span className="font-bold text-xl">Fast<span className="text-red-500">lytics</span></span>
+                     </Link>
+                    <DrawerClose asChild>
+                      <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
+                        <X className="h-5 w-5" />
+                        <span className="sr-only">Close menu</span>
+                      </Button>
+                    </DrawerClose>
                   </div>
-                  <DrawerClose asChild>
-                    <Button variant="ghost" size="icon">
-                      <X className="h-5 w-5" />
-                      <span className="sr-only">Close menu</span>
-                    </Button>
-                  </DrawerClose>
-                </div>
-                
-                <div className="space-y-2">
-                  <NavLink 
-                    to="/" 
-                    end 
-                    className={({ isActive }) => 
-                      cn("flex items-center p-3 rounded-md space-x-2", 
-                         isActive ? "bg-secondary" : "hover:bg-accent")
-                    }
-                    onClick={() => setDrawerOpen(false)}
-                  >
-                    <BarChart2 size={20} />
-                    <span className="font-medium">Dashboard</span>
-                  </NavLink>
-                  
-                  <NavLink 
-                    to="/drivers" 
-                    className={({ isActive }) => 
-                      cn("flex items-center p-3 rounded-md space-x-2", 
-                         isActive ? "bg-secondary" : "hover:bg-accent")
-                    }
-                    onClick={() => setDrawerOpen(false)}
-                  >
-                    <User size={20} />
-                    <span className="font-medium">Drivers</span>
-                  </NavLink>
-                  
-                  <MobileNavSection 
-                    icon={<Timer size={20} />} 
-                    title="Analysis" 
-                    features={sessionFeatures} 
-                  />
-                  
-                  <MobileNavSection 
-                    icon={<Gauge size={20} />} 
-                    title="Telemetry" 
-                    features={telemetryFeatures} 
-                  />
-                  
-                  <MobileNavSection 
-                    icon={<ArrowRightLeft size={20} />} 
-                    title="Strategy" 
-                    features={strategyFeatures} 
-                  />
-                  
-                  <MobileNavSection 
-                    icon={<Calendar size={20} />} 
-                    title="Historical" 
-                    features={historicalFeatures} 
-                  />
-                  
-                  <NavLink 
-                    to="/subscription" 
-                    className={({ isActive }) => 
-                      cn("flex items-center p-3 rounded-md space-x-2", 
-                         isActive ? "bg-secondary" : "hover:bg-accent")
-                    }
-                    onClick={() => setDrawerOpen(false)}
-                  >
-                    <CreditCard size={20} />
-                    <span className="font-medium">Pricing</span>
-                  </NavLink>
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
-        )}
+
+                  {/* Mobile Nav Links */}
+                  <div className="flex flex-col space-y-2">
+                    {navItems.map((item) => (
+                      <NavLink
+                        key={item.name}
+                        to={item.href}
+                        end={item.href === '/dashboard'}
+                        className={({ isActive }) =>
+                          cn(
+                            "flex items-center space-x-3 p-3 rounded-md text-base font-medium",
+                            isActive
+                              ? "bg-gray-700 text-white"
+                              : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                          )
+                        }
+                        onClick={() => setDrawerOpen(false)}
+                      >
+                        {item.icon}
+                        <span>{item.name}</span>
+                      </NavLink>
+                    ))}
+                     <DropdownMenuSeparator className="bg-gray-700 my-4" />
+                     {/* Mobile Account Links */}
+                     <NavLink to="#" className="flex items-center space-x-3 p-3 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => setDrawerOpen(false)}>
+                        <User className="h-5 w-5" />
+                        <span>Profile</span>
+                     </NavLink>
+                     <NavLink to="#" className="flex items-center space-x-3 p-3 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => setDrawerOpen(false)}>
+                        <Settings className="h-5 w-5" />
+                        <span>Settings</span>
+                     </NavLink>
+                     <Button variant="ghost" onClick={() => { handleLogout(); setDrawerOpen(false); }} className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-800/80 p-3 text-base font-medium">
+                        <LogOut className="mr-3 h-5 w-5" />
+                        <span>Log out</span>
+                     </Button>
+                  </div>
+                </DrawerContent>
+              </Drawer>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </nav>
   );
 };
-
-// Component for mobile menu sections with collapsible content
-const MobileNavSection = ({ icon, title, features }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  return (
-    <div className="space-y-1">
-      <Button 
-        variant="ghost" 
-        className="w-full justify-start p-3 font-medium"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center w-full justify-between">
-          <div className="flex items-center space-x-2">
-            {icon}
-            <span>{title}</span>
-          </div>
-          <div className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}>
-            <ChevronDown className="h-4 w-4" />
-          </div>
-        </div>
-      </Button>
-      
-      {isOpen && (
-        <div className="pl-9 space-y-1">
-          {features.slice(0, 4).map((feature) => (
-            <a 
-              key={feature.title} 
-              href="#" 
-              className="block p-2 text-sm rounded-md hover:bg-accent"
-            >
-              {feature.title}
-            </a>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
-    </li>
-  )
-})
-ListItem.displayName = "ListItem"
-
-// Feature lists for dropdown menus - reduced number of items to make the navbar less cluttered
-const sessionFeatures = [
-  { title: "Dynamic Track Evolution", description: "Visualize lap time improvements as track rubbers in." },
-  { title: "Weather-Driven Strategy", description: "Correlate rain with intermediate tire pit stops." },
-  { title: "Red Flag Forensics", description: "Analyze driver reactions before red flags." },
-  { title: "Safety Car Delta", description: "Calculate time impact during safety car periods." },
-];
-
-const driverTeamFeatures = [
-  { title: "Throttle-Brake Overlap", description: "Identify trail braking techniques into corners." },
-  { title: "Gear Shift Consistency", description: "Compare shift points across laps." },
-  { title: "ERS Deployment Heatmap", description: "Visualize energy deployment on track." },
-  { title: "Tire Whisperer Index", description: "Rank drivers by tire management skills." },
-];
-
-const telemetryFeatures = [
-  { title: "Aero Efficiency Score", description: "Link G-forces to downforce in high-speed corners." },
-  { title: "Brake Glow Simulation", description: "Animate disc temperatures in braking zones." },
-  { title: "Drag vs. Downforce", description: "Analyze setup trade-offs by track." },
-  { title: "G-Force Zones", description: "Highlight extreme lateral/vertical force corners." },
-];
-
-const strategyFeatures = [
-  { title: "Undercut/Overcut Sim", description: "Test hypothetical pit windows for strategy." },
-  { title: "Tire Degradation", description: "Predict optimal stops using wear models." },
-  { title: "Fuel Load Engineering", description: "Estimate starting fuel from lap time patterns." },
-  { title: "Pit Stop Battle", description: "Compare teams by median stop time." },
-];
-
-const historicalFeatures = [
-  { title: "Era vs. Era Speed", description: "Compare different eras at the same circuits." },
-  { title: "Rule Change Effect", description: "Model how regulation changes affect racing." },
-  { title: "Driver DNA Profiling", description: "Create fingerprints of unique driving styles." },
-  { title: "Team Dominance Cycles", description: "Chart periods of constructor dominance." },
-];
-
-// Missing import
-import { ChevronDown } from 'lucide-react';
 
 export default Navbar;

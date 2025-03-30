@@ -33,24 +33,26 @@ const Race = () => {
   const handleFeatureClick = (feature: string) => {
     setActiveFeature(feature === activeFeature ? null : feature);
   };
-
+  
   return (
-    <div className="min-h-screen bg-background carbon-fiber-bg">
+    // Apply the landing page background gradient and text color
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white"> 
       <Navbar />
       
       <div className="container py-6">
         {/* Back button and title */}
         <div className="flex items-center mb-6">
+           {/* Adjusted Button style */}
           <Button 
             variant="ghost" 
-            className="mr-4 hover:bg-primary/10" 
-            onClick={() => navigate('/')}
+            className="mr-4 text-gray-300 hover:bg-gray-800 hover:text-white" 
+            onClick={() => navigate('/dashboard')} // Navigate back to dashboard
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold">{race.event}</h1>
-            <p className="text-muted-foreground">2023 Season</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white">{race.event}</h1> {/* Adjusted color */}
+            <p className="text-gray-400">2023 Season</p> {/* Adjusted color */}
           </div>
         </div>
         
@@ -68,13 +70,15 @@ const Race = () => {
 
         {/* Race Analysis Tabs */}
         <Tabs defaultValue="overview" className="mb-8">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 w-full">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="telemetry">Telemetry</TabsTrigger>
-            <TabsTrigger value="strategy">Strategy</TabsTrigger>
-            <TabsTrigger value="driver">Driver Analysis</TabsTrigger>
-            <TabsTrigger value="weather">Weather Impact</TabsTrigger>
-            <TabsTrigger value="historical">Historical</TabsTrigger>
+           {/* Adjusted TabsList background */}
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 w-full bg-gray-800/80 rounded-lg">
+             {/* Adjusted TabsTrigger active state and text color */}
+            <TabsTrigger value="overview" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 rounded-md">Overview</TabsTrigger>
+            <TabsTrigger value="telemetry" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 rounded-md">Telemetry</TabsTrigger>
+            <TabsTrigger value="strategy" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 rounded-md">Strategy</TabsTrigger>
+            <TabsTrigger value="driver" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 rounded-md">Driver Analysis</TabsTrigger>
+            <TabsTrigger value="weather" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 rounded-md">Weather Impact</TabsTrigger>
+            <TabsTrigger value="historical" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 rounded-md">Historical</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="pt-6">
@@ -91,29 +95,32 @@ const Race = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="stat-card p-4 rounded-lg bg-card/80 border border-border/50">
+               {/* Adjusted Stat Card styles */}
+              <div className="stat-card p-4 rounded-lg bg-gray-900/80 border border-gray-700">
                 <div className="flex items-center gap-3 mb-2">
-                  <Flag className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-medium">Laps</h3>
+                  <Flag className="h-5 w-5 text-red-500" /> {/* Adjusted color */}
+                  <h3 className="text-sm font-medium text-gray-400">Laps</h3> {/* Adjusted color */}
                 </div>
-                <p className="text-2xl font-bold">58</p>
+                <p className="text-2xl font-bold text-white">58</p> {/* Adjusted color */}
               </div>
               
-              <div className="stat-card p-4 rounded-lg bg-card/80 border border-border/50">
+               {/* Adjusted Stat Card styles */}
+              <div className="stat-card p-4 rounded-lg bg-gray-900/80 border border-gray-700">
                 <div className="flex items-center gap-3 mb-2">
-                  <BarChart2 className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-medium">Fastest Lap</h3>
+                  <BarChart2 className="h-5 w-5 text-red-500" /> {/* Adjusted color */}
+                  <h3 className="text-sm font-medium text-gray-400">Fastest Lap</h3> {/* Adjusted color */}
                 </div>
-                <p className="text-2xl font-bold">1:31.45</p>
-                <p className="text-sm text-muted-foreground">{race.driver}</p>
+                <p className="text-2xl font-bold text-white">1:31.45</p> {/* Adjusted color */}
+                <p className="text-sm text-gray-500">{race.driver}</p> {/* Adjusted color */}
               </div>
               
-              <div className="stat-card p-4 rounded-lg bg-card/80 border border-border/50">
+               {/* Adjusted Stat Card styles */}
+              <div className="stat-card p-4 rounded-lg bg-gray-900/80 border border-gray-700">
                 <div className="flex items-center gap-3 mb-2">
-                  <Clock className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-medium">Race Duration</h3>
+                  <Clock className="h-5 w-5 text-red-500" /> {/* Adjusted color */}
+                  <h3 className="text-sm font-medium text-gray-400">Race Duration</h3> {/* Adjusted color */}
                 </div>
-                <p className="text-2xl font-bold">1h 32m 15s</p>
+                <p className="text-2xl font-bold text-white">1h 32m 15s</p> {/* Adjusted color */}
               </div>
             </div>
           </TabsContent>
@@ -224,23 +231,33 @@ const PremiumFeatureCard = ({
   icon: React.ReactNode; 
   description: string 
 }) => {
+  const navigate = useNavigate(); // Add navigate hook
   return (
-    <Card className="bg-card/60 border-border/50 overflow-hidden">
-      <div className="absolute top-0 right-0 bg-primary/20 px-3 py-1 text-xs font-medium flex items-center rounded-bl-md">
+     // Adjusted Premium Card styles
+    <Card className="bg-gray-900/80 border-gray-700 overflow-hidden relative"> 
+       {/* Adjusted Premium banner style */}
+      <div className="absolute top-0 right-0 bg-red-600/80 px-3 py-1 text-xs font-medium flex items-center rounded-bl-md text-white"> 
         <Lock className="h-3 w-3 mr-1" />
         Premium
       </div>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 pt-8"> {/* Added padding-top */}
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-full bg-secondary/20 text-primary">
+           {/* Adjusted icon background and color */}
+          <div className="p-2.5 rounded-full bg-red-500/10 text-red-500"> 
             {icon}
           </div>
-          <CardTitle className="text-lg">{title}</CardTitle>
+          <CardTitle className="text-lg text-white">{title}</CardTitle> {/* Adjusted color */}
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground">{description}</p>
-        <Button className="mt-4 w-full racing-button">Unlock Feature</Button>
+        <p className="text-gray-400">{description}</p> {/* Adjusted color */}
+         {/* Adjusted Button style and action */}
+        <Button 
+          className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white" 
+          onClick={() => navigate('/subscription')} // Navigate to subscription page
+        > 
+          Unlock Feature
+        </Button>
       </CardContent>
     </Card>
   );

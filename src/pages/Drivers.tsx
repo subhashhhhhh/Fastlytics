@@ -36,7 +36,8 @@ const Drivers = () => {
   });
   
   return (
-    <div className="min-h-screen bg-background carbon-fiber-bg">
+    // Apply the landing page background gradient and text color
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white"> 
       <Navbar />
       
       <div className="container py-6">
@@ -45,28 +46,30 @@ const Drivers = () => {
           <p className="text-muted-foreground">Compare performance metrics between any two Formula 1 drivers</p>
         </div>
         
-        <Card className="mb-8">
+        {/* Apply dark theme styles to Card */}
+        <Card className="mb-8 bg-gray-900/80 border-gray-700 shadow-xl"> 
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 h-5 w-5" />
+            <CardTitle className="flex items-center text-white"> {/* Adjusted color */}
+              <Users className="mr-2 h-5 w-5 text-red-500" /> {/* Adjusted color */}
               Select Drivers to Compare
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-400"> {/* Adjusted color */}
               Choose any two drivers to see how they match up across different performance metrics
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-2 flex items-center">
-                  <User className="mr-2 h-4 w-4 text-f1-redbull" />
+                <label className="block text-sm font-medium mb-2 flex items-center text-gray-300"> {/* Adjusted color */}
+                  <User className="mr-2 h-4 w-4 text-red-500" /> {/* Adjusted color */}
                   Driver 1
                 </label>
+                 {/* Apply dark theme styles to Select */}
                 <Select value={driver1} onValueChange={setDriver1}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500">
                     <SelectValue placeholder="Select driver" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gray-900 border-gray-700 text-white">
                     {drivers.map(driver => (
                       <SelectItem 
                         key={driver.id} 
@@ -81,15 +84,16 @@ const Drivers = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2 flex items-center">
-                  <User className="mr-2 h-4 w-4 text-f1-mercedes" />
+                <label className="block text-sm font-medium mb-2 flex items-center text-gray-300"> {/* Adjusted color */}
+                  <User className="mr-2 h-4 w-4 text-red-500" /> {/* Adjusted color */}
                   Driver 2
                 </label>
+                 {/* Apply dark theme styles to Select */}
                 <Select value={driver2} onValueChange={setDriver2}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500">
                     <SelectValue placeholder="Select driver" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gray-900 border-gray-700 text-white">
                     {drivers.map(driver => (
                       <SelectItem 
                         key={driver.id} 
@@ -112,58 +116,60 @@ const Drivers = () => {
         />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card>
+           {/* Apply dark theme styles to Card */}
+          <Card className="bg-gray-900/80 border-gray-700"> 
             <CardHeader>
-              <CardTitle>Performance Breakdown</CardTitle>
-              <CardDescription>Detailed analysis of driver strengths and weaknesses</CardDescription>
+              <CardTitle className="text-white">Performance Breakdown</CardTitle> {/* Adjusted color */}
+              <CardDescription className="text-gray-400">Detailed analysis of driver strengths and weaknesses</CardDescription> {/* Adjusted color */}
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-gray-400 mb-4"> {/* Adjusted color */}
                 This radar chart compares drivers across multiple performance metrics including 
                 qualifying pace, race pace, tire management, wet weather performance, and more.
               </p>
-              <ul className="space-y-2">
+              <ul className="space-y-2 text-gray-300"> {/* Adjusted color */}
                 <li className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
+                  <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div> {/* Adjusted color */}
                   <span>Higher values indicate better performance</span>
                 </li>
                 <li className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
+                  <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div> {/* Adjusted color */}
                   <span>Data is normalized across the grid</span>
                 </li>
                 <li className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
+                  <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div> {/* Adjusted color */}
                   <span>Based on the current season's performance</span>
                 </li>
               </ul>
             </CardContent>
           </Card>
           
-          <Card>
+           {/* Apply dark theme styles to Card */}
+          <Card className="bg-gray-900/80 border-gray-700">
             <CardHeader>
-              <CardTitle>Methodology</CardTitle>
-              <CardDescription>How we calculate driver performance metrics</CardDescription>
+              <CardTitle className="text-white">Methodology</CardTitle> {/* Adjusted color */}
+              <CardDescription className="text-gray-400">How we calculate driver performance metrics</CardDescription> {/* Adjusted color */}
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-gray-400 mb-4"> {/* Adjusted color */}
                 Our driver performance metrics are calculated using a combination of 
                 telemetry data, race results, and advanced statistical modeling.
               </p>
-              <ul className="space-y-2">
+              <ul className="space-y-2 text-gray-300"> {/* Adjusted color */}
                 <li className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
+                  <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div> {/* Adjusted color */}
                   <span>Qualifying Pace: Gap to pole position</span>
                 </li>
                 <li className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
+                  <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div> {/* Adjusted color */}
                   <span>Race Pace: Average lap time delta</span>
                 </li>
                 <li className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
+                  <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div> {/* Adjusted color */}
                   <span>Tire Management: Degradation rates</span>
                 </li>
                 <li className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
+                  <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div> {/* Adjusted color */}
                   <span>Consistency: Lap time variance</span>
                 </li>
               </ul>
