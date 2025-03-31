@@ -121,23 +121,6 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* --- Conditional CTA --- */}
-        {user && (
-          <div className="mb-10 md:mb-12 p-4 md:p-6 bg-gradient-to-r from-red-600/10 via-gray-900/20 to-gray-900/10 border border-red-500/30 rounded-lg flex flex-col md:flex-row justify-between items-center gap-4 animate-fade-in">
-            <div className='flex-grow'>
-              {/* Responsive CTA title */}
-              <h2 className="text-lg md:text-xl font-semibold mb-1 flex items-center"><Lock className="w-5 h-5 mr-2 text-red-400"/>Unlock Premium Analytics</h2>
-              <p className="text-sm text-gray-300">
-                Access advanced telemetry, AI predictions, and strategy simulations.
-              </p>
-            </div>
-            <div className="flex gap-3 flex-shrink-0">
-              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => navigate('/subscription')}>
-                <CreditCard className="mr-2 h-4 w-4" /> Upgrade Plan
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* --- Main Content Grid --- */}
         {/* Adjusted main grid gap */}
@@ -287,38 +270,40 @@ const Dashboard = () => {
   );
 };
 
-// Redesigned Feature Card Component
+// Redesigned Feature Card Component with Coming Soon state
 const FeatureCardRedesigned = ({
   title, description, icon, linkTo
 }: {
   title: string; description: string; icon: React.ReactNode; linkTo: string;
 }) => {
-  const navigate = useNavigate();
   return (
     <Card
-      onClick={() => navigate(linkTo)}
       className={cn(
-        "bg-gray-900/70 border-gray-700/80 hover:border-gray-600",
-        "cursor-pointer transition-all duration-200 ease-in-out",
-        "hover:shadow-lg hover:shadow-red-500/10 hover:-translate-y-1 group"
+        "bg-gray-900/70 border-gray-700/80",
+        "cursor-not-allowed transition-all duration-200 ease-in-out",
+        "hover:shadow-lg hover:shadow-gray-500/10 relative overflow-hidden"
       )}
     >
+      {/* Coming Soon Ribbon */}
+      <div className="absolute top-2 right-[-30px] w-[110px] transform rotate-45 bg-red-600 text-center text-[10px] font-bold text-white py-0.5">
+        COMING SOON
+      </div>
+      
       <CardHeader>
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <CardTitle className="text-lg font-semibold group-hover:text-red-400 transition-colors">{title}</CardTitle>
-            <CardDescription className="text-gray-400 text-sm">{description}</CardDescription>
+            <CardTitle className="text-lg font-semibold text-gray-400">{title}</CardTitle>
+            <CardDescription className="text-gray-500 text-sm">{description}</CardDescription>
           </div>
-          <div className="p-2 bg-gray-800 rounded-lg border border-gray-700">
-             {icon}
+          <div className="p-2 bg-gray-800 rounded-lg border border-gray-700 opacity-50">
+            {icon}
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-2">
-         <div className="flex justify-end items-center text-xs text-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            Explore
-            <ArrowRight className="w-3 h-3 ml-1"/>
-         </div>
+        <div className="flex justify-end items-center text-xs text-gray-500">
+          <ArrowRight className="w-3 h-3 ml-1"/>
+        </div>
       </CardContent>
     </Card>
   );

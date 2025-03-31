@@ -1,17 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, Droplets, AlertCircle, Zap } from 'lucide-react'; // Added Zap
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, AlertCircle, Zap, Calendar, MapPin, Users, Timer, Sparkles } from 'lucide-react'; // Added Sparkles
 import Navbar from '@/components/Navbar';
 import RacingChart from '@/components/RacingChart';
 import TireStrategy from '@/components/TireStrategy';
 import SpeedTraceChart from '@/components/SpeedTraceChart';
 import GearMapChart from '@/components/GearMapChart';
-import PositionChart from '@/components/PositionChart'; // Import the new chart
+import PositionChart from '@/components/PositionChart';
 import F1Card from '@/components/F1Card';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { fetchSpecificRaceResults, DetailedRaceResult } from '@/lib/api';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { fetchSpecificRaceResults, fetchAvailableSessions, DetailedRaceResult, AvailableSession } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -23,316 +24,389 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from '@/lib/utils';
+import LoadingSpinnerF1 from '@/components/ui/LoadingSpinnerF1'; // Import spinner
+
+// Helper to get team color class
+const getTeamColorClass = (teamName: string | undefined): string => {
+    if (!teamName) return 'gray';
+    const simpleName = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (simpleName.includes('mclaren')) return 'mclaren';
+    if (simpleName.includes('mercedes')) return 'mercedes';
+    if (simpleName.includes('redbull')) return 'redbull';
+    if (simpleName.includes('ferrari')) return 'ferrari';
+    if (simpleName.includes('alpine')) return 'alpine';
+    if (simpleName.includes('astonmartin')) return 'astonmartin';
+    if (simpleName.includes('williams')) return 'williams';
+    if (simpleName.includes('haas')) return 'haas';
+    if (simpleName.includes('sauber')) return 'alfaromeo';
+    if (simpleName.includes('racingbulls') || simpleName.includes('alphatauri')) return 'alphatauri';
+    return 'gray';
+}
+
+// Component for rendering the results table dynamically
+const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType: string }> = ({ results, sessionType }) => {
+  const isPractice = sessionType.startsWith('FP');
+  const isQualifying = sessionType.startsWith('Q') || sessionType.startsWith('SQ');
+  const isRaceOrSprint = sessionType === 'R' || sessionType === 'Sprint';
+
+  // Determine columns based on session type
+  const columns: { key: keyof DetailedRaceResult | 'driver' | 'team', label: string, className?: string }[] = [
+    { key: 'position', label: 'Pos', className: 'w-[50px] text-center' },
+    { key: 'driver', label: 'Driver' }, // Combine name/code later
+    { key: 'team', label: 'Team' }, // Combine color/name later
+  ];
+
+  if (isRaceOrSprint) {
+    columns.push({ key: 'gridPosition', label: 'Grid', className: 'text-center' });
+    columns.push({ key: 'status', label: 'Status' });
+    columns.push({ key: 'points', label: 'Points', className: 'text-right font-bold' });
+  } else if (isQualifying) {
+    // Add Q1, Q2, Q3 based on which segment it is or if it's the parent Q/SQ
+    if (sessionType === 'Q1' || sessionType === 'Q' || sessionType === 'SQ1' || sessionType === 'SQ') columns.push({ key: 'q1Time', label: 'Q1', className: 'text-right font-mono text-sm' });
+    if (sessionType === 'Q2' || sessionType === 'Q' || sessionType === 'SQ2' || sessionType === 'SQ') columns.push({ key: 'q2Time', label: 'Q2', className: 'text-right font-mono text-sm' });
+    if (sessionType === 'Q3' || sessionType === 'Q' || sessionType === 'SQ3' || sessionType === 'SQ') columns.push({ key: 'q3Time', label: 'Q3', className: 'text-right font-mono text-sm' });
+    // If viewing a specific segment (Q1/Q2/Q3), maybe highlight that column or only show relevant times?
+    // For simplicity now, show all available Q times if viewing Q parent.
+    // If viewing Q1, maybe only show Q1? Let's show all for now.
+  } else if (isPractice) {
+    columns.push({ key: 'fastestLapTime', label: 'Fastest Lap', className: 'text-right font-mono text-sm' });
+    columns.push({ key: 'lapsCompleted', label: 'Laps', className: 'text-center' });
+  }
+
+  return (
+    <div className="bg-gray-900/80 border border-gray-700 rounded-lg overflow-hidden shadow-lg backdrop-blur-sm">
+      <Table>
+        <TableHeader className="bg-gray-800/50">
+          <TableRow className="border-gray-700">
+            {columns.map(col => (
+              <TableHead key={String(col.key)} className={cn("text-white font-semibold", col.className)}>
+                {col.label}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {results?.map((res) => (
+            <TableRow key={res.driverCode} className="border-gray-700/50 hover:bg-gray-800/40 transition-colors">
+              {columns.map(col => (
+                <TableCell key={`${res.driverCode}-${String(col.key)}`} className={cn(col.className)}>
+                  {col.key === 'driver' ? (
+                    res.fullName
+                  ) : col.key === 'team' ? (
+                    <span className="flex items-center gap-2">
+                      <span className={cn("w-2 h-2 rounded-full", `bg-f1-${getTeamColorClass(res.team)}`)}></span>
+                      {res.team}
+                    </span>
+                  ) : col.key === 'points' ? (
+                     res.points ?? 0 // Default points to 0 if null/undefined
+                  ) : (
+                    res[col.key as keyof DetailedRaceResult] ?? '-' // Access other keys directly
+                  )}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
 
 const Race = () => {
   const { raceId } = useParams<{ raceId: string }>();
   const navigate = useNavigate();
+  const [availableSessions, setAvailableSessions] = useState<AvailableSession[]>([]);
+  const [selectedSession, setSelectedSession] = useState<string>('R'); // Default to Race
+  const [selectedLap, setSelectedLap] = useState<string | number>('fastest'); // For telemetry
 
   // Parse year and event slug from raceId
   const { year, eventSlug, eventName } = useMemo(() => {
     if (!raceId) return { year: null, eventSlug: null, eventName: 'Race' };
     const parts = raceId.split('-');
     const parsedYear = parseInt(parts[0], 10);
-    if (isNaN(parsedYear)) return { year: null, eventSlug: raceId, eventName: 'Invalid Race ID' }; // Handle invalid year
+    if (isNaN(parsedYear)) return { year: null, eventSlug: raceId, eventName: 'Invalid Race ID' };
 
-    const slug = parts.slice(1).join('-'); // The rest is the slug
-    // Convert slug to title case name, replacing hyphens with spaces
+    const slug = parts.slice(1).join('-');
     const name = slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
     return { year: parsedYear, eventSlug: slug, eventName: name };
   }, [raceId]);
 
-  // Fetch detailed race results (using eventSlug for the API call)
-  const { data: raceResults, isLoading, error, isError } = useQuery<DetailedRaceResult[]>({
-    queryKey: ['raceResult', year, eventSlug],
+  // Fetch available sessions using the updated backend endpoint
+  const { data: fetchedAvailableSessions, isLoading: isLoadingSessions } = useQuery<AvailableSession[]>({
+    queryKey: ['availableSessions', year, eventName], // Use eventName as key if API expects it
     queryFn: () => {
-        if (!year || !eventSlug) throw new Error("Invalid year or event slug");
-        return fetchSpecificRaceResults(year, eventSlug);
+        if (!year || !eventName) throw new Error("Invalid year or event name");
+        // Pass eventName or eventSlug based on what the updated API expects
+        return fetchAvailableSessions(year, eventName);
     },
-    staleTime: 1000 * 60 * 60,
-    gcTime: 1000 * 60 * 120,
-    retry: 1,
-    enabled: !!year && !!eventSlug,
+    staleTime: 1000 * 60 * 60 * 24, // Cache for a day
+    gcTime: 1000 * 60 * 60 * 24,
+    enabled: !!year && !!eventName,
   });
 
-  // Find winner from fetched results
-  const winner = useMemo(() => {
-    if (!raceResults) return null;
-    return raceResults.find(r => r.position === 1);
-  }, [raceResults]);
+  // Effect to update state when available sessions data is fetched
+  useEffect(() => {
+    if (fetchedAvailableSessions && fetchedAvailableSessions.length > 0) {
+        setAvailableSessions(fetchedAvailableSessions);
+        // Set default selected session to 'R' if available, otherwise last session in list
+        if (fetchedAvailableSessions.some(s => s.type === 'R')) {
+            setSelectedSession('R');
+        } else {
+            setSelectedSession(fetchedAvailableSessions[fetchedAvailableSessions.length - 1].type);
+        }
+    } else if (fetchedAvailableSessions) { // Handle case where fetch returns empty array
+        setAvailableSessions([]);
+    }
+  }, [fetchedAvailableSessions]);
 
-  // Find pole sitter
+  // Fetch detailed results for the selected session
+  const { data: sessionResults, isLoading: isLoadingResults, error, isError } = useQuery<DetailedRaceResult[]>({
+    queryKey: ['sessionResult', year, eventSlug, selectedSession],
+    queryFn: () => {
+        if (!year || !eventSlug || !selectedSession) throw new Error("Invalid year, event slug, or session");
+        return fetchSpecificRaceResults(year, eventSlug, selectedSession); // Pass selectedSession
+    },
+    staleTime: 1000 * 60 * 5, // Shorter stale time for potentially live data
+    gcTime: 1000 * 60 * 15,
+    retry: 1,
+    enabled: !!year && !!eventSlug && !!selectedSession,
+  });
+
+  // --- Derived Data (Winner, Pole, Fastest Lap - specific to Race 'R') ---
+  const raceWinner = useMemo(() => {
+    if (selectedSession !== 'R' || !sessionResults) return null;
+    return sessionResults.find(r => r.position === 1);
+  }, [sessionResults, selectedSession]);
+
   const poleSitter = useMemo(() => {
-    if (!raceResults) return null;
-    return raceResults.find(r => r.gridPosition === 1);
-  }, [raceResults]);
+     if (selectedSession !== 'R' || !sessionResults) return null;
+     return sessionResults.find(r => r.gridPosition === 1);
+  }, [sessionResults, selectedSession]);
 
-  // Find fastest lap holder
   const fastestLapHolder = useMemo(() => {
-    if (!raceResults) return null;
-    // The isFastestLap field might be optional if the processor script hasn't run for older data
-    return raceResults.find(r => r.isFastestLap === true);
-  }, [raceResults]);
+    // This requires lap data which isn't directly in sessionResults usually.
+    // We'd need to fetch laps separately or rely on a pre-processed 'isFastestLap' flag.
+    // For now, let's disable this card if the flag isn't present.
+    if (selectedSession !== 'R' || !sessionResults) return null;
+    return sessionResults.find(r => r.isFastestLap === true);
+  }, [sessionResults, selectedSession]);
 
+  // --- Loading and Error States ---
+  const isLoading = isLoadingSessions || isLoadingResults;
 
-  // Helper to get team color class
-  const getTeamColorClass = (teamName: string | undefined): string => {
-      if (!teamName) return 'gray';
-      const simpleName = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (simpleName.includes('mclaren')) return 'mclaren';
-      if (simpleName.includes('mercedes')) return 'mercedes';
-      if (simpleName.includes('redbull')) return 'redbull';
-      if (simpleName.includes('ferrari')) return 'ferrari';
-      if (simpleName.includes('alpine')) return 'alpine';
-      if (simpleName.includes('astonmartin')) return 'astonmartin';
-      if (simpleName.includes('williams')) return 'williams';
-      if (simpleName.includes('haas')) return 'haas';
-      if (simpleName.includes('sauber')) return 'alfaromeo';
-      if (simpleName.includes('racingbulls') || simpleName.includes('alphatauri')) return 'alphatauri';
-      return 'gray';
-  }
-
-  // --- Render States ---
   if (!year || !eventSlug) {
+     // Render Invalid URL state
      return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white flex flex-col items-center justify-center p-4">
-        <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-        <h1 className="text-2xl font-bold mb-2 text-white">Invalid Race URL</h1>
-        <p className="text-gray-400 mb-6">Could not parse year or event from the URL.</p>
-        <Button onClick={() => navigate('/dashboard')} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-        </Button>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-     return (
-       <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white">
-         <Navbar />
-         <div className="container py-6">
-           <div className="flex items-center mb-6">
-             <Skeleton className="h-10 w-10 mr-4 rounded-full bg-gray-800/50"/>
-             <div>
-                <Skeleton className="h-8 w-64 mb-2 bg-gray-800/50"/>
-                <Skeleton className="h-4 w-32 bg-gray-800/50"/>
-             </div>
-           </div>
-           <Skeleton className="h-24 w-full md:w-1/3 mb-8 bg-gray-800/50 rounded-lg" />
-           <Skeleton className="h-10 w-full mb-6 bg-gray-800/50 rounded-lg" />
-           <Skeleton className="h-80 w-full bg-gray-800/50 rounded-lg" />
-         </div>
-       </div>
-     );
-  }
-
-  if (isError) {
-     return (
-       <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white">
-         <Navbar />
-         <div className="container py-6 text-center">
-           <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-400" />
-           <h1 className="text-2xl font-semibold mb-2 text-white">Error Loading Race Data</h1>
-           <p className="text-sm text-gray-400 mb-6">{(error as Error)?.message || 'Could not fetch data for this race.'}</p>
-           <Button onClick={() => navigate('/dashboard')} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
-             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-           </Button>
-         </div>
-       </div>
-     );
+        <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white flex flex-col items-center justify-center p-4">
+          <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+          <h1 className="text-2xl font-bold mb-2 text-white">Invalid Race URL</h1>
+          <p className="text-gray-400 mb-6">Could not parse year or event from the URL.</p>
+          <Button onClick={() => navigate('/dashboard')} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+          </Button>
+        </div>
+      );
   }
 
   // --- Render Page ---
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white">
       <Navbar />
-      <div className="container py-6">
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <header className="flex items-center mb-6">
-          <Button variant="ghost" className="mr-4 text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white">{eventName}</h1>
-            <p className="text-gray-400">{year} Season</p>
+        <header className="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" className="mr-3 text-gray-400 hover:bg-gray-800 hover:text-white" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">{eventName}</h1>
+              <p className="text-lg text-gray-400">{year} Season</p>
+            </div>
+          </div>
+          {/* Session Selector */}
+          <div className="w-full md:w-auto">
+             {isLoadingSessions ? (
+                 <Skeleton className="h-10 w-[200px] bg-gray-800/60" />
+             ) : availableSessions.length > 0 ? (
+                 <Select value={selectedSession} onValueChange={setSelectedSession}>
+                     <SelectTrigger className="w-full md:w-[220px] bg-gray-800/70 border-gray-700 text-white backdrop-blur-sm h-10">
+                         <Calendar className="w-4 h-4 mr-2 opacity-70" />
+                         <SelectValue placeholder="Select Session" />
+                     </SelectTrigger>
+                     <SelectContent className="bg-gray-900 border-gray-700 text-white">
+                         {availableSessions.map(session => (
+                             <SelectItem
+                                 key={session.type}
+                                 value={session.type}
+                                 className="hover:bg-gray-800 focus:bg-gray-700"
+                             >
+                                 {session.name}
+                             </SelectItem>
+                         ))}
+                     </SelectContent>
+                 </Select>
+             ) : (
+                 <p className="text-sm text-gray-500">No sessions available.</p>
+             )}
           </div>
         </header>
 
-        {/* Key Info Cards (Winner, Pole, Fastest Lap) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {/* Race Winner Card */}
-            {winner && (
-                <F1Card
-                    title="Race Winner"
-                    value={winner.fullName}
-                    team={getTeamColorClass(winner.team) as any}
-                    icon={<Trophy className={`h-6 w-6 text-f1-${getTeamColorClass(winner.team)}`} />}
-                    // points_change is optional, not applicable here
-                    className="animate-fade-in bg-gray-900/80 border border-gray-700"
-                />
+        {/* Key Info Cards (Only show for Race session 'R') */}
+        {selectedSession === 'R' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 animate-fade-in">
+            {raceWinner && (
+                <F1Card title="Race Winner" value={raceWinner.fullName} team={getTeamColorClass(raceWinner.team) as any} icon={<Trophy />} />
             )}
-            {/* Pole Position Card */}
             {poleSitter && (
-                 <F1Card
-                    title="Pole Position"
-                     value={poleSitter.fullName}
-                     team={getTeamColorClass(poleSitter.team) as any}
-                     icon={<Zap className={`h-6 w-6 text-f1-${getTeamColorClass(poleSitter.team)}`} />} // Use Zap icon
-                     // points_change is optional, not applicable here
-                     className="animate-fade-in bg-gray-900/80 border border-gray-700"
-                  />
+                 <F1Card title="Pole Position" value={poleSitter.fullName} team={getTeamColorClass(poleSitter.team) as any} icon={<Zap />} />
              )}
-              {/* Fastest Lap Card */}
             {fastestLapHolder && (
-                 <F1Card
-                    title="Fastest Lap"
-                     value={fastestLapHolder.fullName}
-                     team={getTeamColorClass(fastestLapHolder.team) as any}
-                     icon={<Clock className={`h-6 w-6 text-f1-${getTeamColorClass(fastestLapHolder.team)}`} />}
-                     // points_change is optional, not applicable here
-                     className="animate-fade-in bg-gray-900/80 border border-gray-700"
-                  />
+                 <F1Card title="Fastest Lap" value={fastestLapHolder.fullName} team={getTeamColorClass(fastestLapHolder.team) as any} icon={<Clock />} />
              )}
          </div>
+        )}
 
-
-        {/* Race Analysis Tabs */}
-        <Tabs defaultValue="results" className="mb-8">
-          {/* Refined Responsive Tabs */}
-          <TabsList className="flex flex-wrap h-auto justify-start gap-1 p-1 bg-gray-800/80 border border-gray-700 rounded-lg">
-            <TabsTrigger value="results" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors">Results</TabsTrigger>
-            <TabsTrigger value="positions" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors">Positions</TabsTrigger> {/* New Tab Trigger */}
-            <TabsTrigger value="laptimes" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors">Lap Times</TabsTrigger>
-            <TabsTrigger value="strategy" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors">Strategy</TabsTrigger>
-            <TabsTrigger value="telemetry" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors">Telemetry</TabsTrigger>
-          </TabsList>
-
-          {/* Results Tab */}
-          <TabsContent value="results" className="pt-6">
-             <h2 className="text-xl font-semibold mb-4 text-white">Full Race Results</h2>
-             <div className="bg-gray-900/80 border border-gray-700 rounded-lg overflow-hidden shadow-lg">
-                <Table>
-                    <TableHeader className="bg-gray-800/50">
-                        <TableRow className="border-gray-700">
-                            <TableHead className="w-[50px] text-center text-white font-semibold">Pos</TableHead>
-                            <TableHead className="text-white font-semibold">Driver</TableHead>
-                            <TableHead className="text-white font-semibold">Team</TableHead>
-                            <TableHead className="text-center text-white font-semibold">Grid</TableHead>
-                            <TableHead className="text-white font-semibold">Status</TableHead>
-                            <TableHead className="text-right text-white font-semibold">Points</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {raceResults?.map((res) => (
-                            <TableRow key={res.driverCode} className="border-gray-700/50 hover:bg-gray-800/40">
-                                <TableCell className="text-center font-medium">{res.position ?? 'N/A'}</TableCell>
-                                <TableCell className="font-medium">{res.fullName}</TableCell>
-                                <TableCell className="flex items-center gap-2">
-                                    <span className={cn("w-2 h-2 rounded-full", `bg-f1-${getTeamColorClass(res.team)}`)}></span>
-                                    {res.team}
-                                </TableCell>
-                                <TableCell className="text-center">{res.gridPosition ?? 'N/A'}</TableCell>
-                                <TableCell>{res.status}</TableCell>
-                                <TableCell className="text-right font-bold">{res.points}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+        {/* Main Content Area */}
+        {isLoadingResults ? (
+             <div className="space-y-6 mt-6">
+                 <Skeleton className="h-10 w-1/3 bg-gray-800/60 rounded-lg" />
+                 <Skeleton className="h-10 w-full bg-gray-800/60 rounded-lg" />
+                 <Skeleton className="h-80 w-full bg-gray-800/60 rounded-lg" />
              </div>
-          </TabsContent>
+        ) : isError ? (
+             <Card className="bg-red-900/20 border-red-500/50 text-red-300 mt-6">
+                 <CardHeader>
+                     <CardTitle className="flex items-center gap-2"><AlertCircle /> Error Loading Data</CardTitle>
+                 </CardHeader>
+                 <CardContent>
+                     <p>{(error as Error)?.message || 'Could not fetch data for the selected session.'}</p>
+                     <Button onClick={() => navigate('/dashboard')} variant="outline" size="sm" className="mt-4 border-red-500/50 hover:bg-red-900/30">
+                         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+                     </Button>
+                 </CardContent>
+             </Card>
+        ) : !sessionResults || sessionResults.length === 0 ? (
+             <Card className="bg-gray-900/50 border-gray-700 mt-6">
+                 <CardHeader>
+                     <CardTitle>No Data Available</CardTitle>
+                 </CardHeader>
+                 <CardContent>
+                     <p className="text-gray-400">No results data found for the selected session ({selectedSession}).</p>
+                 </CardContent>
+             </Card>
+        ) : (
+          <Tabs defaultValue="results" className="mt-6">
+            <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 p-1 bg-gray-800/80 border border-gray-700 rounded-lg h-auto mb-6">
+              <TabsTrigger value="results" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Users className="w-4 h-4 mr-1.5 inline"/>Results</TabsTrigger>
+              {/* Only show certain tabs if it's Race or Sprint */}
+              {(selectedSession === 'R' || selectedSession === 'Sprint') && (
+                <>
+                  <TabsTrigger value="positions" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><MapPin className="w-4 h-4 mr-1.5 inline"/>Positions</TabsTrigger>
+                  <TabsTrigger value="laptimes" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Timer className="w-4 h-4 mr-1.5 inline"/>Lap Times</TabsTrigger>
+                  <TabsTrigger value="strategy" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Flag className="w-4 h-4 mr-1.5 inline"/>Strategy</TabsTrigger>
+                  <TabsTrigger value="telemetry" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><BarChart2 className="w-4 h-4 mr-1.5 inline"/>Telemetry</TabsTrigger>
+                </>
+              )}
+            </TabsList>
 
-           {/* Position Changes Tab */}
-           <TabsContent value="positions" className="pt-6">
-             {year && eventName && (
-               <PositionChart
-                 year={year}
-                 event={eventName} // Pass the name with spaces
-                 session="R" // Position data only available for Race
-               />
-             )}
-           </TabsContent>
+            {/* Results Tab */}
+            <TabsContent value="results" className="pt-2">
+               <h2 className="text-xl font-semibold mb-4 text-white">Session Results: {availableSessions.find(s => s.type === selectedSession)?.name}</h2>
+               <SessionResultsTable results={sessionResults} sessionType={selectedSession} />
+            </TabsContent>
 
-          {/* Lap Times Tab */}
-          <TabsContent value="laptimes" className="pt-6">
-            {year && eventName && (
-              <RacingChart
-                year={year}
-                event={eventName} // Pass the name with spaces
-                session="R"
-                initialDrivers={["VER", "LEC"]} // Pass initial drivers array
-                title="Lap Time Comparison" // Title is now more generic
-              />
+            {/* Position Changes Tab (Only for Race 'R') */}
+            {(selectedSession === 'R') && (
+              <TabsContent value="positions" className="pt-2">
+                {year && eventName && (
+                  <PositionChart year={year} event={eventName} session="R" />
+                )}
+              </TabsContent>
             )}
-          </TabsContent>
 
-          {/* Strategy Tab */}
-          <TabsContent value="strategy" className="pt-6">
-             {year && eventName && (
-               <TireStrategy
-                 year={year}
-                 event={eventName} // Pass the name with spaces
-                 session="R"
-               />
-             )}
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-               <PremiumFeatureCard title="Undercut Simulation" icon={<ArrowRightLeft />} description="Test hypothetical pit windows..." />
-               <PremiumFeatureCard title="Tire Degradation" icon={<BarChart2 />} description="Lap time analysis showing compound performance..." />
-             </div>
-          </TabsContent>
+            {/* Lap Times Tab (Race or Sprint) */}
+            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
+              <TabsContent value="laptimes" className="pt-2">
+                {year && eventName && (
+                  <RacingChart year={year} event={eventName} session={selectedSession} initialDrivers={["VER", "LEC"]} title="Lap Time Comparison" />
+                )}
+              </TabsContent>
+            )}
 
-          {/* Telemetry Tab */}
-          <TabsContent value="telemetry" className="pt-6">
-             {year && eventName && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <SpeedTraceChart
-                        year={year}
-                        event={eventName} // Pass the name with spaces
-                        session="R"
-                        initialDriver="VER"
-                        lap="fastest"
-                        title="Fastest Lap Speed Trace"
-                    />
-                    <GearMapChart
-                        year={year}
-                        event={eventName} // Pass the name with spaces
-                        session="R"
-                        initialDriver="VER"
-                        lap="fastest"
-                    />
-                </div>
-             )}
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-               <PremiumFeatureCard title="G-Force Analysis" icon={<Gauge />} description="Explore lateral and longitudinal G-forces..." />
-               <PremiumFeatureCard title="Brake Temperature" icon={<Cpu />} description="Animated brake temperature visualization..." />
-               <PremiumFeatureCard title="ERS Deployment" icon={<BarChart2 />} description="Energy deployment and harvesting patterns..." />
-               <PremiumFeatureCard title="Aero Efficiency" icon={<ArrowRightLeft />} description="Downforce vs drag trade-off analysis..." />
-             </div>
-          </TabsContent>
+            {/* Strategy Tab (Race or Sprint) */}
+            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
+              <TabsContent value="strategy" className="pt-2">
+                 {year && eventName && (
+                   <TireStrategy year={year} event={eventName} session={selectedSession} />
+                 )}
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                   <FeatureCard title="Undercut Simulation" icon={<ArrowRightLeft />} description="Test hypothetical pit windows..." />
+                   <FeatureCard title="Tire Degradation" icon={<BarChart2 />} description="Lap time analysis showing compound performance..." />
+                 </div>
+              </TabsContent>
+            )}
 
-        </Tabs>
+            {/* Telemetry Tab (Race or Sprint) */}
+            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
+              <TabsContent value="telemetry" className="pt-2">
+                 {year && eventName && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        {/* Speed Trace */}
+                        <SpeedTraceChart
+                            year={year}
+                            event={eventName}
+                            session={selectedSession}
+                            initialDriver={sessionResults[0]?.driverCode || "VER"} // Use first driver or default
+                            lap={selectedLap} // Pass selected lap state
+                            title="" // Title is handled internally now
+                        />
+                        {/* Gear Map */}
+                        <GearMapChart
+                            year={year}
+                            event={eventName}
+                            session={selectedSession}
+                            initialDriver={sessionResults[0]?.driverCode || "VER"}
+                            lap={selectedLap} // Pass selected lap state
+                        />
+                    </div>
+                 )}
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                   <FeatureCard title="G-Force Analysis" icon={<Gauge />} description="Explore lateral and longitudinal G-forces..." />
+                   <FeatureCard title="Brake Temperature" icon={<Cpu />} description="Animated brake temperature visualization..." />
+                   <FeatureCard title="ERS Deployment" icon={<BarChart2 />} description="Energy deployment and harvesting patterns..." />
+                   <FeatureCard title="Aero Efficiency" icon={<ArrowRightLeft />} description="Downforce vs drag trade-off analysis..." />
+                 </div>
+              </TabsContent>
+            )}
+          </Tabs>
+        )}
       </div>
     </div>
   );
 };
 
-// Keep PremiumFeatureCard component
-const PremiumFeatureCard = ({ title, icon, description }: { title: string; icon: React.ReactNode; description: string }) => {
-  const navigate = useNavigate();
+// Updated FeatureCard component for "Coming Soon" features
+const FeatureCard = ({ title, icon, description }: { title: string; icon: React.ReactNode; description: string }) => {
   return (
-    <Card className="bg-gray-900/80 border-gray-700 overflow-hidden relative">
-      <div className="absolute top-0 right-0 bg-red-600/80 px-3 py-1 text-xs font-medium flex items-center rounded-bl-md text-white">
-        <Lock className="h-3 w-3 mr-1" /> Premium
+    <Card className="bg-gray-900/80 border-gray-700 overflow-hidden relative backdrop-blur-sm hover:border-gray-600 transition-colors">
+      {/* "Coming Soon" Badge */}
+      <div className="absolute top-0 right-0 bg-blue-600/80 px-3 py-1 text-xs font-medium flex items-center rounded-bl-md text-white">
+        <Sparkles className="h-3 w-3 mr-1" /> Coming Soon
       </div>
       <CardHeader className="pb-2 pt-8">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-full bg-red-500/10 text-red-500">{icon}</div>
+          {/* Use a neutral color for the icon background */}
+          <div className="p-2.5 rounded-full bg-gray-700/50 text-gray-400">{icon}</div>
           <CardTitle className="text-lg text-white">{title}</CardTitle>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-gray-400">{description}</p>
-        <Button className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white" onClick={() => navigate('/subscription')}>
-          Unlock Feature
+        <p className="text-sm text-gray-400 mb-4">{description}</p>
+        {/* Optional: Add a disabled button or remove it */}
+        <Button size="sm" className="w-full bg-gray-700 hover:bg-gray-600 text-gray-400 cursor-not-allowed" disabled>
+          Coming Soon
         </Button>
       </CardContent>
     </Card>

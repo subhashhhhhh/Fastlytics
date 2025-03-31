@@ -21,16 +21,47 @@ export interface DetailedRaceResult {
     team: string;
     points: number;
     status: string;
-    gridPosition: number | null;
+    gridPosition?: number | null; // Optional for non-race/sprint
     teamColor: string;
-    isFastestLap?: boolean; // Added field for fastest lap holder
+    isFastestLap?: boolean; // Optional, mainly for Race/Sprint
+    // Fields for specific session types
+    fastestLapTime?: string | null; // For Practice
+    lapsCompleted?: number | null; // For Practice
+    q1Time?: string | null; // For Qualifying
+    q2Time?: string | null; // For Qualifying
+    q3Time?: string | null; // For Qualifying
 }
 export interface LapPositionDataPoint {
     LapNumber: number;
     [driverCode: string]: number | null; // Position for each driver, null if DNF/not available
 }
 
+export interface AvailableSession {
+    name: string;
+    type: string;
+    startTime: string;
+}
+
 // --- API Fetch Functions ---
+
+/** Fetches available sessions for a given event */
+export const fetchAvailableSessions = async (year: number, event: string): Promise<AvailableSession[]> => {
+    const params = new URLSearchParams({ year: year.toString(), event });
+    const url = `${API_BASE_URL}/api/sessions?${params.toString()}`;
+    console.log(`Fetching available sessions from: ${url}`);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: AvailableSession[] = await response.json();
+        console.log(`Successfully fetched ${data.length} available sessions.`);
+        return data;
+    } catch (error) { console.error("Error fetching available sessions:", error); throw error; }
+};
 
 /** Fetches the list of drivers for a given session. */
 export const fetchSessionDrivers = async (year: number, event: string, session: string): Promise<SessionDriver[]> => {
@@ -187,7 +218,7 @@ export const fetchRaceResults = async (year: number): Promise<RaceResult[]> => {
 };
 
 /** Fetches detailed race results for a specific event. */
-export const fetchSpecificRaceResults = async (year: number, eventSlug: string): Promise<DetailedRaceResult[]> => {
+export const fetchSpecificRaceResults = async (year: number, eventSlug: string, session?: string): Promise<DetailedRaceResult[]> => {
     const url = `${API_BASE_URL}/api/results/race/${year}/${eventSlug}`;
     console.log(`Fetching detailed race results from: ${url}`);
     try {
