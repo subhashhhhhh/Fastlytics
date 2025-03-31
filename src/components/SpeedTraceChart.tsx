@@ -1,62 +1,52 @@
-import React, { useState } from 'react'; // Import useState
+import React, { useState, useEffect } from 'react';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { cn } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
-import { fetchTelemetrySpeed, fetchSessionDrivers, SessionDriver } from '@/lib/api'; // Import fetchSessionDrivers
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, User } from 'lucide-react'; // Import User
+// Import API functions and types
+import { fetchTelemetrySpeed, fetchSessionDrivers, SessionDriver, SpeedDataPoint } from '@/lib/api';
+import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1"; // Import the spinner
+import { AlertCircle, User } from 'lucide-react';
 import { driverColor } from '@/lib/driverColor';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Import Card
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface SpeedTraceChartProps {
   className?: string;
   delay?: number;
-  title: string; // Keep title prop
-  // Session identifiers
+  title: string; // Title might become dynamic based on selection
   year: number;
   event: string;
   session: string;
-  // Initial driver (optional)
-  initialDriver?: string;
-  // Lap identifier (can be made selectable later too)
-  lap: string | number;
+  initialDriver: string; // Initial driver to show
+  lap: string | number; // Lap identifier ('fastest' or number) - TODO: Make selectable?
 }
 
 const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
   className,
   delay = 0,
-  title: initialTitle, // Rename prop to avoid conflict with state
+  // title, // Title will be dynamic
   year,
   event,
   session,
-  initialDriver = "VER", // Default initial driver
-  lap = "fastest" // Default lap
+  initialDriver,
+  lap // Keep lap fixed for now, e.g., 'fastest'
 }) => {
 
   const [selectedDriver, setSelectedDriver] = useState<string>(initialDriver);
-  // TODO: Add state for selectedLap if you want lap selection
 
   // Fetch available drivers
-  const { data: availableDrivers, isLoading: isLoadingDrivers } = useQuery({
+  const { data: availableDrivers, isLoading: isLoadingDrivers } = useQuery<SessionDriver[]>({
     queryKey: ['sessionDrivers', year, event, session],
     queryFn: () => fetchSessionDrivers(year, event, session),
     staleTime: Infinity,
-    gcTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
     enabled: !!year && !!event && !!session,
   });
 
-  // Fetch speed data based on selected driver and lap
-  const { data: speedData, isLoading: isLoadingSpeed, error, isError } = useQuery({
+  // Fetch speed data for the selected driver and lap
+  const { data: speedData, isLoading: isLoadingSpeed, error, isError } = useQuery<SpeedDataPoint[]>({
     queryKey: ['speedTrace', year, event, session, selectedDriver, lap],
     queryFn: () => fetchTelemetrySpeed(year, event, session, selectedDriver, lap),
     staleTime: 1000 * 60 * 10,
@@ -68,149 +58,84 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
   const color = driverColor(selectedDriver);
   const isLoading = isLoadingDrivers || isLoadingSpeed;
 
-  // Update title dynamically
-  const chartTitle = `${initialTitle} (${selectedDriver} - Lap ${lap})`;
+  // Dynamic title
+  const chartTitle = `${selectedDriver}'s ${lap === 'fastest' ? 'Fastest Lap' : `Lap ${lap}`} Speed Trace`;
 
   // --- Render States ---
-  if (isLoading) {
-    return (
-      <Card className={cn("chart-container bg-gray-900/80 border-gray-700", className)}>
-         <CardHeader>
-           <CardTitle className="text-lg font-semibold text-gray-400">{chartTitle}</CardTitle>
-           {/* Placeholder for selector */}
-           <Skeleton className="w-[180px] h-10 mt-3 bg-gray-800/50" />
-         </CardHeader>
-         <CardContent>
-           <Skeleton className="w-full h-[300px] bg-gray-800/50" />
-         </CardContent>
-       </Card>
-    );
-  }
+  const renderContent = () => {
+    if (isLoading) {
+      // Use LoadingSpinnerF1 instead of Skeleton
+      return (
+        <div className="w-full h-[300px] flex items-center justify-center bg-gray-900/50 rounded-lg">
+          <LoadingSpinnerF1 />
+        </div>
+      );
+    }
+    if (isError || !speedData) {
+      return (
+        <div className="w-full h-[300px] bg-gray-900/80 border border-red-500/30 rounded-lg flex flex-col items-center justify-center text-red-400">
+           <AlertCircle className="w-10 h-10 mb-2" />
+           <p className="font-semibold">Error loading speed trace</p>
+           <p className="text-xs text-gray-500 mt-1">{(error as Error)?.message || 'Could not fetch data.'}</p>
+        </div>
+      );
+    }
+    if (speedData.length === 0) {
+     return (
+        <div className="w-full h-[300px] bg-gray-900/80 border border-gray-700/50 rounded-lg flex items-center justify-center text-gray-500">
+           No speed telemetry data found for {selectedDriver} lap {lap}.
+        </div>
+      );
+    }
 
-  if (isError || !speedData) {
+    // --- Render Chart ---
     return (
-       <Card className={cn("chart-container bg-gray-900/80 border-red-500/30", className)}>
-         <CardHeader>
-           <CardTitle className="text-lg font-semibold text-gray-400">{chartTitle}</CardTitle>
-            {/* Still show selector even on error */}
-            <div className="pt-3">
-               <Select
-                 value={selectedDriver}
-                 onValueChange={setSelectedDriver}
-                 disabled={!availableDrivers}
-               >
-                 <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700 text-white focus:border-red-500 focus:ring-red-500">
-                   <SelectValue placeholder="Select driver..." />
-                 </SelectTrigger>
-                 <SelectContent className="bg-gray-900 border-gray-700 text-white">
-                   <SelectGroup>
-                     <SelectLabel>Driver</SelectLabel>
-                     {availableDrivers?.map((d) => (
-                       <SelectItem key={d.code} value={d.code}>
-                         {d.name} ({d.code})
-                       </SelectItem>
-                     ))}
-                   </SelectGroup>
-                 </SelectContent>
-               </Select>
-             </div>
-         </CardHeader>
-         <CardContent>
-           <div className="w-full h-[300px] flex flex-col items-center justify-center text-red-400">
-             <AlertCircle className="w-10 h-10 mb-2" />
-             <p className="font-semibold">Error loading speed trace</p>
-             <p className="text-xs text-gray-500 mt-1">{(error as Error)?.message || 'Could not fetch data.'}</p>
-           </div>
-         </CardContent>
-       </Card>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={speedData} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
+          {/* Updated XAxis tickFormatter for distance */}
+          <XAxis type="number" dataKey="Distance" stroke="rgba(156, 163, 175, 0.7)" tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} tickFormatter={(value: number) => `${value.toFixed(2)}m`} domain={['dataMin', 'dataMax']} />
+          <YAxis dataKey="Speed" stroke="rgba(156, 163, 175, 0.7)" tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} domain={['auto', 'dataMax + 10']} tickFormatter={(value) => `${value} kph`} width={50} />
+          {/* Updated Tooltip labelFormatter for distance */}
+          <Tooltip contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(100, 116, 139, 0.5)', color: '#E5E7EB', borderRadius: '6px', boxShadow: '0 2px 10px rgba(0,0,0,0.5)' }} labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }} itemStyle={{ color: color }} formatter={(value: number, name: string) => [`${value} kph`, name]} labelFormatter={(label: number) => `Distance: ${label.toFixed(2)}m`} />
+          <Line type="monotone" dataKey="Speed" stroke={color} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: color }} name={selectedDriver} connectNulls={true} />
+          {/* <Legend /> */}
+        </LineChart>
+      </ResponsiveContainer>
     );
-  }
+  };
 
-  // --- Render Chart & Controls ---
   return (
-    <Card className={cn("chart-container bg-gray-900/80 border-gray-700 animate-fade-in", className)}
-          style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}>
+    <Card className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}>
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-white">{chartTitle}</CardTitle>
-         {/* Driver Selector */}
-         <div className="pt-3">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+           <CardTitle className="text-lg font-semibold text-white">{chartTitle}</CardTitle>
+           {/* Driver Selector */}
            <Select
              value={selectedDriver}
              onValueChange={setSelectedDriver}
-             disabled={!availableDrivers}
+             disabled={isLoadingDrivers || !availableDrivers}
            >
-             <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700 text-white focus:border-red-500 focus:ring-red-500">
-               <SelectValue placeholder="Select driver..." />
+             <SelectTrigger className="w-full sm:w-[180px] bg-gray-800/80 border-gray-700 text-gray-200 text-sm h-9 focus:border-red-500 focus:ring-red-500">
+               <User className="w-4 h-4 mr-2 opacity-70"/>
+               <SelectValue placeholder="Select Driver" />
              </SelectTrigger>
-             <SelectContent className="bg-gray-900 border-gray-700 text-white">
+             <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
                <SelectGroup>
-                 <SelectLabel>Driver</SelectLabel>
-                 {availableDrivers?.map((d) => (
-                   <SelectItem key={d.code} value={d.code}>
-                     {d.name} ({d.code})
+                 <SelectLabel className="text-xs text-gray-500">Driver</SelectLabel>
+                 {availableDrivers?.map((drv) => (
+                   <SelectItem key={drv.code} value={drv.code} className="text-sm">
+                     {drv.code} ({drv.name})
                    </SelectItem>
                  ))}
                </SelectGroup>
              </SelectContent>
            </Select>
-           {/* TODO: Add Lap Selector here if needed */}
-         </div>
+           {/* TODO: Add Lap Selector Here */}
+        </div>
       </CardHeader>
-      <CardContent>
-        {speedData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={speedData}
-              margin={{ top: 5, right: 10, left: -15, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
-              <XAxis
-                type="number"
-                dataKey="Distance"
-                stroke="rgba(156, 163, 175, 0.7)"
-                tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }}
-                tickFormatter={(value) => `${value}m`}
-                domain={['dataMin', 'dataMax']}
-              />
-              <YAxis
-                dataKey="Speed"
-                stroke="rgba(156, 163, 175, 0.7)"
-                tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }}
-                domain={['auto', 'dataMax + 10']}
-                tickFormatter={(value) => `${value} kph`}
-                width={50}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(31, 41, 55, 0.9)',
-                  borderColor: 'rgba(100, 116, 139, 0.5)',
-                  color: '#E5E7EB',
-                  borderRadius: '6px',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
-                }}
-                labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }}
-                itemStyle={{ color: color }}
-                formatter={(value: number, name: string) => [`${value} kph`, name]}
-                labelFormatter={(label) => `Distance: ${label}m`}
-              />
-              <Line
-                type="monotone"
-                dataKey="Speed"
-                stroke={color}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: color }}
-                name={selectedDriver}
-                connectNulls={true}
-              />
-              {/* <Legend /> */} {/* Legend might be redundant for single line */}
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-           <div className="w-full h-[300px] flex items-center justify-center text-gray-500">
-             No speed telemetry data found for this selection.
-           </div>
-        )}
+      <CardContent className="pt-0">
+        {renderContent()}
       </CardContent>
     </Card>
   );

@@ -1,47 +1,38 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, CheckCircle, MinusCircle, Award, Calendar, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Flag, Calendar, AlertCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { Button } from "@/components/ui/button";
-// Import API function and type
-import { fetchTeamStandings, TeamStanding } from '@/lib/api';
+import { fetchRaceResults, RaceResult } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const TeamStandings = () => {
+const Races = () => {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
   // Define available years (consider fetching this dynamically)
-  const availableYears = [2025, 2024, 2023];
+  const availableYears = [2025, 2024, 2023]; // Match other pages
   const [selectedYear, setSelectedYear] = useState<number>(availableYears[0]);
 
-  // Fetch Team Standings for the selected year
-  const { data: teamStandings, isLoading, error, isError } = useQuery<TeamStanding[]>({
-    queryKey: ['teamStandings', selectedYear],
-    queryFn: () => fetchTeamStandings(selectedYear),
-    staleTime: 1000 * 60 * 60, // Cache for 1 hour
-    gcTime: 1000 * 60 * 120,
-    retry: 1,
+  // Fetch Race Results for the selected year
+  const { data: raceResults, isLoading, error, isError } = useQuery<RaceResult[]>({
+     queryKey: ['raceResults', selectedYear], // Use the same query key as Dashboard for caching
+     queryFn: () => fetchRaceResults(selectedYear),
+     staleTime: 1000 * 60 * 30, // 30 minutes
+     gcTime: 1000 * 60 * 60, // 1 hour
+     retry: 1,
   });
 
-  // Function to determine change indicator color and icon
-  const getChangeIndicator = (change: number | null) => {
-    if (change === null) {
-       return { color: 'text-gray-500', icon: <MinusCircle className="h-4 w-4 opacity-50" /> };
-    }
-    if (change > 0) {
-      return { color: 'text-green-500', icon: <CheckCircle className="h-4 w-4" /> };
-    } else if (change < 0) {
-      return { color: 'text-red-500', icon: <MinusCircle className="h-4 w-4" /> };
-    } else {
-      return { color: 'text-gray-500', icon: <MinusCircle className="h-4 w-4" /> };
-    }
+  const handleRaceClick = (race: RaceResult) => {
+    // Navigate to the specific race page (assuming this route exists)
+    const raceId = `${race.year}-${race.event.toLowerCase().replace(/\s+/g, '-')}`;
+    navigate(`/race/${raceId}`);
   };
 
-   // Helper to get team color class
+   // Helper to get team color class (copied from Dashboard)
    const getTeamColorClass = (teamName: string | undefined): string => {
       if (!teamName) return 'gray';
       const simpleName = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -68,7 +59,7 @@ const TeamStandings = () => {
              <Button variant="ghost" size="icon" className="mr-3 text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => navigate('/dashboard')}>
                <ArrowLeft className="h-5 w-5" />
              </Button>
-             <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Constructor Standings</h1>
+             <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Race Calendar & Results</h1>
            </div>
            <Select value={String(selectedYear)} onValueChange={(value) => setSelectedYear(Number(value))}>
              <SelectTrigger className="w-full md:w-[180px] bg-gray-800/80 border-gray-700 text-gray-200 hover:bg-gray-700/70 hover:border-gray-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:ring-offset-0 transition-colors duration-150 py-2.5">
@@ -92,63 +83,51 @@ const TeamStandings = () => {
            </Select>
         </header>
 
-        {/* Standings List */}
+        {/* Races List */}
         <div className="space-y-3 md:space-y-4">
           {isLoading ? (
              [...Array(10)].map((_, i) => <Skeleton key={i} className="h-[76px] bg-gray-800/50 rounded-lg"/>)
           ) : isError ? (
              <div className="text-center py-10 text-red-400">
                 <AlertCircle className="w-10 h-10 mx-auto mb-2" />
-                Error loading standings for {selectedYear}. <br/>
+                Error loading race results for {selectedYear}. <br/>
                 <span className="text-xs text-gray-500">{(error as Error)?.message || 'Please try again later.'}</span>
              </div>
-          ) : teamStandings && teamStandings.length > 0 ? (
-            teamStandings.map((team, index) => { // No need to sort here if API returns sorted
-              const indicator = getChangeIndicator(team.change);
-              const rank = team.rank || index + 1;
-              const teamColor = getTeamColorClass(team.team);
+          ) : raceResults && raceResults.length > 0 ? (
+            raceResults.map((race, index) => {
+              const teamColor = getTeamColorClass(race.team);
+              const raceDate = race.date ? new Date(race.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBA';
 
               return (
                 <Card
-                  key={team.shortName || team.team}
+                  key={`${race.year}-${race.event}`}
+                  onClick={() => handleRaceClick(race)}
                   className={cn(
                     "bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm",
                     "p-4 md:p-5 flex items-center gap-4 md:gap-6",
-                    "transition-all duration-300 ease-in-out hover:bg-gray-800/80 hover:border-gray-600",
+                    "transition-all duration-300 ease-in-out hover:bg-gray-800/80 hover:border-gray-600 cursor-pointer",
                     "animate-fade-in"
                   )}
-                  style={{ animationDelay: `${index * 75}ms` }}
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="text-xl md:text-2xl font-bold text-gray-500 w-8 text-center">{rank}</div>
+                  <div className="text-lg md:text-xl font-semibold text-gray-400 w-16 text-center">{raceDate}</div>
                   <div className={cn("w-1.5 h-10 rounded-full", `bg-f1-${teamColor}`)}></div>
                   <div className="flex-grow">
-                    <h2 className="text-lg md:text-xl font-semibold text-white">{team.team}</h2>
+                    <h2 className="text-lg md:text-xl font-semibold text-white">{race.event}</h2>
+                    <p className="text-sm text-gray-500">{race.location}</p>
                   </div>
-                  <div className="flex items-center gap-4 md:gap-6 text-sm text-gray-400 flex-shrink-0">
-                     <div className="flex items-center gap-1.5" title="Wins">
-                       <Trophy className="w-4 h-4 text-yellow-500"/>
-                       <span>{team.wins ?? '-'}</span>
+                  <div className="flex flex-col items-end text-sm text-gray-400 flex-shrink-0">
+                     <div className="flex items-center gap-1.5" title="Winner">
+                       <Flag className="w-4 h-4 text-yellow-500"/>
+                       <span>{race.driver ?? 'N/A'}</span>
                      </div>
-                     <div className="flex items-center gap-1.5" title="Podiums">
-                       <Award className="w-4 h-4 text-gray-400"/>
-                       <span>{team.podiums ?? '-'}</span>
-                     </div>
-                     {/* Change might not be available/relevant from calculated standings */}
-                     {selectedYear === currentYear && team.change !== null && (
-                        <div className={cn("flex items-center gap-1", indicator.color)} title="Points Change">
-                          {indicator.icon}
-                          <span>{team.change !== 0 ? Math.abs(team.change) : '-'}</span>
-                        </div>
-                     )}
+                     <span className="text-xs text-gray-500">{race.team ?? ''}</span>
                   </div>
-                   <div className="text-lg md:text-xl font-bold text-white w-20 text-right">
-                     {team.points} <span className="text-xs font-normal text-gray-500">PTS</span>
-                   </div>
                 </Card>
               );
             })
           ) : (
-            <p className="text-center text-gray-500 py-10">No standings data available for {selectedYear}.</p>
+            <p className="text-center text-gray-500 py-10">No race results available for {selectedYear}.</p>
           )}
         </div>
       </div>
@@ -156,4 +135,4 @@ const TeamStandings = () => {
   );
 };
 
-export default TeamStandings;
+export default Races;

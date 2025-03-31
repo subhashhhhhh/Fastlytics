@@ -2,8 +2,25 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from 'react-router-dom';
-import { BarChart, GitCompareArrows, Clock, Fuel, Users, Share2, Cpu, Cloud, BarChart3 } from 'lucide-react'; // Added Cpu, Cloud, BarChart3 icons
+import { BarChart, GitCompareArrows, Clock, Fuel, Users, Share2, Cpu, Database, Server } from 'lucide-react'; // Updated icons
 import LandingNavbar from '@/components/LandingNavbar'; // Import the Navbar
+import RacingChart from '@/components/RacingChart'; // Import the chart component
+import { LapTimeDataPoint } from '@/lib/api'; // Import the data type
+
+// Sample static data for the showcase chart
+const sampleLapData: LapTimeDataPoint[] = [
+  { LapNumber: 1, VER: 95.3, LEC: 95.8 },
+  { LapNumber: 2, VER: 94.1, LEC: 94.5 },
+  { LapNumber: 3, VER: 93.8, LEC: 94.0 },
+  { LapNumber: 4, VER: 93.9, LEC: 94.2 },
+  { LapNumber: 5, VER: 94.5, LEC: 94.3 },
+  { LapNumber: 6, VER: 94.2, LEC: 94.6 },
+  { LapNumber: 7, VER: 94.0, LEC: 94.1 },
+  { LapNumber: 8, VER: 93.7, LEC: 93.9 },
+  { LapNumber: 9, VER: 93.5, LEC: 93.8 },
+  { LapNumber: 10, VER: 93.6, LEC: 93.7 },
+];
+
 
 const Landing: React.FC = () => {
   return (
@@ -123,59 +140,69 @@ const Landing: React.FC = () => {
         <h2 className="text-3xl md:text-4xl font-semibold mb-10">How It Works: Speed & Simplicity</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {/* Step 1 Card */}
-          <Card className="bg-gray-900 border-gray-800 text-left">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl font-semibold">
-                <Cpu className="text-red-500 h-6 w-6" />
-                1. Data Processing
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-400">
-                We crunch complex historical F1 data behind the scenes, pre-generating insightful charts and visualizations for entire race sessions.
-              </p>
-            </CardContent>
-          </Card>
+            <Card className="bg-gray-900 border-gray-800 text-left">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+                  <Cpu className="text-red-500 h-6 w-6" />
+                  1. Backend Processing
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-400">
+                  Our Python backend uses the FastF1 library to fetch raw data, processes it, and saves key insights into an optimized JSON cache.
+                </p>
+              </CardContent>
+            </Card>
 
-          {/* Step 2 Card */}
-          <Card className="bg-gray-900 border-gray-800 text-left">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl font-semibold">
-                <Cloud className="text-red-500 h-6 w-6" />
-                2. Optimized Storage
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-400">
-                These ready-to-view charts are stored efficiently in the cloud, optimized for rapid delivery across the globe.
-              </p>
-            </CardContent>
-          </Card>
+            {/* Step 2 Card */}
+            <Card className="bg-gray-900 border-gray-800 text-left">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+                  <Server className="text-red-500 h-6 w-6" />
+                  2. API Layer
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-400">
+                  A lightweight FastAPI server reads directly from the pre-processed cache, ensuring rapid responses for most data requests. Live telemetry is fetched on demand.
+                </p>
+              </CardContent>
+            </Card>
 
-          {/* Step 3 Card */}
-          <Card className="bg-gray-900 border-gray-800 text-left">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl font-semibold">
-                <BarChart3 className="text-red-500 h-6 w-6" />
-                3. Instant Exploration
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-400">
-                You get lightning-fast access to browse, filter, and compare insights instantly – no waiting for calculations, just pure F1 analysis.
-              </p>
+            {/* Step 3 Card */}
+            <Card className="bg-gray-900 border-gray-800 text-left">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+                  <Database className="text-red-500 h-6 w-6" />
+                  3. Frontend Interaction
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-400">
+                  The React frontend calls our API and uses libraries like Recharts to render interactive charts and tables for your analysis.
+                </p>
             </CardContent>
           </Card>
         </div>
       </section>
 
       {/* Visual Showcase Section */}
-        <section id="showcase" className="w-full max-w-5xl text-center py-16 px-4">
-           <h2 className="text-3xl md:text-4xl font-semibold mb-10">See It In Action</h2>
-           {/* Replace with an actual chart image or interactive demo component */}
-           <img src="/placeholder.svg" alt="Example F1 Chart" className="rounded-lg shadow-xl mx-auto border border-gray-700" />
-           <p className="text-gray-400 mt-4">Example: Lap time comparison between two drivers.</p>
-        </section>
+         <section id="showcase" className="w-full max-w-5xl text-center py-16 px-4">
+            <h2 className="text-3xl md:text-4xl font-semibold mb-10">See It In Action</h2>
+            {/* Embed the RacingChart component with static data */}
+            <div className="bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm rounded-lg p-4 md:p-6 shadow-xl mx-auto">
+               <RacingChart
+                 title="Example: VER vs LEC Lap Times (First 10 Laps)"
+                 year={2023} // Dummy year for styling/context
+                 event="Sample Race" // Dummy event
+                 session="R" // Dummy session
+                 initialDrivers={["VER", "LEC"]}
+                 staticData={sampleLapData} // Pass the static data
+                 className="h-[350px]" // Ensure chart has height
+               />
+            </div>
+            <p className="text-gray-400 mt-4">Example: Interactive lap time comparison chart.</p>
+         </section>
 
         {/* Final CTA Section */}
         <section id="get-started" className="w-full max-w-4xl text-center py-16 px-4">

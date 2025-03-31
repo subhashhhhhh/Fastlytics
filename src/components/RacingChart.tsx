@@ -1,35 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { cn } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
-import { fetchLapTimes, fetchSessionDrivers, SessionDriver } from '@/lib/api';
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Users, XCircle } from 'lucide-react'; // Added XCircle
+// Import API functions and types
+import { fetchLapTimes, fetchSessionDrivers, SessionDriver, LapTimeDataPoint } from '@/lib/api';
+import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1"; // Import the spinner
+import { AlertCircle, Users } from 'lucide-react'; // Added Users icon
 import { driverColor } from '@/lib/driverColor';
+// Import Select components
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button'; // Import Button
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Use Card for layout
 
-// Define props for the dynamic chart
+// Helper function to format seconds into MM:SS.mmm
+const formatLapTime = (totalSeconds: number | null): string => {
+  if (totalSeconds === null || isNaN(totalSeconds)) {
+    return 'N/A';
+  }
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  // Pad seconds with leading zero if needed, keep 3 decimal places for milliseconds
+  const formattedSeconds = seconds.toFixed(3).padStart(6, '0'); // 6 = SS.mmm
+  return `${minutes}:${formattedSeconds}`;
+};
+
 interface RacingChartProps {
   className?: string;
   delay?: number;
   title: string;
-  // Props to identify the session
   year: number;
   event: string;
   session: string;
-  // Initial drivers (optional)
-  initialDrivers?: string[];
+  initialDrivers: string[]; // Expect array of 2 or 3 driver codes
+  staticData?: LapTimeDataPoint[]; // Optional static data prop
 }
 
 const RacingChart: React.FC<RacingChartProps> = ({
@@ -39,202 +43,164 @@ const RacingChart: React.FC<RacingChartProps> = ({
   year,
   event,
   session,
-  initialDrivers = ["VER", "LEC"] // Default initial drivers
+  initialDrivers, // Should be length 2 or 3
+  staticData // Destructure the new prop
 }) => {
 
-  // State for selected drivers (min 2, max 3)
-  const [selectedDrivers, setSelectedDrivers] = useState<string[]>(initialDrivers.slice(0, 3)); // Ensure initial state respects limits
+  // Validate initialDrivers prop length (only if not using static data)
+  if (!initialDrivers || initialDrivers.length < 2 || initialDrivers.length > 3) {
+     console.error("RacingChart requires an initialDrivers prop with 2 or 3 driver codes.");
+     // Render an error state or default drivers if needed
+      if (!staticData) initialDrivers = ["VER", "LEC"]; // Fallback default only if fetching
+   }
 
-  // Fetch available drivers for the session
-  const { data: availableDrivers, isLoading: isLoadingDrivers } = useQuery({
+   // Always call useState at the top level
+   const [selectedDrivers, setSelectedDrivers] = useState<string[]>(initialDrivers);
+
+   // Determine which drivers to actually display/fetch for
+   // Use initialDrivers if staticData is provided, otherwise use the state
+   const driversToDisplay = staticData ? initialDrivers : selectedDrivers;
+
+   // Fetch available drivers for the session (only if not using static data)
+   const { data: availableDrivers, isLoading: isLoadingDrivers } = useQuery<SessionDriver[]>({
     queryKey: ['sessionDrivers', year, event, session],
     queryFn: () => fetchSessionDrivers(year, event, session),
-    staleTime: Infinity, // Driver list for a session rarely changes
-    gcTime: Infinity,
-    enabled: !!year && !!event && !!session,
+    staleTime: Infinity, // Driver list for a session won't change
+    gcTime: 1000 * 60 * 60 * 24, // Keep for a day
+    enabled: !staticData && !!year && !!event && !!session, // Disable if staticData is provided
   });
 
-  // Fetch lap time data based on selected drivers
-  const { data: lapData, isLoading: isLoadingLapTimes, error, isError } = useQuery({
-    queryKey: ['lapTimes', year, event, session, ...selectedDrivers.sort()], // Sort drivers for consistent query key
-    queryFn: () => fetchLapTimes(year, event, session, selectedDrivers), // Pass array here
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+   // Fetch lap time data based on selected drivers (only if not using static data)
+   // Use selectedDrivers state for the query key and function when fetching
+   const { data: fetchedLapData, isLoading: isLoadingLapTimes, error, isError } = useQuery<LapTimeDataPoint[]>({
+     queryKey: ['lapTimes', year, event, session, ...selectedDrivers.sort()], // Use state here
+     queryFn: () => fetchLapTimes(year, event, session, selectedDrivers),      // Use state here
+     staleTime: 1000 * 60 * 5,
+     gcTime: 1000 * 60 * 15,
     retry: 1,
-    // Only run query if we have exactly 2 or 3 drivers selected and session info
-    enabled: !!year && !!event && !!session && selectedDrivers.length >= 2 && selectedDrivers.length <= 3,
+    enabled: !staticData && !!year && !!event && !!session && driversToDisplay.length >= 2, // Disable if staticData is provided
   });
 
-  // Handler for driver selection change
-  const handleDriverChange = (index: number, value: string) => {
-    // Prevent selecting the same driver multiple times
-    if (selectedDrivers.includes(value) && selectedDrivers[index] !== value) {
-      // Maybe show a toast notification here?
-      console.warn("Driver already selected");
-      return;
+  // Use staticData if provided, otherwise use fetched data
+  const lapData = staticData || fetchedLapData;
+
+   const handleDriverChange = (index: number, value: string) => {
+     // Prevent selecting the same driver multiple times
+     // Check against the current state (selectedDrivers)
+     if (selectedDrivers.includes(value) && selectedDrivers[index] !== value) {
+         // Optionally show a toast message here
+         console.warn("Driver already selected");
+        return;
     }
-
-    const newSelection = [...selectedDrivers];
-    newSelection[index] = value;
-    setSelectedDrivers(newSelection);
-  };
-
-  // Handler to add a third driver selector
-  const addDriverSelector = () => {
-    if (selectedDrivers.length < 3 && availableDrivers) {
-      // Find the first available driver not already selected
-      const nextDriver = availableDrivers.find(d => !selectedDrivers.includes(d.code));
-      if (nextDriver) {
-        setSelectedDrivers([...selectedDrivers, nextDriver.code]);
-      }
+     // This function should only be called when not using static data
+     if (!staticData) {
+         const newSelection = [...selectedDrivers]; // Use state here
+         newSelection[index] = value;
+         setSelectedDrivers(newSelection); // Use the state setter
     }
   };
 
-  // Handler to remove the third driver selector
-  const removeDriverSelector = (indexToRemove: number) => {
-    if (selectedDrivers.length > 2) {
-      setSelectedDrivers(selectedDrivers.filter((_, index) => index !== indexToRemove));
-    }
-  };
-
-  const isLoading = isLoadingDrivers || (isLoadingLapTimes && selectedDrivers.length >= 2);
+  // Adjust isLoading check for static data
+  const isLoading = !staticData && (isLoadingDrivers || isLoadingLapTimes);
 
   // --- Render States ---
-  // Simplified loading/error for brevity, can be enhanced
-  if (isLoading) {
-    return (
-      <Card className={cn("chart-container bg-gray-900/80 border-gray-700", className)}>
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-400">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="w-full h-[300px] bg-gray-800/50" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (isError && selectedDrivers.length >= 2) { // Only show lap time error if trying to load
-    return (
-       <Card className={cn("chart-container bg-gray-900/80 border-red-500/30", className)}>
-         <CardHeader>
-           <CardTitle className="text-lg font-semibold text-gray-400">{title}</CardTitle>
-         </CardHeader>
-         <CardContent>
-            <div className="w-full h-[300px] flex flex-col items-center justify-center text-red-400">
-              <AlertCircle className="w-10 h-10 mb-2" />
-              <p className="font-semibold">Error loading lap times</p>
-              <p className="text-xs text-gray-500 mt-1">{(error as Error)?.message || 'Could not fetch data.'}</p>
-            </div>
-         </CardContent>
-       </Card>
-    );
-  }
-
-  // --- Render Chart & Controls ---
-  return (
-    <Card className={cn("chart-container bg-gray-900/80 border-gray-700", className)}>
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-white">{title}</CardTitle>
-        {/* Driver Selectors */}
-        <div className="flex flex-wrap gap-4 pt-3">
-          {selectedDrivers.map((driverCode, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Select
-                value={driverCode}
-                onValueChange={(value) => handleDriverChange(index, value)}
-                disabled={!availableDrivers}
-              >
-                <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700 text-white focus:border-red-500 focus:ring-red-500">
-                  <SelectValue placeholder="Select driver..." />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700 text-white">
-                  <SelectGroup>
-                    <SelectLabel>Driver {index + 1}</SelectLabel>
-                    {availableDrivers?.map((d) => (
-                      <SelectItem key={d.code} value={d.code} disabled={selectedDrivers.includes(d.code) && selectedDrivers[index] !== d.code}>
-                        {d.name} ({d.code}) - {d.team}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              {/* Show remove button only for the 3rd driver and if there are 3 */}
-              {index === 2 && selectedDrivers.length === 3 && (
-                 <Button variant="ghost" size="icon" className="text-gray-500 hover:text-red-500 h-8 w-8" onClick={() => removeDriverSelector(index)}>
-                    <XCircle className="h-4 w-4"/>
-                 </Button>
-              )}
-            </div>
-          ))}
-          {/* Add Driver Button */}
-          {selectedDrivers.length < 3 && (
-            <Button variant="outline" size="sm" onClick={addDriverSelector} disabled={!availableDrivers || selectedDrivers.length >= 3} className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
-              <Users className="h-4 w-4 mr-1"/> Add Driver
-            </Button>
-          )}
+  // Simplified loading/error checks
+  const renderContent = () => {
+    if (isLoading) {
+      // Use LoadingSpinnerF1 instead of Skeleton
+      return (
+        <div className="w-full h-[300px] flex items-center justify-center bg-gray-900/50 rounded-lg">
+          <LoadingSpinnerF1 />
         </div>
-      </CardHeader>
-      <CardContent>
-        {lapData && lapData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={lapData}
-              margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
-              <XAxis
-                dataKey="LapNumber"
-                stroke="rgba(156, 163, 175, 0.7)"
-                tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }}
-                padding={{ left: 10, right: 10 }}
+      );
+    }
+    if (isError || !lapData) {
+      return (
+        <div className="w-full h-[300px] bg-gray-900/80 border border-red-500/30 rounded-lg flex flex-col items-center justify-center text-red-400">
+          <AlertCircle className="w-10 h-10 mb-2" />
+          <p className="font-semibold">Error loading lap times</p>
+          <p className="text-xs text-gray-500 mt-1">{(error as Error)?.message || 'Could not fetch data.'}</p>
+        </div>
+      );
+    }
+    if (lapData.length === 0) {
+      return (
+        <div className="w-full h-[300px] bg-gray-900/80 border border-gray-700/50 rounded-lg flex items-center justify-center text-gray-500">
+          No common lap data found for comparison.
+        </div>
+      );
+    }
+
+    // --- Render Chart ---
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={lapData} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
+          <XAxis dataKey="LapNumber" stroke="rgba(156, 163, 175, 0.7)" tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} padding={{ left: 10, right: 10 }} />
+          {/* Updated YAxis tickFormatter */}
+          <YAxis stroke="rgba(156, 163, 175, 0.7)" tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} domain={['dataMin - 0.5', 'dataMax + 0.5']} tickFormatter={formatLapTime} allowDecimals={true} width={60} /> {/* Increased width for MM:SS.mmm */}
+          {/* Updated Tooltip formatter */}
+          <Tooltip contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(100, 116, 139, 0.5)', color: '#E5E7EB', borderRadius: '6px', boxShadow: '0 2px 10px rgba(0,0,0,0.5)' }} labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }} itemStyle={{ color: '#E5E7EB' }} formatter={(value: number | null) => [formatLapTime(value), null]} labelFormatter={(label) => `Lap ${label}`} />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} />
+          {/* Dynamically render lines */}
+          {driversToDisplay.map((driverCode) => {
+            const color = driverColor(driverCode);
+            return (
+              <Line
+                key={driverCode}
+                type="monotone"
+                dataKey={driverCode}
+                stroke={color}
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 5, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: color }}
+                name={driverCode}
+                connectNulls={true}
               />
-              <YAxis
-                stroke="rgba(156, 163, 175, 0.7)"
-                tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }}
-                domain={['dataMin - 0.5', 'dataMax + 0.5']}
-                tickFormatter={(value) => value.toFixed(1)}
-                allowDecimals={true}
-                width={40}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(31, 41, 55, 0.9)',
-                  borderColor: 'rgba(100, 116, 139, 0.5)',
-                  color: '#E5E7EB',
-                  borderRadius: '6px',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
-                }}
-                labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }}
-                itemStyle={{ color: '#E5E7EB' }} // Color will be overridden by line stroke in legend payload
-                formatter={(value: number | null | undefined, name: string) => [value ? `${value.toFixed(3)}s` : 'N/A', name]}
-                labelFormatter={(label) => `Lap ${label}`}
-              />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              {/* Render lines dynamically */}
-              {selectedDrivers.map((driverCode) => {
-                 const color = driverColor(driverCode);
-                 return (
-                    <Line
-                      key={driverCode}
-                      type="monotone"
-                      dataKey={driverCode} // Use driver code as data key
-                      stroke={color}
-                      strokeWidth={2.5}
-                      dot={false}
-                      activeDot={{ r: 5, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: color }}
-                      name={driverCode} // Legend name
-                      connectNulls={true}
-                    />
-                 );
-              })}
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-           <div className="w-full h-[300px] flex items-center justify-center text-gray-500">
-             {selectedDrivers.length < 2 ? "Select at least 2 drivers to compare." : "No common lap data found."}
-           </div>
-        )}
+            );
+          })}
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  return (
+    <Card className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm", className)}>
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+           <CardTitle className="text-lg font-semibold text-white">{title}</CardTitle>
+           {/* Driver Selectors (Hide if using static data) */}
+           {!staticData && (
+             <div className="flex flex-wrap gap-2">
+               {driversToDisplay.map((driverCode, index) => (
+                 <Select
+                   key={index}
+                   value={driverCode}
+                   onValueChange={(value) => handleDriverChange(index, value)}
+                   disabled={isLoadingDrivers || !availableDrivers}
+                 >
+                   <SelectTrigger className="w-full sm:w-[150px] bg-gray-800/80 border-gray-700 text-gray-200 text-xs h-8 focus:border-red-500 focus:ring-red-500">
+                   <SelectValue placeholder="Select Driver" />
+                 </SelectTrigger>
+                 <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
+                   <SelectGroup>
+                     <SelectLabel className="text-xs text-gray-500">Driver {index + 1}</SelectLabel>
+                     {availableDrivers?.map((drv) => (
+                       <SelectItem key={drv.code} value={drv.code} className="text-xs">
+                         {drv.code} ({drv.name})
+                       </SelectItem>
+                     ))}
+                   </SelectGroup>
+                 </SelectContent>
+                </Select>
+              ))}
+              {/* Optional: Add button to add/remove 3rd driver */}
+            </div>
+           )} {/* <-- Added closing parenthesis for conditional rendering */}
+         </div>
+       </CardHeader>
+      <CardContent className="pt-0">
+        {renderContent()}
       </CardContent>
     </Card>
   );

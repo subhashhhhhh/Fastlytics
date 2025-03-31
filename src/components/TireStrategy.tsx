@@ -1,11 +1,11 @@
 import React, { useState } from 'react'; // Import useState
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"; // Corrected path
 import { useQuery } from '@tanstack/react-query';
-import { fetchTireStrategy } from '@/lib/api'; // Import the API function
-import { Skeleton } from "@/components/ui/skeleton";
+import { fetchTireStrategy, DriverStrategy } from '@/lib/api'; // Corrected path & added DriverStrategy type
+import { Skeleton } from "@/components/ui/skeleton"; // Corrected path
 import { AlertCircle, ChevronDown } from 'lucide-react'; // Import ChevronDown
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from '@/components/ui/button'; // Import Button
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Corrected path
+import { Button } from '@/components/ui/button'; // Corrected path
 
 // Define props for the dynamic component
 interface TireStrategyProps {
@@ -16,7 +16,7 @@ interface TireStrategyProps {
   session: string;
 }
 
-// Define tire compound colors
+// Define tire compound colors (using Tailwind classes)
 const tireCompoundColors: { [key: string]: string } = {
   SOFT: 'bg-red-500',
   MEDIUM: 'bg-yellow-400',
@@ -26,7 +26,7 @@ const tireCompoundColors: { [key: string]: string } = {
   UNKNOWN: 'bg-gray-500',
 };
 
-const getTireColor = (compound: string): string => {
+const getTireColorClass = (compound: string): string => {
   return tireCompoundColors[compound?.toUpperCase()] || tireCompoundColors.UNKNOWN;
 };
 
@@ -40,7 +40,8 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
 
   const [visibleDrivers, setVisibleDrivers] = useState(5); // State for pagination
 
-  const { data: strategyData, isLoading, error, isError } = useQuery({
+  // Added DriverStrategy[] type annotation for data
+  const { data: strategyData, isLoading, error, isError } = useQuery<DriverStrategy[]>({
     queryKey: ['tireStrategy', year, event, session],
     queryFn: () => fetchTireStrategy(year, event, session),
     staleTime: 1000 * 60 * 10,
@@ -59,7 +60,7 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
   if (isLoading) {
     return (
       <div className={cn("chart-container", className)}>
-        <h2 className="text-lg font-semibold mb-4 text-gray-400">Tire Strategy</h2>
+        <h2 className="text-lg font-semibold mb-4 text-white">Tire Strategy</h2> {/* Changed text color */}
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="w-full h-[28px] bg-gray-800/50" /> // Adjusted height
@@ -72,7 +73,7 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
   if (isError || !strategyData) {
     return (
       <div className={cn("chart-container", className)}>
-        <h2 className="text-lg font-semibold mb-4 text-gray-400">Tire Strategy</h2>
+        <h2 className="text-lg font-semibold mb-4 text-white">Tire Strategy</h2> {/* Changed text color */}
         <div className="w-full h-[300px] bg-gray-900/80 border border-red-500/30 rounded-lg flex flex-col items-center justify-center text-red-400">
            <AlertCircle className="w-10 h-10 mb-2" />
            <p className="font-semibold">Error loading tire strategy</p>
@@ -85,7 +86,7 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
    if (strategyData.length === 0) {
      return (
       <div className={cn("chart-container", className)}>
-        <h2 className="text-lg font-semibold mb-4 text-gray-400">Tire Strategy</h2>
+        <h2 className="text-lg font-semibold mb-4 text-white">Tire Strategy</h2> {/* Changed text color */}
         <div className="w-full h-[300px] bg-gray-900/80 border border-gray-700/50 rounded-lg flex items-center justify-center text-gray-500">
            No tire strategy data found for this session.
         </div>
@@ -130,14 +131,14 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
                   const widthPercentage = ((stint.endLap - stint.startLap + 1) / maxLaps) * 100;
                   // Calculate left offset based on previous stints' widths
                   const leftOffsetPercentage = ((stint.startLap - 1) / maxLaps) * 100;
-                  const bgColor = getTireColor(stint.compound);
+                  const bgColorClass = getTireColorClass(stint.compound); // Use class getter
                   const tooltipContent = `${stint.compound} (L${stint.startLap}-L${stint.endLap}, ${stint.lapCount} laps)`;
 
                   return (
                     <Tooltip key={index}>
                       <TooltipTrigger asChild>
                         <div
-                          className={cn("h-full absolute transition-opacity hover:opacity-80", bgColor)}
+                          className={cn("h-full absolute transition-opacity hover:opacity-80", bgColorClass)} // Use class
                           style={{
                               left: `${leftOffsetPercentage}%`,
                               width: `${widthPercentage}%`,

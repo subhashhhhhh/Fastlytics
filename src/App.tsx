@@ -10,6 +10,7 @@ import Race from "./pages/Race";
 import Drivers from "./pages/Drivers";
 import TeamStandings from "./pages/TeamStandings";
 import DriverStandings from "./pages/DriverStandings";
+import Races from "./pages/Races"; // Import Races page
 import Profile from "./pages/Profile"; // Import Profile page
 import Settings from "./pages/Settings"; // Import Settings page
 import NotFound from "./pages/NotFound";
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
             <Route path="/race/:raceId" element={<MainLayout><Race /></MainLayout>} />
             <Route path="/drivers" element={<MainLayout><Drivers /></MainLayout>} />
+            <Route path="/races" element={<MainLayout><Races /></MainLayout>} /> {/* New Races route */}
             {/* Assuming subscription and standings also need auth */}
             <Route path="/subscription" element={<MainLayout><Subscription /></MainLayout>} />
             <Route path="/standings/teams" element={<MainLayout><TeamStandings /></MainLayout>} />
