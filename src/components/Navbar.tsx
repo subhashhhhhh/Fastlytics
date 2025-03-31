@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import {
   User,
-  Car,
+  // Car, // Replaced with Gauge
   CreditCard,
   Menu,
   X,
   LogOut,
   Settings,
-  LayoutDashboard
+  LayoutDashboard,
+  Gauge, // Added Gauge for logo
+  Flag, // Added Flag for Races
+  Users, // Added Users for Drivers (already imported but used here)
+  UsersRound // Added UsersRound for Teams
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -35,9 +39,12 @@ const Navbar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { user, signOut, loading } = useAuth(); // Get user and signOut from context
 
-  // Simplified Nav Items for Dashboard
+  // Expanded Nav Items
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    { name: 'Races', href: '/races', icon: <Flag size={18} /> },
+    { name: 'Drivers', href: '/standings/drivers', icon: <Users size={18} /> },
+    { name: 'Teams', href: '/standings/teams', icon: <UsersRound size={18} /> },
   ];
 
   // Corrected handleLogout function (make it async)
@@ -63,7 +70,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-2 text-white hover:text-red-500 transition-colors">
-            <Car className="h-6 w-6 text-red-500" />
+            <Gauge className="h-6 w-6 text-red-500" /> {/* Changed icon */}
             <span className="font-bold text-xl">Fast<span className="text-red-500">lytics</span></span>
           </Link>
 
@@ -161,7 +168,7 @@ const Navbar = () => {
                 <DrawerContent className="h-[90vh] bg-gray-950 border-l-gray-800 text-white p-4 flex flex-col"> {/* Use flex-col */}
                   <div className="flex items-center justify-between mb-6">
                      <Link to="/dashboard" className="flex items-center gap-2 text-white hover:text-red-500 transition-colors" onClick={() => setDrawerOpen(false)}>
-                        <Car className="h-6 w-6 text-red-500" />
+                        <Gauge className="h-6 w-6 text-red-500" /> {/* Changed icon */}
                         <span className="font-bold text-xl">Fast<span className="text-red-500">lytics</span></span>
                      </Link>
                     <DrawerClose asChild>

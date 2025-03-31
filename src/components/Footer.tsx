@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Twitter, Mail, Car, Heart } from 'lucide-react'; // Keep relevant icons
+import { Github, Twitter, Mail, Gauge, Heart } from 'lucide-react'; // Replaced Car with Gauge
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = [
     { title: 'Features', links: [ { name: 'Dashboard', href: '/dashboard'}, { name: 'Drivers', href: '/drivers'}, { name: 'Races', href: '/dashboard'} ] }, // Simplified links
-    { title: 'Resources', links: [ { name: 'Subscription', href: '/subscription'}, { name: 'Support', href: '#'}, { name: 'FAQ', href: '#'} ] },
+    { title: 'Resources', links: [ { name: 'Blog', href: 'https://subhashh.tech'}, { name: 'Support', href: '#'}, { name: 'FAQ', href: '#'} ] },
     { title: 'Legal', links: [ { name: 'Privacy Policy', href: '#'}, { name: 'Terms of Service', href: '#'} ] },
   ];
 
@@ -24,7 +24,7 @@ const Footer = () => {
           {/* Logo & Description */}
           <div className="col-span-2 lg:col-span-2 space-y-4">
             <Link to="/dashboard" className="flex items-center gap-2 text-white hover:text-red-500 transition-colors mb-2 w-fit">
-              <Car className="h-6 w-6 text-red-500" />
+              <Gauge className="h-6 w-6 text-red-500" />
               <span className="font-bold text-xl">Fast<span className="text-red-500">lytics</span></span>
             </Link>
             <p className="text-sm max-w-xs">

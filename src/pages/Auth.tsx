@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Car, Lock, ChevronLeft, User, Mail, Eye, EyeOff } from 'lucide-react';
+import { Gauge, Lock, ChevronLeft, User, Mail, Eye, EyeOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -153,7 +153,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
            <Link to="/" className="inline-flex items-center gap-2 text-white hover:text-red-500 transition-colors mb-4">
-              <Car className="h-8 w-8 text-red-500" />
+              <Gauge className="h-8 w-8 text-red-500" />
               <span className="font-bold text-3xl">Fast<span className="text-red-500">lytics</span></span>
            </Link>
           <p className="text-gray-400 mt-1">Your premium F1 analytics dashboard</p>

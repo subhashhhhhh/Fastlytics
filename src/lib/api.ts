@@ -1,5 +1,21 @@
 // Base URL for your backend API
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// API Key from environment variable (Vite specific)
+const API_KEY = import.meta.env.VITE_FASTLYTICS_API_KEY;
+const API_KEY_HEADER = 'X-API-Key';
+
+// --- Helper to get headers ---
+const getHeaders = (): HeadersInit => {
+    const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+    };
+    if (API_KEY) {
+        headers[API_KEY_HEADER] = API_KEY;
+    } else {
+        console.warn("VITE_FASTLYTICS_API_KEY is not set. API requests will be sent without authentication.");
+    }
+    return headers;
+};
 
 // --- Data Structures (Exported) ---
 export interface LapTimeDataPoint {
@@ -11,9 +27,9 @@ export interface GearMapDataPoint { X: number; Y: number; nGear: number; }
 export interface TireStint { compound: string; startLap: number; endLap: number; lapCount: number; }
 export interface DriverStrategy { driver: string; stints: TireStint[]; }
 export interface SessionDriver { code: string; name: string; team: string; }
-export interface DriverStanding { rank: number; code: string; name: string; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; } // Use points_change?
-export interface TeamStanding { rank: number; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; shortName?: string; } // Use points_change?
-export interface RaceResult { year: number; event: string; round: number; driver: string; team: string; teamColor: string; date?: string; location?: string; } // Added date and location
+export interface DriverStanding { rank: number; code: string; name: string; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; driverId: string;}
+export interface TeamStanding { rank: number; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; shortName?: string; teamId: string; }
+export interface RaceResult { year: number; event: string; round: number; driver: string; team: string; teamColor: string; date?: string; location?: string; }
 export interface DetailedRaceResult {
     position: number | null;
     driverCode: string;
@@ -50,7 +66,7 @@ export const fetchAvailableSessions = async (year: number, event: string): Promi
     const url = `${API_BASE_URL}/api/sessions?${params.toString()}`;
     console.log(`Fetching available sessions from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -69,7 +85,7 @@ export const fetchSessionDrivers = async (year: number, event: string, session: 
     const url = `${API_BASE_URL}/api/session/drivers?${params.toString()}`;
     console.log(`Fetching session drivers from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -90,7 +106,7 @@ export const fetchLapTimes = async (year: number, event: string, session: string
     const url = `${API_BASE_URL}/api/laptimes?${params.toString()}`;
     console.log(`Fetching lap times from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -109,7 +125,7 @@ export const fetchTelemetrySpeed = async (year: number, event: string, session: 
     const url = `${API_BASE_URL}/api/telemetry/speed?${params.toString()}`;
     console.log(`Fetching speed telemetry from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -128,7 +144,7 @@ export const fetchTelemetryGear = async (year: number, event: string, session: s
     const url = `${API_BASE_URL}/api/telemetry/gear?${params.toString()}`;
     console.log(`Fetching gear telemetry from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -147,7 +163,7 @@ export const fetchTireStrategy = async (year: number, event: string, session: st
     const url = `${API_BASE_URL}/api/strategy/tires?${params.toString()}`;
     console.log(`Fetching tire strategy from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -166,7 +182,7 @@ export const fetchDriverStandings = async (year: number): Promise<DriverStanding
     const url = `${API_BASE_URL}/api/standings/drivers?${params.toString()}`;
     console.log(`Fetching driver standings from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -185,7 +201,7 @@ export const fetchTeamStandings = async (year: number): Promise<TeamStanding[]> 
     const url = `${API_BASE_URL}/api/standings/teams?${params.toString()}`;
     console.log(`Fetching team standings from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -204,7 +220,7 @@ export const fetchRaceResults = async (year: number): Promise<RaceResult[]> => {
     const url = `${API_BASE_URL}/api/results/races?${params.toString()}`;
     console.log(`Fetching race results summary from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -222,7 +238,7 @@ export const fetchSpecificRaceResults = async (year: number, eventSlug: string, 
     const url = `${API_BASE_URL}/api/results/race/${year}/${eventSlug}`;
     console.log(`Fetching detailed race results from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
@@ -244,7 +260,7 @@ export const fetchLapPositions = async (year: number, event: string, session: st
     const url = `${API_BASE_URL}/api/lapdata/positions?${params.toString()}`;
     console.log(`Fetching lap positions from: ${url}`);
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }

@@ -281,7 +281,8 @@ const FeatureCardRedesigned = ({
       className={cn(
         "bg-gray-900/70 border-gray-700/80",
         "cursor-not-allowed transition-all duration-200 ease-in-out",
-        "hover:shadow-lg hover:shadow-gray-500/10 relative overflow-hidden"
+        // Removed hover effect, added opacity
+        "opacity-75 relative overflow-hidden" 
       )}
     >
       {/* Coming Soon Ribbon */}

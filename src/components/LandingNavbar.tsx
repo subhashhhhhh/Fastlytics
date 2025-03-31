@@ -2,7 +2,7 @@ import React, { useState } from 'react'; // Import useState
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Car, User, LogOut, Settings, LayoutDashboard } from 'lucide-react'; // Added LayoutDashboard
+import { Menu, Gauge, User, LogOut, Settings, LayoutDashboard } from 'lucide-react'; // Replaced Car with Gauge, Added LayoutDashboard
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Import Avatar
 import {
@@ -40,7 +40,7 @@ const LandingNavbar: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
           <Link to="/" className="flex items-center gap-2 text-white hover:text-red-500 transition-colors">
-            <Car className="h-6 w-6 text-red-500" />
+            <Gauge className="h-6 w-6 text-red-500" />
             <span className="font-bold text-xl">Fast<span className="text-red-500">lytics</span></span>
           </Link>
 
@@ -96,14 +96,9 @@ const LandingNavbar: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
-                <Link to="/auth?tab=login">
-                  <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white hover:bg-gray-800">Log In</Button>
-                </Link>
-                <Link to="/auth?tab=signup">
-                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">Sign Up</Button>
-                </Link>
-              </>
+              <Link to="/dashboard">
+                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">Explore Dashboard</Button>
+              </Link>
             )}
           </div>
 
