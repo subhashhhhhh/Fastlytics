@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard"; // Renamed from Index
 import Landing from "./pages/Landing"; // New Landing page
 import Race from "./pages/Race";
-import Drivers from "./pages/Drivers";
 import TeamStandings from "./pages/TeamStandings";
 import DriverStandings from "./pages/DriverStandings";
 import Races from "./pages/Races"; // Import Races page
@@ -18,6 +17,7 @@ import Auth from "./pages/Auth";
 import Subscription from "./pages/Subscription";
 import Footer from "./components/Footer";
 import { AuthProvider } from "./contexts/AuthContext";
+import { SeasonProvider } from "./contexts/SeasonContext"; // Import SeasonProvider
 import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
 
 const queryClient = new QueryClient();
@@ -51,10 +51,11 @@ const App = () => (
       <AuthProvider> {/* Wrap with AuthProvider */}
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Auth routes without footer */}
-            <Route path="/auth" element={<AuthLayout><Auth /></AuthLayout>} />
+        <SeasonProvider> {/* Wrap with SeasonProvider */}
+          <BrowserRouter>
+            <Routes>
+              {/* Auth routes without footer */}
+              <Route path="/auth" element={<AuthLayout><Auth /></AuthLayout>} />
 
           {/* Landing Page Route (No Footer) */}
           <Route path="/" element={<LandingLayout><Landing /></LandingLayout>} />
@@ -64,7 +65,6 @@ const App = () => (
             {/* Routes within here require authentication */}
             <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
             <Route path="/race/:raceId" element={<MainLayout><Race /></MainLayout>} />
-            <Route path="/drivers" element={<MainLayout><Drivers /></MainLayout>} />
             <Route path="/races" element={<MainLayout><Races /></MainLayout>} /> {/* New Races route */}
             {/* Assuming subscription and standings also need auth */}
             <Route path="/subscription" element={<MainLayout><Subscription /></MainLayout>} />
@@ -75,9 +75,11 @@ const App = () => (
           </Route>
 
           {/* 404 page - Keep outside protected routes or handle within if needed */}
-            <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
-          </Routes>
-        </BrowserRouter>
+              {/* 404 page - Keep outside protected routes or handle within if needed */}
+              <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
+            </Routes>
+          </BrowserRouter>
+        </SeasonProvider> {/* Close SeasonProvider */}
       </AuthProvider> {/* Close AuthProvider */}
     </TooltipProvider>
   </QueryClientProvider>

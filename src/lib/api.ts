@@ -11,8 +11,8 @@ export interface GearMapDataPoint { X: number; Y: number; nGear: number; }
 export interface TireStint { compound: string; startLap: number; endLap: number; lapCount: number; }
 export interface DriverStrategy { driver: string; stints: TireStint[]; }
 export interface SessionDriver { code: string; name: string; team: string; }
-export interface DriverStanding { rank: number; code: string; name: string; team: string; points: number; wins: number; podiums: number; change: number | null; teamColor?: string; }
-export interface TeamStanding { rank: number; team: string; points: number; wins: number; podiums: number; change: number | null; teamColor?: string; shortName?: string; }
+export interface DriverStanding { rank: number; code: string; name: string; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; } // Use points_change?
+export interface TeamStanding { rank: number; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; shortName?: string; } // Use points_change?
 export interface RaceResult { year: number; event: string; round: number; driver: string; team: string; teamColor: string; date?: string; location?: string; } // Added date and location
 export interface DetailedRaceResult {
     position: number | null;

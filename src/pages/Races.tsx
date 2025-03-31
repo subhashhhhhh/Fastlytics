@@ -9,13 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSeason } from '@/contexts/SeasonContext'; // Import useSeason
 
 const Races = () => {
   const navigate = useNavigate();
-  const currentYear = new Date().getFullYear();
-  // Define available years (consider fetching this dynamically)
-  const availableYears = [2025, 2024, 2023]; // Match other pages
-  const [selectedYear, setSelectedYear] = useState<number>(availableYears[0]);
+  const { selectedYear, setSelectedYear, availableYears } = useSeason(); // Use context
 
   // Fetch Race Results for the selected year
   const { data: raceResults, isLoading, error, isError } = useQuery<RaceResult[]>({

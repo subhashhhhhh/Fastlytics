@@ -19,15 +19,13 @@ import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSeason } from '@/contexts/SeasonContext'; // Import useSeason
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const currentYear = new Date().getFullYear();
-  // Define available years (consider fetching this dynamically)
-  const availableYears = [2025, 2024, 2023];
-  const [selectedYear, setSelectedYear] = useState<number>(availableYears[0]);
+  const { selectedYear, setSelectedYear, availableYears } = useSeason(); // Use context
 
   // Fetch Team Standings
   const { data: teamStandings, isLoading: isLoadingTeams } = useQuery<TeamStanding[]>({
@@ -169,14 +167,14 @@ const Dashboard = () => {
                     {teamStandings?.slice(0, 4).map((team) => (
                       <F1Card
                         key={team.shortName || team.team}
-                       title={team.team}
-                       value={`${team.points} PTS`}
-                       team={getTeamColorClass(team.team) as any}
-                       icon={<Award className={`h-5 w-5 text-f1-${getTeamColorClass(team.team)}`} />}
-                       change={null} // Change data not available from this endpoint yet
-                       className="bg-gray-900/80 border border-gray-700/80 hover:border-gray-600 transition-colors duration-200"
-                     />
-                   ))}
+                        title={team.team}
+                        value={`${team.points} PTS`}
+                        team={getTeamColorClass(team.team) as any}
+                        icon={<Award className={`h-5 w-5 text-f1-${getTeamColorClass(team.team)}`} />}
+                        points_change={team.points_change} // Pass points_change
+                        className="bg-gray-900/80 border border-gray-700/80 hover:border-gray-600 transition-colors duration-200"
+                      />
+                    ))}
                  </div>
                )}
             </section>
@@ -201,14 +199,14 @@ const Dashboard = () => {
                    {driverStandings?.slice(0, 4).map((driver) => (
                      <F1Card
                        key={driver.code}
-                       title={driver.name}
-                       value={`${driver.points} PTS`}
-                       team={getTeamColorClass(driver.team) as any}
-                       icon={<Users className={`h-5 w-5 text-f1-${getTeamColorClass(driver.team)}`} />}
-                       change={null} // Change data not available from this endpoint yet
-                       className="bg-gray-900/80 border border-gray-700/80 hover:border-gray-600 transition-colors duration-200"
-                     />
-                   ))}
+                        title={driver.name}
+                        value={`${driver.points} PTS`}
+                        team={getTeamColorClass(driver.team) as any}
+                        icon={<Users className={`h-5 w-5 text-f1-${getTeamColorClass(driver.team)}`} />}
+                        points_change={driver.points_change} // Pass points_change
+                        className="bg-gray-900/80 border border-gray-700/80 hover:border-gray-600 transition-colors duration-200"
+                      />
+                    ))}
                  </div>
                )}
             </section>
@@ -239,12 +237,12 @@ const Dashboard = () => {
                       <F1Card
                         title={race.event}
                         value={`Winner: ${race.driver}`}
-                        team={getTeamColorClass(race.team) as any}
-                        icon={<Flag className={`h-5 w-5 text-f1-${getTeamColorClass(race.team)}`} />}
-                        change={null} // Change data not available from this endpoint
-                        className="bg-gray-900/80 border border-gray-700/80 group-hover:border-red-500/50 transition-colors duration-200"
-                      />
-                    </div>
+                         team={getTeamColorClass(race.team) as any}
+                         icon={<Flag className={`h-5 w-5 text-f1-${getTeamColorClass(race.team)}`} />}
+                         // points_change is optional, so no need to pass null if not applicable
+                         className="bg-gray-900/80 border border-gray-700/80 group-hover:border-red-500/50 transition-colors duration-200"
+                       />
+                     </div>
                   ))}
                 </div>
               ) : (

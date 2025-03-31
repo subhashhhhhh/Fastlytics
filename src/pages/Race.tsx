@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, Droplets, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, Droplets, AlertCircle, Zap } from 'lucide-react'; // Added Zap
 import Navbar from '@/components/Navbar';
 import RacingChart from '@/components/RacingChart';
 import TireStrategy from '@/components/TireStrategy';
@@ -167,7 +167,7 @@ const Race = () => {
                     value={winner.fullName}
                     team={getTeamColorClass(winner.team) as any}
                     icon={<Trophy className={`h-6 w-6 text-f1-${getTeamColorClass(winner.team)}`} />}
-                    change={null}
+                    // points_change is optional, not applicable here
                     className="animate-fade-in bg-gray-900/80 border border-gray-700"
                 />
             )}
@@ -177,8 +177,8 @@ const Race = () => {
                     title="Pole Position"
                      value={poleSitter.fullName}
                      team={getTeamColorClass(poleSitter.team) as any}
-                     icon={<Flag className={`h-6 w-6 text-f1-${getTeamColorClass(poleSitter.team)}`} />}
-                     change={null}
+                     icon={<Zap className={`h-6 w-6 text-f1-${getTeamColorClass(poleSitter.team)}`} />} // Use Zap icon
+                     // points_change is optional, not applicable here
                      className="animate-fade-in bg-gray-900/80 border border-gray-700"
                   />
              )}
@@ -189,7 +189,7 @@ const Race = () => {
                      value={fastestLapHolder.fullName}
                      team={getTeamColorClass(fastestLapHolder.team) as any}
                      icon={<Clock className={`h-6 w-6 text-f1-${getTeamColorClass(fastestLapHolder.team)}`} />}
-                     change={null} // Could add lap time here later if available
+                     // points_change is optional, not applicable here
                      className="animate-fade-in bg-gray-900/80 border border-gray-700"
                   />
              )}

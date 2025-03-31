@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, CheckCircle, MinusCircle, Award, Calendar, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Trophy, CheckCircle, MinusCircle, Award, Calendar, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react'; // Added ArrowUp/Down
 import Navbar from '@/components/Navbar';
 import { Button } from "@/components/ui/button";
 // Import API function and type
@@ -10,13 +10,11 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSeason } from '@/contexts/SeasonContext'; // Import useSeason
 
 const TeamStandings = () => {
   const navigate = useNavigate();
-  const currentYear = new Date().getFullYear();
-  // Define available years (consider fetching this dynamically)
-  const availableYears = [2025, 2024, 2023];
-  const [selectedYear, setSelectedYear] = useState<number>(availableYears[0]);
+  const { selectedYear, setSelectedYear, availableYears } = useSeason(); // Use context
 
   // Fetch Team Standings for the selected year
   const { data: teamStandings, isLoading, error, isError } = useQuery<TeamStanding[]>({
@@ -28,15 +26,16 @@ const TeamStandings = () => {
   });
 
   // Function to determine change indicator color and icon
-  const getChangeIndicator = (change: number | null) => {
-    if (change === null) {
-       return { color: 'text-gray-500', icon: <MinusCircle className="h-4 w-4 opacity-50" /> };
+  const getChangeIndicator = (change: number | undefined) => { // Accept undefined
+    if (change === undefined) { // Check for undefined
+       // Return null or a default state if no change data exists
+       return null;
     }
     if (change > 0) {
-      return { color: 'text-green-500', icon: <CheckCircle className="h-4 w-4" /> };
+      return { color: 'text-green-500', icon: <ArrowUp className="h-4 w-4" /> }; // Use ArrowUp
     } else if (change < 0) {
-      return { color: 'text-red-500', icon: <MinusCircle className="h-4 w-4" /> };
-    } else {
+      return { color: 'text-red-500', icon: <ArrowDown className="h-4 w-4" /> }; // Use ArrowDown
+    } else { // change === 0
       return { color: 'text-gray-500', icon: <MinusCircle className="h-4 w-4" /> };
     }
   };
@@ -103,10 +102,10 @@ const TeamStandings = () => {
                 <span className="text-xs text-gray-500">{(error as Error)?.message || 'Please try again later.'}</span>
              </div>
           ) : teamStandings && teamStandings.length > 0 ? (
-            teamStandings.map((team, index) => { // No need to sort here if API returns sorted
-              const indicator = getChangeIndicator(team.change);
+            teamStandings.map((team, index) => { // Use fetched data
+              const indicator = getChangeIndicator(team.points_change); // Use points_change
               const rank = team.rank || index + 1;
-              const teamColor = getTeamColorClass(team.team);
+              const teamColor = team.teamColor || getTeamColorClass(team.team); // Use provided color or derive
 
               return (
                 <Card
@@ -133,11 +132,12 @@ const TeamStandings = () => {
                        <Award className="w-4 h-4 text-gray-400"/>
                        <span>{team.podiums ?? '-'}</span>
                      </div>
-                     {/* Change might not be available/relevant from calculated standings */}
-                     {selectedYear === currentYear && team.change !== null && (
-                        <div className={cn("flex items-center gap-1", indicator.color)} title="Points Change">
+                     {/* Display points change if indicator is not null */}
+                     {indicator && (
+                        <div className={cn("flex items-center gap-1", indicator.color)} title="Points Change Since Last Race">
                           {indicator.icon}
-                          <span>{team.change !== 0 ? Math.abs(team.change) : '-'}</span>
+                          {/* Show absolute value for non-zero change */}
+                          <span>{team.points_change !== 0 ? Math.abs(team.points_change ?? 0) : '-'}</span>
                         </div>
                      )}
                   </div>

@@ -38,7 +38,6 @@ const Navbar = () => {
   // Simplified Nav Items for Dashboard
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={18} /> },
-    { name: 'Drivers', href: '/drivers', icon: <User size={18} /> },
     { name: 'Subscription', href: '/subscription', icon: <CreditCard size={18} /> },
   ];
 
