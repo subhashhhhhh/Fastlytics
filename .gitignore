@@ -46,3 +46,11 @@ dist-ssr
 
 # Optional PNPM lockfile
 pnpm-lock.yaml
+
+# Backend API Directory (if developing within same repo)
+/backend-api/
+!.gitignore # Allow tracking .gitignore within backend-api if needed
+/backend-api/.env*
+/backend-api/cache/
+/backend-api/__pycache__/
+/backend-api/*.pyc

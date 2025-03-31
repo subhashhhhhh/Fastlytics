@@ -5,6 +5,8 @@ import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, 
 import Navbar from '@/components/Navbar';
 import RacingChart from '@/components/RacingChart';
 import TireStrategy from '@/components/TireStrategy';
+import SpeedTraceChart from '@/components/SpeedTraceChart';
+import GearMapChart from '@/components/GearMapChart'; // Import Gear Map chart
 import F1Card from '@/components/F1Card';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -83,13 +85,20 @@ const Race = () => {
           
           <TabsContent value="overview" className="pt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <RacingChart 
-                data={lapTimesData} 
-                title="Lap Time Comparison" 
+              {/* Pass drivers array to RacingChart */}
+              <RacingChart
+                year={2023} // Example Year - TODO: Make dynamic
+                event={race.event}
+                session="R"
+                initialDrivers={["VER", "LEC"]} // Pass initial drivers as an array
+                title="Lap Time Comparison" // Title can be more generic now
                 delay={0}
               />
-              <TireStrategy 
-                data={tireStrategyData} 
+              {/* Update TireStrategy props */}
+              <TireStrategy
+                year={2023} // Example Year - TODO: Make dynamic
+                event={race.event}
+                session="R"
                 delay={2}
               />
             </div>
@@ -126,7 +135,29 @@ const Race = () => {
           </TabsContent>
           
           <TabsContent value="telemetry" className="pt-6">
+             {/* Add SpeedTraceChart */}
+             <SpeedTraceChart
+                year={2023} // Example Year - TODO: Make dynamic
+                event={race.event}
+                session="R"
+                initialDriver="VER" // Pass initialDriver instead of driver
+                lap="fastest" // Example Lap - TODO: Make selectable
+                title="Fastest Lap Speed Trace" // Title is now dynamic inside component
+                className="mb-8"
+             />
+             {/* Add GearMapChart */}
+             <GearMapChart
+                year={2023} // Example Year - TODO: Make dynamic
+                event={race.event}
+                session="R"
+                initialDriver="VER" // Pass initialDriver instead of driver
+                lap="fastest" // Example Lap - TODO: Make selectable
+                title="Fastest Lap Gear Shifts" // Title is now dynamic inside component
+                className="mb-8"
+             />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Keep Premium Feature placeholders for now */}
+              {/* You might replace these with actual interactive charts later */}
               <PremiumFeatureCard
                 title="G-Force Analysis"
                 icon={<Gauge />}
@@ -153,8 +184,11 @@ const Race = () => {
           </TabsContent>
           
           <TabsContent value="strategy" className="pt-6">
-            <TireStrategy 
-              data={tireStrategyData} 
+             {/* Update TireStrategy props */}
+            <TireStrategy
+              year={2023} // Example Year - TODO: Make dynamic
+              event={race.event}
+              session="R"
               delay={0}
               className="mb-6"
             />
