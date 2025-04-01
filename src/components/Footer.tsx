@@ -14,8 +14,8 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { name: 'Twitter', href: 'https://x.com', icon: <Twitter className="h-5 w-5" /> },
-    { name: 'GitHub', href: 'https://github.com', icon: <Github className="h-5 w-5" /> },
+    { name: 'Twitter', href: 'https://x.com/ferrari4lifee', icon: <Twitter className="h-5 w-5" /> },
+    { name: 'GitHub', href: 'https://github.com/subhashhhhhh', icon: <Github className="h-5 w-5" /> },
     { name: 'Mail', href: 'mailto:contact@fastlytics.app', icon: <Mail className="h-5 w-5" /> },
   ];
 
