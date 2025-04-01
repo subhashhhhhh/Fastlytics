@@ -3,11 +3,11 @@ import React, { createContext, useState, useContext, ReactNode, useMemo } from '
 interface SeasonContextType {
   selectedYear: number;
   setSelectedYear: (year: number) => void;
-  availableYears: number[]; // Keep available years consistent
+  availableYears: number[];
 }
 
 const currentYear = new Date().getFullYear();
-const startYear = 2021;
+const startYear = 2019;
 const defaultAvailableYears = Array.from(
   { length: currentYear - startYear + 1 }, 
   (_, i) => currentYear - i
@@ -16,9 +16,8 @@ const defaultAvailableYears = Array.from(
 const SeasonContext = createContext<SeasonContextType | undefined>(undefined);
 
 export const SeasonProvider = ({ children }: { children: ReactNode }) => {
-  const [selectedYear, setSelectedYear] = useState<number>(defaultAvailableYears[0]); // Default to the most recent year
+  const [selectedYear, setSelectedYear] = useState<number>(defaultAvailableYears[0]);
 
-  // Memoize the context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
     selectedYear,
     setSelectedYear,

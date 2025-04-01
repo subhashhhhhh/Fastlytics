@@ -8,6 +8,50 @@ const defaultColors = [
 
 // --- Seasonal Driver Color Mappings ---
 const seasonalDriverColorMap: { [year: string]: { [driverCode: string]: string } } = {
+    '2019': {
+        // Mercedes
+        'HAM': '#00D2BE', 'BOT': '#00D2BE',
+        // Ferrari
+        'VET': '#DC0000', 'LEC': '#DC0000',
+        // Red Bull
+        'VER': '#0600EF', 'GAS': '#0600EF',
+        // McLaren
+        'SAI': '#FF8700', 'NOR': '#FF8700',
+        // Renault
+        'RIC': '#FFF500', 'HUL': '#FFF500',
+        // Toro Rosso
+        'KVY': '#2B4562', 'ALB': '#2B4562',
+        // Racing Point
+        'STR': '#F596C8', 'PER': '#F596C8',
+        // Alfa Romeo
+        'RAI': '#900000', 'GIO': '#900000',
+        // Haas
+        'MAG': '#B6BABD', 'GRO': '#B6BABD',
+        // Williams
+        'RUS': '#FFFFFF', 'KUB': '#FFFFFF',
+    },
+    '2020': {
+        // Mercedes
+        'HAM': '#000000', 'BOT': '#000000',
+        // Ferrari
+        'VET': '#DC0000', 'LEC': '#DC0000',
+        // Red Bull
+        'VER': '#0600EF', 'ALB': '#0600EF',
+        // McLaren
+        'SAI': '#FF8700', 'NOR': '#FF8700',
+        // Renault
+        'RIC': '#FFF500', 'OCO': '#FFF500',
+        // AlphaTauri
+        'GAS': '#FFFFFF', 'KVY': '#FFFFFF',
+        // Racing Point
+        'STR': '#F596C8', 'PER': '#F596C8',
+        // Alfa Romeo
+        'RAI': '#900000', 'GIO': '#900000',
+        // Haas
+        'MAG': '#B6BABD', 'GRO': '#B6BABD',
+        // Williams
+        'RUS': '#005AFF', 'LAT': '#005AFF',
+    },
     '2021': {
         // Mercedes
         'HAM': '#00D2BE', 'BOT': '#00D2BE',
@@ -74,10 +118,32 @@ const seasonalDriverColorMap: { [year: string]: { [driverCode: string]: string }
         // Williams
         'ALB': '#37BEDD', 'SAR': '#37BEDD',
     },
-    // Add 2024 if needed
+    '2024': {
+        // Red Bull Racing
+        'VER': '#3671C6', 'PER': '#3671C6',
+        // Mercedes
+        'HAM': '#6CD3BF', 'RUS': '#6CD3BF',
+        // Ferrari
+        'LEC': '#F91536', 'SAI': '#F91536',// Bearman (1 race)
+        // McLaren
+        'NOR': '#FF8700', 'PIA': '#FF8700',
+        // Aston Martin
+        'ALO': '#00594F', 'STR': '#00594F',
+        // Alpine
+        'GAS': '#0090FF', 'OCO': '#0090FF',
+        // Williams
+        'ALB': '#00A3E0', 'SAR': '#00A3E0', 'COL': '#00A3E0', // Colapinto replaced Sargeant
+        // RB (Visa Cash App RB)
+        'RIC': '#4E7C9B', 'TSU': '#4E7C9B', 'LAW': '#4E7C9B', // Lawson replaced Ricciardo
+        // Stake F1 Team Kick Sauber
+        'BOT': '#900000', 'ZHO': '#900000',
+        // Haas
+        'HUL': '#B6BABD', 'MAG': '#B6BABD', 'BEA': '#B6BABD', // Bearman (1 race)
+    },
+    // 2025 placeholder
     '2025': { // Based on known 2025 lineup
         // Red Bull Racing
-        'VER': '#1E41FF', 'PER': '#1E41FF', // Assuming RB colors similar to 2022/23
+        'VER': '#1E41FF', 'TSU': '#1E41FF', // Assuming RB colors similar to 2022/23
         // Mercedes
         'RUS': '#6CD3BF', 'ANT': '#6CD3BF', // Antonelli
         // Ferrari
@@ -91,10 +157,10 @@ const seasonalDriverColorMap: { [year: string]: { [driverCode: string]: string }
         // Williams
         'ALB': '#00A3E0', 'SAI': '#00A3E0', // Sainz (Using recent Williams blue)
         // RB (Visa Cash App RB)
-        'TSU': '#4E7C9B', 'LAW': '#4E7C9B', // Lawson (Using recent AT/RB blue)
+        'HAD': '#4E7C9B', 'LAW': '#4E7C9B', // Lawson (Using recent AT/RB blue)
         // Sauber / Audi (Using Sauber Red for now)
         'HUL': '#900000', // Hulkenberg
-        // 'BOR': '#900000', // Bortoleto (If confirmed)
+        'BOR': '#900000', // Bortoleto (If confirmed)
         // Haas
         'OCO': '#B6BABD', // Ocon (Using recent Haas gray)
         'BEA': '#B6BABD', // Bearman

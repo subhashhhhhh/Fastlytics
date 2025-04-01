@@ -52,7 +52,7 @@ const Dashboard = () => {
   });
 
   // Show top 4 recent races
-  const recentRaces = raceResults?.slice(-4).reverse() ?? [];
+  const recentRaces = raceResults?.slice(-6).reverse() ?? [];
 
   const handleRaceClick = (race: RaceResult) => {
     const raceId = `${race.year}-${race.event.toLowerCase().replace(/\s+/g, '-')}`;
