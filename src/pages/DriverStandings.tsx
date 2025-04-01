@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Import Link
+import { useNavigate } from 'react-router-dom'; // Remove Link import
 import { ArrowLeft, Trophy, CheckCircle, MinusCircle, Award, Calendar, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react'; // Added ArrowUp/Down
 import Navbar from '@/components/Navbar';
 import { Button } from "@/components/ui/button";
@@ -119,11 +119,11 @@ const DriverStandings = () => {
                 >
                   <div className="text-xl md:text-2xl font-bold text-gray-500 w-8 text-center">{driver.rank}</div>
                   <div className="flex-grow">
-                    {/* Driver name (no longer linked) */}
+                    {/* Driver name display */}
                     <h2 className="text-lg md:text-xl font-semibold text-white">{driver.name}</h2>
                     <div className="flex items-center gap-2 text-sm text-gray-400 mt-0.5"> {/* Added slight margin-top */}
                        <span className={cn("w-2 h-2 rounded-full", `bg-f1-${teamColor}`)}></span>
-                       {/* Team name (not linked) */}
+                       {/* Team name display */}
                        <span>{driver.team}</span>
                     </div>
                   </div>

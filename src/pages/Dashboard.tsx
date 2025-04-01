@@ -148,9 +148,8 @@ const Dashboard = () => {
 
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                    {teamStandings?.slice(0, 4).map((team) => (
-                     // Wrap F1Card with Link for team details
-                     // TODO: Use a proper teamId if available instead of team.team
-                     <Link key={team.shortName || team.team} to={`/team/${encodeURIComponent(team.team)}`} className="no-underline">
+                     // Remove the Link and replace with a simple div
+                     <div key={team.shortName || team.team} className="no-underline">
                        <F1Card
                          title={team.team}
                          value={`${team.points} PTS`}
@@ -159,7 +158,7 @@ const Dashboard = () => {
                          points_change={team.points_change} // Pass points_change
                          className="bg-gray-900/80 border border-gray-700/80 hover:border-red-600/50 transition-colors duration-200 h-full" // Added h-full for consistent height
                        />
-                     </Link>
+                     </div>
                    ))}
                   </div>
                 )}
@@ -183,8 +182,8 @@ const Dashboard = () => {
 
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                    {driverStandings?.slice(0, 4).map((driver) => (
-                     // Wrap F1Card with Link for driver details
-                     <Link key={driver.code} to={`/driver/${driver.code}`} className="no-underline">
+                     // Remove the Link and replace with a simple div
+                     <div key={driver.code} className="no-underline">
                        <F1Card
                          title={driver.name}
                          value={`${driver.points} PTS`}
@@ -193,7 +192,7 @@ const Dashboard = () => {
                          points_change={driver.points_change} // Pass points_change
                          className="bg-gray-900/80 border border-gray-700/80 hover:border-red-600/50 transition-colors duration-200 h-full" // Added h-full for consistent height
                        />
-                     </Link>
+                     </div>
                    ))}
                   </div>
                 )}

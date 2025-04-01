@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Import Link
+import { useNavigate } from 'react-router-dom'; // Remove Link import
 import { ArrowLeft, Trophy, CheckCircle, MinusCircle, Award, Calendar, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react'; // Added ArrowUp/Down
 import Navbar from '@/components/Navbar';
 import { Button } from "@/components/ui/button";
@@ -121,7 +121,7 @@ const TeamStandings = () => {
                   <div className="text-xl md:text-2xl font-bold text-gray-500 w-8 text-center">{rank}</div>
                   <div className={cn("w-1.5 h-10 rounded-full", `bg-f1-${teamColor}`)}></div>
                   <div className="flex-grow">
-                    {/* Team name (no longer linked) */}
+                    {/* Team name display */}
                     <h2 className="text-lg md:text-xl font-semibold text-white">{team.team}</h2>
                   </div>
                   <div className="flex items-center gap-4 md:gap-6 text-sm text-gray-400 flex-shrink-0">

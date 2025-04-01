@@ -10,7 +10,7 @@ import TeamStandings from "./pages/TeamStandings";
 import DriverStandings from "./pages/DriverStandings";
 import Races from "./pages/Races"; // Import Races page
 import Profile from "./pages/Profile"; // Import Profile page
-// Driver/Team details removed
+// Import NotFound page
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import PrivacyPolicy from "./pages/PrivacyPolicy"; // Import Privacy Policy page
@@ -77,7 +77,6 @@ const App = () => (
             <Route path="/standings/teams" element={<MainLayout><TeamStandings /></MainLayout>} />
             <Route path="/standings/drivers" element={<MainLayout><DriverStandings /></MainLayout>} />
             <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} /> {/* New Profile route */}
-            {/* Driver and Team Detail Routes Removed */}
           </Route>
 
           {/* 404 page - Keep outside protected routes or handle within if needed */}
