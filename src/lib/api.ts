@@ -314,10 +314,12 @@ export const fetchRaceResults = async (year: number): Promise<RaceResult[]> => {
     } catch (error) { console.error(`Error fetching race results for ${year}:`, error); throw error; }
 };
 
-/** Fetches detailed race results for a specific event. */
-export const fetchSpecificRaceResults = async (year: number, eventSlug: string, session?: string): Promise<DetailedRaceResult[]> => {
-    const url = `${API_BASE_URL}/api/results/race/${year}/${eventSlug}`;
-    console.log(`Fetching detailed race results from: ${url}`);
+/** Fetches detailed race results for a specific event and session. */
+export const fetchSpecificRaceResults = async (year: number, eventSlug: string, session: string): Promise<DetailedRaceResult[]> => {
+    // Add the session as a query parameter
+    const params = new URLSearchParams({ session });
+    const url = `${API_BASE_URL}/api/results/race/${year}/${eventSlug}?${params.toString()}`;
+    console.log(`Fetching detailed race results from: ${url}`); // Log includes session now
     try {
         const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
@@ -327,10 +329,10 @@ export const fetchSpecificRaceResults = async (year: number, eventSlug: string, 
             throw new Error(errorDetail);
         }
         const data: DetailedRaceResult[] = await response.json();
-        console.log(`Successfully fetched detailed results for ${year} ${eventSlug}.`);
+        console.log(`Successfully fetched detailed results for ${year} ${eventSlug} session ${session}.`);
         return data;
     } catch (error) {
-        console.error(`Error fetching detailed race results for ${year} ${eventSlug}:`, error);
+        console.error(`Error fetching detailed race results for ${year} ${eventSlug} session ${session}:`, error);
         throw error;
     }
 };

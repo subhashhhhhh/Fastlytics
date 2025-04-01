@@ -6,13 +6,16 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
-    port: 8080,
+    host: "::", // Allows access on any network interface
+    port: 8080,  // Change to the port you want
+  },
+  preview: {
+    allowedHosts: ['fastlytics.app'], // Allow access from these hosts
   },
   plugins: [
     react(),
     mode === 'development' &&
-    componentTagger(),
+      componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
