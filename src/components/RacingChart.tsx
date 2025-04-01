@@ -186,7 +186,7 @@ const RacingChart: React.FC<RacingChartProps> = ({
           <Legend wrapperStyle={{ paddingTop: '20px' }} />
           {/* Dynamically render lines */}
           {driversToDisplay.map((driverCode) => {
-            const color = driverColor(driverCode);
+            const color = driverColor(driverCode, year); // Pass year to driverColor
             return (
               <Line
                 key={driverCode}

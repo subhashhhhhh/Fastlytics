@@ -1,8 +1,9 @@
 import React from 'react';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from 'react-router-dom';
-import { BarChart, GitCompareArrows, Clock, Fuel, Users, Share2, Cpu, Database, Server } from 'lucide-react'; // Updated icons
+import { BarChart, GitCompareArrows, Clock, Fuel, Users, Share2, Cpu, Database, Server, Gauge } from 'lucide-react'; // Added Gauge icon
 import LandingNavbar from '@/components/LandingNavbar'; // Import the Navbar
 import RacingChart from '@/components/RacingChart'; // Import the chart component
 import { LapTimeDataPoint } from '@/lib/api'; // Import the data type
@@ -23,6 +24,8 @@ const sampleLapData: LapTimeDataPoint[] = [
 
 
 const Landing: React.FC = () => {
+  const { user } = useAuth(); // Get user state
+
   return (
     <> {/* Wrap in fragment */}
       <LandingNavbar /> {/* Add the Navbar here */}
@@ -30,8 +33,9 @@ const Landing: React.FC = () => {
         {/* Hero Section */}
         <header className="text-center pt-16 pb-12 md:pt-24 md:pb-20 w-full max-w-4xl mx-auto">
           {/* Optional: Add a subtle F1 car silhouette or track graphic here */}
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 tracking-tight">
-            🏎️ Fast<span className="text-red-500">lytics</span>
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 tracking-tight flex items-center justify-center"> {/* Removed gap-3 */}
+            <Gauge className="h-10 w-10 md:h-12 md:w-12 text-red-500 mr-2" /> {/* Added mr-2 */}
+            <span className="transition-colors duration-200 hover:text-red-500">Fast</span><span className="text-red-500">lytics</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Unlock the Speed. Dive deep into historical Formula 1 data with intuitive charts and powerful comparisons.
@@ -42,11 +46,13 @@ const Landing: React.FC = () => {
                 Explore Dashboard
               </Button>
             </Link>
-            <Link to="/auth">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white font-semibold px-8 py-3 rounded-lg shadow-lg transition duration-300">
-                Sign Up / Log In
-              </Button>
-            </Link>
+            {!user && ( // Conditionally render based on user state
+              <Link to="/auth">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white font-semibold px-8 py-3 rounded-lg shadow-lg transition duration-300">
+                  Sign Up / Log In
+                </Button>
+              </Link>
+            )}
           </div>
         </header>
 
@@ -186,6 +192,23 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
+        {/* Open Source Section */}
+        <section id="open-source" className="w-full max-w-6xl text-center py-16 px-4 bg-gray-900/50 border-y border-gray-800/70 my-12">
+          <h2 className="text-3xl md:text-4xl font-semibold mb-6">Built by the Community, For the Community</h2>
+          <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-6">
+            Fastlytics is proud to be an open-source project! Platforms offering this depth of F1 data visualization are rare, and even fewer are built transparently in the open. We believe in collaboration and sharing knowledge with the F1 tech community.
+          </p>
+          <p className="text-gray-400 max-w-3xl mx-auto mb-8">
+            Explore the code, contribute features, or report issues on our GitHub repository.
+          </p>
+          <a href="https://github.com/subhashhhhhh/Fastlytics" target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" size="lg" className="border-red-500 text-red-500 hover:bg-red-900/30 hover:text-red-400 font-semibold px-8 py-3 rounded-lg shadow-lg transition duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-1.5 6-6.5.08-1.3-.32-2.7-.94-3.7a5.4 5.4 0 0 0-.62-4.3s-1-.3-3.3 1.3a12.3 12.3 0 0 0-6.2 0C5.1 2.8 4 3.1 4 3.1a5.4 5.4 0 0 0-.62 4.3c-.62 1-.94 2.4-.94 3.7 0 5 3 6.5 6 6.5-1 1-1 2.5-1 3.5V22"/></svg>
+              View on GitHub
+            </Button>
+          </a>
+        </section>
+
       {/* Visual Showcase Section */}
          <section id="showcase" className="w-full max-w-5xl text-center py-16 px-4">
             <h2 className="text-3xl md:text-4xl font-semibold mb-10">See It In Action</h2>
@@ -216,11 +239,13 @@ const Landing: React.FC = () => {
                 Explore Dashboard
               </Button>
             </Link>
-            <Link to="/auth">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white font-semibold px-8 py-3 rounded-lg shadow-lg transition duration-300">
-                Sign Up / Log In
-              </Button>
-            </Link>
+            {!user && ( // Conditionally render based on user state
+              <Link to="/auth">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white font-semibold px-8 py-3 rounded-lg shadow-lg transition duration-300">
+                  Sign Up / Log In
+                </Button>
+              </Link>
+            )}
           </div>
         </section>
 

@@ -187,9 +187,7 @@ const Race = () => {
   }, [sessionResults, selectedSession]);
 
   const fastestLapHolder = useMemo(() => {
-    // This requires lap data which isn't directly in sessionResults usually.
-    // We'd need to fetch laps separately or rely on a pre-processed 'isFastestLap' flag.
-    // For now, let's disable this card if the flag isn't present.
+    // Find the driver marked with the fastest lap flag by the backend
     if (selectedSession !== 'R' || !sessionResults) return null;
     return sessionResults.find(r => r.isFastestLap === true);
   }, [sessionResults, selectedSession]);
@@ -262,10 +260,22 @@ const Race = () => {
                 <F1Card title="Race Winner" value={raceWinner.fullName} team={getTeamColorClass(raceWinner.team) as any} icon={<Trophy />} />
             )}
             {poleSitter && (
-                 <F1Card title="Pole Position" value={poleSitter.fullName} team={getTeamColorClass(poleSitter.team) as any} icon={<Zap />} />
+                 <F1Card
+                    title="Pole Position"
+                    value={poleSitter.fullName}
+                    subValue={poleSitter.poleLapTimeValue} // Pass the pole lap time
+                    team={getTeamColorClass(poleSitter.team) as any}
+                    icon={<Zap />}
+                 />
              )}
             {fastestLapHolder && (
-                 <F1Card title="Fastest Lap" value={fastestLapHolder.fullName} team={getTeamColorClass(fastestLapHolder.team) as any} icon={<Clock />} />
+                 <F1Card
+                    title="Fastest Lap"
+                    value={fastestLapHolder.fullName}
+                    subValue={fastestLapHolder.fastestLapTimeValue} // Pass the fastest lap time
+                    team={getTeamColorClass(fastestLapHolder.team) as any}
+                    icon={<Clock />}
+                 />
              )}
          </div>
         )}

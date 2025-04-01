@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>; // Add signOut function
+  setUser: (user: User) => void; // Add setUser function for profile updates
   // Add profile data or other auth-related state if needed later
   // profile: UserProfile | null;
 }
@@ -79,6 +80,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // State will update via onAuthStateChange listener
     setLoading(false);
   };
+  
+  // Manual setter for user data for updates that don't trigger the auth state listener
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
 
   // Value provided to consuming components
   const value = {
@@ -86,6 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     loading,
     signOut,
+    setUser: updateUser, // Expose the setUser function
   };
 
   return (

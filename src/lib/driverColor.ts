@@ -1,77 +1,137 @@
-// Helper function to get a consistent color for a driver
-// This is a basic example, you might want to map directly to team colors
-// or use a more sophisticated color generation/mapping library
+// Helper function to get a consistent color for a driver based on the season
 
-// Import team colors if you want to use them directly
-// import { teamPerformanceData } from '@/data/mockData'; // Assuming team data has colors
-
-// Basic color palette (add more as needed)
+// Basic color palette for fallback
 const defaultColors = [
-    '#EF4444', // Red (Accent)
-    '#3B82F6', // Blue
-    '#22C55E', // Green
-    '#EAB308', // Yellow
-    '#A855F7', // Purple
-    '#EC4899', // Pink
-    '#F97316', // Orange
-    '#14B8A6', // Teal
-    '#6366F1', // Indigo
-    '#84CC16', // Lime
+    '#EF4444', '#3B82F6', '#22C55E', '#EAB308', '#A855F7',
+    '#EC4899', '#F97316', '#14B8A6', '#6366F1', '#84CC16',
 ];
 
-// Simple mapping (expand this or use team data)
-const driverColorMap: { [key: string]: string } = {
-    'VER': '#1E41FF', // Red Bull Blue
-    'PER': '#1E41FF',
-    'HAM': '#6CD3BF', // Mercedes Teal (approx)
-    'RUS': '#6CD3BF',
-    'LEC': '#FF2800', // Ferrari Red
-    'SAI': '#FF2800',
-    'NOR': '#FF8700', // McLaren Orange
-    'PIA': '#FF8700',
-    'ALO': '#00594F', // Aston Martin Green
-    'STR': '#00594F',
-    'OCO': '#0090FF', // Alpine Blue
-    'GAS': '#0090FF',
-    'ALB': '#00A3E0', // Williams Blue (approx)
-    'SAR': '#00A3E0', // Assuming Sargeant for Williams
-    'TSU': '#4E7C9B', // AlphaTauri/RB Blue
-    'RIC': '#4E7C9B', // Assuming Ricciardo for RB
-    'BOT': '#900000', // Alfa Romeo/Sauber Red
-    'ZHO': '#900000',
-    'MAG': '#B6BABD', // Haas Gray/White (approx)
-    'HUL': '#B6BABD',
-    // Add mappings for new 2025 drivers if needed, or use fallback
-    'ANT': '#6CD3BF', // Antonelli -> Mercedes
-    'BEA': '#B6BABD', // Bearman -> Haas
-    'HAD': '#4E7C9B', // Hadjar -> RB
-    'LAW': '#1E41FF', // Lawson -> Red Bull (Reserve?)
-    'DOO': '#0090FF', // Doohan -> Alpine (Reserve?)
-    'BOR': '#900000', // Bortoleto -> Sauber (Reserve?)
+// --- Seasonal Driver Color Mappings ---
+const seasonalDriverColorMap: { [year: string]: { [driverCode: string]: string } } = {
+    '2021': {
+        // Mercedes
+        'HAM': '#00D2BE', 'BOT': '#00D2BE',
+        // Red Bull
+        'VER': '#0600EF', 'PER': '#0600EF',
+        // McLaren
+        'RIC': '#FF8700', 'NOR': '#FF8700',
+        // Aston Martin
+        'VET': '#006F62', 'STR': '#006F62',
+        // Alpine
+        'ALO': '#0090FF', 'OCO': '#0090FF',
+        // Ferrari
+        'LEC': '#DC0000', 'SAI': '#DC0000',
+        // AlphaTauri
+        'GAS': '#2B4562', 'TSU': '#2B4562',
+        // Alfa Romeo
+        'RAI': '#900000', 'GIO': '#900000',
+        // Haas
+        'MAZ': '#FFFFFF', 'MSC': '#FFFFFF',
+        // Williams
+        'LAT': '#005AFF', 'RUS': '#005AFF',
+    },
+    '2022': {
+        // Mercedes
+        'HAM': '#6CD3BF', 'RUS': '#6CD3BF',
+        // Red Bull
+        'VER': '#1E5BC6', 'PER': '#1E5BC6',
+        // Ferrari
+        'LEC': '#ED1C24', 'SAI': '#ED1C24',
+        // McLaren
+        'NOR': '#F58020', 'RIC': '#F58020',
+        // Alpine
+        'ALO': '#2293D1', 'OCO': '#2293D1',
+        // AlphaTauri
+        'GAS': '#4E7C9B', 'TSU': '#4E7C9B',
+        // Aston Martin
+        'VET': '#2D826D', 'STR': '#2D826D',
+        // Williams
+        'LAT': '#37BEDD', 'ALB': '#37BEDD',
+        // Alfa Romeo
+        'ZHO': '#B12039', 'BOT': '#B12039',
+        // Haas
+        'MAG': '#B6BABD', 'MSC': '#B6BABD',
+    },
+    '2023': {
+        // Red Bull
+        'VER': '#3671C6', 'PER': '#3671C6',
+        // Ferrari
+        'LEC': '#F91536', 'SAI': '#F91536',
+        // Mercedes
+        'HAM': '#6CD3BF', 'RUS': '#6CD3BF',
+        // Alpine
+        'OCO': '#2293D1', 'GAS': '#2293D1',
+        // McLaren
+        'NOR': '#F58020', 'PIA': '#F58020',
+        // Alfa Romeo
+        'BOT': '#C92D4B', 'ZHO': '#C92D4B',
+        // Aston Martin
+        'STR': '#358C75', 'ALO': '#358C75',
+        // Haas
+        'MAG': '#B6BABD', 'HUL': '#B6BABD',
+        // AlphaTauri
+        'TSU': '#5E8FAA', 'DEV': '#5E8FAA', 'RIC': '#5E8FAA', 'LAW': '#5E8FAA', // Added RIC/LAW for mid-season
+        // Williams
+        'ALB': '#37BEDD', 'SAR': '#37BEDD',
+    },
+    // Add 2024 if needed
+    '2025': { // Based on known 2025 lineup
+        // Red Bull Racing
+        'VER': '#1E41FF', 'PER': '#1E41FF', // Assuming RB colors similar to 2022/23
+        // Mercedes
+        'RUS': '#6CD3BF', 'ANT': '#6CD3BF', // Antonelli
+        // Ferrari
+        'LEC': '#FF2800', 'HAM': '#FF2800', // Hamilton (Using recent Ferrari red)
+        // McLaren
+        'NOR': '#FF8700', 'PIA': '#FF8700', // Using recent McLaren orange
+        // Aston Martin
+        'ALO': '#00594F', 'STR': '#00594F', // Using recent Aston green
+        // Alpine
+        'GAS': '#0090FF', 'DOO': '#0090FF', // Doohan (Using recent Alpine blue)
+        // Williams
+        'ALB': '#00A3E0', 'SAI': '#00A3E0', // Sainz (Using recent Williams blue)
+        // RB (Visa Cash App RB)
+        'TSU': '#4E7C9B', 'LAW': '#4E7C9B', // Lawson (Using recent AT/RB blue)
+        // Sauber / Audi (Using Sauber Red for now)
+        'HUL': '#900000', // Hulkenberg
+        // 'BOR': '#900000', // Bortoleto (If confirmed)
+        // Haas
+        'OCO': '#B6BABD', // Ocon (Using recent Haas gray)
+        'BEA': '#B6BABD', // Bearman
+    }
 };
 
-let colorIndex = 0;
+// Keep track of fallback color index globally or reset it if needed
+let fallbackColorIndex = 0;
 
-export const driverColor = (driverCode: string): string => {
-    if (driverColorMap[driverCode]) {
-        return driverColorMap[driverCode];
+/**
+ * Gets the color associated with a driver for a specific season.
+ * @param driverCode The 3-letter driver code (e.g., 'HAM').
+ * @param season The year of the season (e.g., 2023).
+ * @returns The hex color code string.
+ */
+export const driverColor = (driverCode: string, season: number | string): string => {
+    const year = String(season); // Ensure year is a string for map lookup
+    const latestYear = '2025'; // Define the most recent year with data
+
+    // Try to get the color map for the specific season
+    const yearMap = seasonalDriverColorMap[year];
+
+    if (yearMap && yearMap[driverCode]) {
+        return yearMap[driverCode];
     }
-    // Fallback: cycle through default colors if no specific mapping exists
-    const color = defaultColors[colorIndex % defaultColors.length];
-    colorIndex++;
+
+    // Fallback 1: If driver not found in the specific year, check the latest year's map
+    // (Handles cases where a driver might be new or data is missing for that year)
+    const latestMap = seasonalDriverColorMap[latestYear];
+    if (latestMap && latestMap[driverCode]) {
+        // console.warn(`Driver ${driverCode} not found for season ${year}, using ${latestYear} color.`);
+        return latestMap[driverCode];
+    }
+
+    // Fallback 2: Cycle through default colors if no mapping exists in specific or latest year
+    // console.warn(`No color mapping found for driver ${driverCode} in season ${year} or ${latestYear}. Using default fallback.`);
+    const color = defaultColors[fallbackColorIndex % defaultColors.length];
+    fallbackColorIndex++;
     return color;
 };
-
-// --- Alternative using team data (if mockData includes driver-team mapping) ---
-/*
-import { driverStandingsData } from "@/data/mockData"; // Assuming driver data has teamColor
-
-const driverTeamColorMap = driverStandingsData.reduce((acc, driver) => {
-    acc[driver.shortName] = `var(--f1-${driver.teamColor})`; // Or use hex codes directly
-    return acc;
-}, {} as Record<string, string>);
-
-export const driverColor = (driverCode: string): string => {
-    return driverTeamColorMap[driverCode] || defaultColors[Math.floor(Math.random() * defaultColors.length)]; // Random fallback
-};
-*/

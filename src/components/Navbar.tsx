@@ -7,7 +7,6 @@ import {
   Menu,
   X,
   LogOut,
-  Settings,
   LayoutDashboard,
   Gauge, // Added Gauge for logo
   Flag, // Added Flag for Races
@@ -23,21 +22,13 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth hook
 
 const Navbar = () => {
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { user, signOut, loading } = useAuth(); // Get user and signOut from context
+  const { user, loading } = useAuth(); // Get user from context
 
   // Expanded Nav Items
   const navItems = [
@@ -46,13 +37,6 @@ const Navbar = () => {
     { name: 'Drivers', href: '/standings/drivers', icon: <Users size={18} /> },
     { name: 'Teams', href: '/standings/teams', icon: <UsersRound size={18} /> },
   ];
-
-  // Corrected handleLogout function (make it async)
-  const handleLogout = async () => {
-    console.log("Logout clicked");
-    await signOut(); // Call signOut from context
-    // AuthProvider listener handles state update
-  };
 
   // Loading state while checking auth
   if (loading) {
@@ -96,50 +80,19 @@ const Navbar = () => {
 
           {/* Right side: Account/Auth & Mobile Toggle */}
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Desktop Account Dropdown or Login/Signup */}
+            {/* Desktop Account or Login/Signup */}
             <div className="hidden md:flex items-center gap-2">
               {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                      <Avatar className="h-9 w-9 border-2 border-gray-700">
-                        <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email?.charAt(0).toUpperCase()} />
-                        <AvatarFallback className="bg-gray-700 text-gray-300">
-                          {user.email ? user.email.charAt(0).toUpperCase() : '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-gray-900 border-gray-700 text-white" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user.user_metadata?.full_name || user.email}
-                        </p>
-                        {user.email && <p className="text-xs leading-none text-gray-400">{user.email}</p>}
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-gray-700" />
-                    {/* Use asChild with Link for navigation */}
-                    <DropdownMenuItem asChild className="hover:bg-gray-800 cursor-pointer focus:bg-gray-800">
-                      <Link to="/profile">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="hover:bg-gray-800 cursor-pointer focus:bg-gray-800">
-                      <Link to="/settings">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-gray-700" />
-                    <DropdownMenuItem onClick={handleLogout} className="hover:bg-red-800/80 cursor-pointer text-red-400 hover:text-red-300 focus:bg-red-800/80 focus:text-red-300">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Link to="/profile">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full hover:bg-gray-800">
+                    <Avatar className="h-9 w-9 border-2 border-gray-700">
+                      <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email?.charAt(0).toUpperCase()} />
+                      <AvatarFallback className="bg-gray-700 text-gray-300">
+                        {user.email ? user.email.charAt(0).toUpperCase() : '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </Link>
               ) : (
                 <>
                   <Link to="/auth?tab=login">
@@ -213,14 +166,6 @@ const Navbar = () => {
                             <User className="h-5 w-5" />
                             <span>Profile</span>
                          </Link>
-                         <Link to="/settings" className="flex items-center space-x-3 p-3 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => setDrawerOpen(false)}>
-                            <Settings className="h-5 w-5" />
-                            <span>Settings</span>
-                         </Link>
-                         <Button variant="ghost" onClick={() => { handleLogout(); setDrawerOpen(false); }} className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-800/80 p-3 text-base font-medium">
-                            <LogOut className="mr-3 h-5 w-5" />
-                            <span>Log out</span>
-                         </Button>
                        </div>
                      ) : (
                        <div className="flex flex-col space-y-2">

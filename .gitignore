@@ -1,3 +1,23 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+/coverage
+
+# Vite / Build Output
+/dist
+/dist-ssr
+/.vite
+*.local
+
+# TypeScript
+*.tsbuildinfo
+
 # Logs
 logs
 *.log
@@ -7,12 +27,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Environment variables
+# Environment Variables
 .env*
 !.env.example
 
@@ -20,20 +35,15 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Build outputs
-/dist
-/build
-/out
-
-# Dependency directories
-/node_modules
+# OS generated files
+.DS_Store
+Thumbs.db
 
 # Optional npm cache directory
 .npm
@@ -41,16 +51,17 @@ dist-ssr
 # Optional eslint cache
 .eslintcache
 
-# Optional vite cache
-.vite
+# Optional PNPM lockfile (if applicable, but usually committed)
+# pnpm-lock.yaml
 
-# Optional PNPM lockfile
-pnpm-lock.yaml
-
-# Backend API Directory (if developing within same repo)
+# Backend API Directory (Specific Rules)
+# Ignore the entire directory by default
 /backend-api/
-!.gitignore # Allow tracking .gitignore within backend-api if needed
+# But DO NOT ignore a .gitignore file within it, allowing specific un-ignores
+!/backend-api/.gitignore
+# Ignore environment files within the backend directory
 /backend-api/.env*
+# Ignore Python cache/compiled files
 /backend-api/cache/
 /backend-api/__pycache__/
 /backend-api/*.pyc

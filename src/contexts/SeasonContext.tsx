@@ -7,8 +7,11 @@ interface SeasonContextType {
 }
 
 const currentYear = new Date().getFullYear();
-// Define available years centrally
-const defaultAvailableYears = [currentYear, currentYear - 1, currentYear - 2]; // Example: current and previous 2 years
+const startYear = 2021;
+const defaultAvailableYears = Array.from(
+  { length: currentYear - startYear + 1 }, 
+  (_, i) => currentYear - i
+);
 
 const SeasonContext = createContext<SeasonContextType | undefined>(undefined);
 

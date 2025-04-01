@@ -78,7 +78,7 @@ const PrivacyPolicy = () => {
 
           <h2>8. What Are Your Privacy Rights?</h2>
           <p>
-            You may review, change, or terminate your account at any time by logging into your account settings and updating your user account or by contacting us using the contact information provided.
+            You may review, change, or terminate your account at any time by logging into your account and updating your profile or by contacting us using the contact information provided.
           </p>
 
           <h2>9. Updates To This Notice</h2>

@@ -46,6 +46,9 @@ export interface DetailedRaceResult {
     q1Time?: string | null; // For Qualifying
     q2Time?: string | null; // For Qualifying
     q3Time?: string | null; // For Qualifying
+    // Added fields for specific lap times from processor
+    poleLapTimeValue?: string | null; // Formatted pole time (MM:SS.ms)
+    fastestLapTimeValue?: string | null; // Formatted fastest lap time (MM:SS.ms)
 }
 export interface LapPositionDataPoint {
     LapNumber: number;

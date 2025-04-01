@@ -9,11 +9,12 @@ interface F1CardProps {
   team: 'ferrari' | 'mercedes' | 'mclaren' | 'redbull' | 'astonmartin' | 'alpine' | 'williams' | 'haas' | 'alfaromeo' | 'alphatauri' | 'gray'; // Added missing teams + gray
   icon?: React.ReactNode;
   points_change?: number; // Use points_change instead of change
+  subValue?: string | null; // Optional sub-value (e.g., lap time)
   className?: string;
   style?: React.CSSProperties;
 }
 
-const F1Card = ({ title, value, team, icon, points_change, className, style }: F1CardProps) => {
+const F1Card = ({ title, value, team, icon, points_change, subValue, className, style }: F1CardProps) => {
 
   // Function to determine change indicator color and icon (copied from standings pages)
   const getChangeIndicator = (change: number | undefined) => {
@@ -37,6 +38,10 @@ const F1Card = ({ title, value, team, icon, points_change, className, style }: F
         <div>
           <h3 className="text-sm text-gray-300 font-medium mb-1">{title}</h3>
           <div className="text-2xl font-bold text-white">{value}</div>
+          {/* Display subValue (lap time) if available */}
+          {subValue && (
+            <div className="text-xs text-gray-400 font-mono mt-0.5">{subValue}</div>
+          )}
 
           {/* Display points change indicator if available */}
           {indicator && (

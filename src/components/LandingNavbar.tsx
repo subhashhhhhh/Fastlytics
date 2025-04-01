@@ -2,7 +2,7 @@ import React, { useState } from 'react'; // Import useState
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Gauge, User, LogOut, Settings, LayoutDashboard } from 'lucide-react'; // Replaced Car with Gauge, Added LayoutDashboard
+import { Menu, Gauge, User, LogOut, LayoutDashboard } from 'lucide-react'; // Removed Settings icon
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Import Avatar
 import {
@@ -85,9 +85,6 @@ const LandingNavbar: React.FC = () => {
                   <DropdownMenuItem asChild className="hover:bg-gray-800 cursor-pointer focus:bg-gray-800">
                     <Link to="/profile"><User className="mr-2 h-4 w-4" /><span>Profile</span></Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="hover:bg-gray-800 cursor-pointer focus:bg-gray-800">
-                     <Link to="/settings"><Settings className="mr-2 h-4 w-4" /><span>Settings</span></Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-gray-700" />
                   <DropdownMenuItem onClick={signOut} className="hover:bg-red-800/80 cursor-pointer text-red-400 hover:text-red-300 focus:bg-red-800/80 focus:text-red-300">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -138,9 +135,6 @@ const LandingNavbar: React.FC = () => {
                          </Link>
                          <Link to="/profile" className="flex items-center space-x-3 p-3 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => setDrawerOpen(false)}>
                             <User className="h-5 w-5" /><span>Profile</span>
-                         </Link>
-                         <Link to="/settings" className="flex items-center space-x-3 p-3 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => setDrawerOpen(false)}>
-                            <Settings className="h-5 w-5" /><span>Settings</span>
                          </Link>
                          <Button variant="ghost" onClick={() => { signOut(); setDrawerOpen(false); }} className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-800/80 p-3 text-base font-medium">
                             <LogOut className="mr-3 h-5 w-5" /><span>Log out</span>

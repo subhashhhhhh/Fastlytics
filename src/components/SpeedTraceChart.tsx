@@ -70,7 +70,7 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
     enabled: !!year && !!event && !!session && !!selectedDriver && !!selectedLap,
   });
 
-  const color = driverColor(selectedDriver);
+  const color = driverColor(selectedDriver, year); // Pass year to driverColor
   const isLoading = isLoadingDrivers || isLoadingSpeed;
   const chartTitle = `${selectedDriver}'s ${selectedLap === 'fastest' ? 'Fastest Lap' : `Lap ${selectedLap}`} Speed Trace`;
 

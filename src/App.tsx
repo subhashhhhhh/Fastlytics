@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,7 +10,6 @@ import TeamStandings from "./pages/TeamStandings";
 import DriverStandings from "./pages/DriverStandings";
 import Races from "./pages/Races"; // Import Races page
 import Profile from "./pages/Profile"; // Import Profile page
-import Settings from "./pages/Settings"; // Import Settings page
 // Driver/Team details removed
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -79,12 +77,10 @@ const App = () => (
             <Route path="/standings/teams" element={<MainLayout><TeamStandings /></MainLayout>} />
             <Route path="/standings/drivers" element={<MainLayout><DriverStandings /></MainLayout>} />
             <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} /> {/* New Profile route */}
-            <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} /> {/* New Settings route */}
             {/* Driver and Team Detail Routes Removed */}
           </Route>
 
           {/* 404 page - Keep outside protected routes or handle within if needed */}
-              {/* 404 page - Keep outside protected routes or handle within if needed */}
               <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
             </Routes>
           </BrowserRouter>
