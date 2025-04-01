@@ -40,6 +40,10 @@ const Landing: React.FC = () => {
           <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Unlock the Speed. Dive deep into historical Formula 1 data with intuitive charts and powerful comparisons.
           </p>
+          {/* Product Hunt Badge */}
+          <div className="mb-8 flex justify-center">
+            <a href="https://www.producthunt.com/posts/fastlytics?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-fastlytics" target="_blank" rel="noopener noreferrer"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=948509&theme=light&t=1743539982583" alt="Fastlytics - In-depth Formula 1 race analysis through data visualization | Product Hunt" style={{ width: '250px', height: '54px' }} width="250" height="54" /></a>
+          </div>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/dashboard">
               <Button size="lg" className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
