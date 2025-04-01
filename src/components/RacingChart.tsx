@@ -7,11 +7,12 @@ import { useQuery } from '@tanstack/react-query';
 // Import API functions and types
 import { fetchLapTimes, fetchSessionDrivers, SessionDriver, LapTimeDataPoint } from '@/lib/api';
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1"; // Import the spinner
-import { AlertCircle, Users } from 'lucide-react'; // Added Users icon
+import { AlertCircle, Users, PlusCircle, XCircle } from 'lucide-react'; // Added PlusCircle, XCircle icons
 import { driverColor } from '@/lib/driverColor';
 // Import Select components
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Use Card for layout
+import { Button } from "@/components/ui/button"; // Import Button
 
 // Helper function to format seconds into MM:SS.mmm
 const formatLapTime = (totalSeconds: number | null): string => {
@@ -32,9 +33,12 @@ interface RacingChartProps {
   year: number;
   event: string;
   session: string;
-  initialDrivers: string[]; // Expect array of 2 or 3 driver codes
+  initialDrivers: string[]; // Expect array of 2 to 5 driver codes
   staticData?: LapTimeDataPoint[]; // Optional static data prop
 }
+
+const MAX_DRIVERS = 5; // Define max drivers constant
+const MIN_DRIVERS = 2; // Define min drivers constant
 
 const RacingChart: React.FC<RacingChartProps> = ({
   className,
@@ -43,23 +47,28 @@ const RacingChart: React.FC<RacingChartProps> = ({
   year,
   event,
   session,
-  initialDrivers, // Should be length 2 or 3
+  initialDrivers, // Should be length 2 to 5
   staticData // Destructure the new prop
 }) => {
 
-  // Validate initialDrivers prop length (only if not using static data)
-  if (!initialDrivers || initialDrivers.length < 2 || initialDrivers.length > 3) {
-     console.error("RacingChart requires an initialDrivers prop with 2 or 3 driver codes.");
-     // Render an error state or default drivers if needed
-      if (!staticData) initialDrivers = ["VER", "LEC"]; // Fallback default only if fetching
-   }
+  // Validate initialDrivers prop length and clamp if necessary
+  let validatedInitialDrivers = initialDrivers || [];
+  if (!staticData) {
+      if (validatedInitialDrivers.length < MIN_DRIVERS) {
+          console.warn(`RacingChart received fewer than ${MIN_DRIVERS} initialDrivers. Falling back to defaults.`);
+          validatedInitialDrivers = ["VER", "LEC"]; // Default fallback
+      } else if (validatedInitialDrivers.length > MAX_DRIVERS) {
+          console.warn(`RacingChart received more than ${MAX_DRIVERS} initialDrivers. Clamping to ${MAX_DRIVERS}.`);
+          validatedInitialDrivers = validatedInitialDrivers.slice(0, MAX_DRIVERS);
+      }
+  }
 
    // Always call useState at the top level
-   const [selectedDrivers, setSelectedDrivers] = useState<string[]>(initialDrivers);
+   const [selectedDrivers, setSelectedDrivers] = useState<string[]>(validatedInitialDrivers);
 
    // Determine which drivers to actually display/fetch for
-   // Use initialDrivers if staticData is provided, otherwise use the state
-   const driversToDisplay = staticData ? initialDrivers : selectedDrivers;
+   // Use validatedInitialDrivers if staticData is provided, otherwise use the state
+   const driversToDisplay = staticData ? validatedInitialDrivers : selectedDrivers;
 
    // Fetch available drivers for the session (only if not using static data)
    const { data: availableDrivers, isLoading: isLoadingDrivers } = useQuery<SessionDriver[]>({
@@ -73,30 +82,50 @@ const RacingChart: React.FC<RacingChartProps> = ({
    // Fetch lap time data based on selected drivers (only if not using static data)
    // Use selectedDrivers state for the query key and function when fetching
    const { data: fetchedLapData, isLoading: isLoadingLapTimes, error, isError } = useQuery<LapTimeDataPoint[]>({
-     queryKey: ['lapTimes', year, event, session, ...selectedDrivers.sort()], // Use state here
-     queryFn: () => fetchLapTimes(year, event, session, selectedDrivers),      // Use state here
+     // Sort drivers in the key for consistent caching regardless of selection order
+     queryKey: ['lapTimes', year, event, session, ...selectedDrivers.sort()],
+     queryFn: () => fetchLapTimes(year, event, session, selectedDrivers),
      staleTime: 1000 * 60 * 5,
      gcTime: 1000 * 60 * 15,
     retry: 1,
-    enabled: !staticData && !!year && !!event && !!session && driversToDisplay.length >= 2, // Disable if staticData is provided
+    // Ensure we have the minimum number of drivers selected before enabling fetch
+    enabled: !staticData && !!year && !!event && !!session && selectedDrivers.length >= MIN_DRIVERS,
   });
 
   // Use staticData if provided, otherwise use fetched data
   const lapData = staticData || fetchedLapData;
 
-   const handleDriverChange = (index: number, value: string) => {
-     // Prevent selecting the same driver multiple times
-     // Check against the current state (selectedDrivers)
-     if (selectedDrivers.includes(value) && selectedDrivers[index] !== value) {
-         // Optionally show a toast message here
-         console.warn("Driver already selected");
-        return;
+  // --- Driver Selection Handlers ---
+  const handleDriverChange = (index: number, value: string) => {
+    // Prevent selecting the same driver multiple times
+    if (selectedDrivers.includes(value) && selectedDrivers[index] !== value) {
+      console.warn("Driver already selected");
+      return;
     }
-     // This function should only be called when not using static data
-     if (!staticData) {
-         const newSelection = [...selectedDrivers]; // Use state here
-         newSelection[index] = value;
-         setSelectedDrivers(newSelection); // Use the state setter
+    // This function should only be called when not using static data
+    if (!staticData) {
+      const newSelection = [...selectedDrivers];
+      newSelection[index] = value;
+      setSelectedDrivers(newSelection);
+    }
+  };
+
+  const addDriver = () => {
+    if (selectedDrivers.length < MAX_DRIVERS && availableDrivers) {
+      // Find the first available driver not already selected
+      const nextDriver = availableDrivers.find(d => !selectedDrivers.includes(d.code));
+      if (nextDriver) {
+        setSelectedDrivers([...selectedDrivers, nextDriver.code]);
+      } else {
+        console.warn("No more available drivers to add.");
+        // Optionally show a message to the user
+      }
+    }
+  };
+
+  const removeDriver = (indexToRemove: number) => {
+    if (selectedDrivers.length > MIN_DRIVERS) {
+      setSelectedDrivers(selectedDrivers.filter((_, index) => index !== indexToRemove));
     }
   };
 
@@ -138,9 +167,22 @@ const RacingChart: React.FC<RacingChartProps> = ({
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
           <XAxis dataKey="LapNumber" stroke="rgba(156, 163, 175, 0.7)" tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} padding={{ left: 10, right: 10 }} />
           {/* Updated YAxis tickFormatter */}
-          <YAxis stroke="rgba(156, 163, 175, 0.7)" tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} domain={['dataMin - 0.5', 'dataMax + 0.5']} tickFormatter={formatLapTime} allowDecimals={true} width={60} /> {/* Increased width for MM:SS.mmm */}
-          {/* Updated Tooltip formatter */}
-          <Tooltip contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(100, 116, 139, 0.5)', color: '#E5E7EB', borderRadius: '6px', boxShadow: '0 2px 10px rgba(0,0,0,0.5)' }} labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }} itemStyle={{ color: '#E5E7EB' }} formatter={(value: number | null) => [formatLapTime(value), null]} labelFormatter={(label) => `Lap ${label}`} />
+          <YAxis stroke="rgba(156, 163, 175, 0.7)" tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} domain={['dataMin - 0.5', 'dataMax + 0.5']} tickFormatter={formatLapTime} allowDecimals={true} width={60} />
+          {/* Updated Tooltip: isAnimationActive=false helps focus on single item */}
+          <Tooltip
+            isAnimationActive={false} // Prevent showing all lines on hover
+            contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(100, 116, 139, 0.5)', color: '#E5E7EB', borderRadius: '6px', boxShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
+            labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }}
+            itemStyle={{ padding: '2px 0' }}
+            formatter={(value: number | null, name: string, props) => {
+                // Only return the value for the specific item being hovered (if active)
+                // Note: This might still show multiple if lines overlap perfectly.
+                // A fully custom tooltip might be needed for absolute single-item display.
+                return [`${formatLapTime(value)}`, name];
+            }}
+            labelFormatter={(label) => `Lap ${label}`}
+            // cursor={{ stroke: 'rgba(156, 163, 175, 0.5)', strokeWidth: 1 }} // Optional: customize cursor line
+          />
           <Legend wrapperStyle={{ paddingTop: '20px' }} />
           {/* Dynamically render lines */}
           {driversToDisplay.map((driverCode) => {
@@ -171,32 +213,57 @@ const RacingChart: React.FC<RacingChartProps> = ({
            <CardTitle className="text-lg font-semibold text-white">{title}</CardTitle>
            {/* Driver Selectors (Hide if using static data) */}
            {!staticData && (
-             <div className="flex flex-wrap gap-2">
-               {driversToDisplay.map((driverCode, index) => (
-                 <Select
-                   key={index}
-                   value={driverCode}
-                   onValueChange={(value) => handleDriverChange(index, value)}
+             <div className="flex flex-wrap items-center gap-2"> {/* This div is the direct child */}
+               {selectedDrivers.map((driverCode, index) => (
+                 <div key={index} className="flex items-center gap-1">
+                   <Select
+                     value={driverCode}
+                     onValueChange={(value) => handleDriverChange(index, value)}
+                     disabled={isLoadingDrivers || !availableDrivers}
+                   >
+                     <SelectTrigger className="w-full sm:w-[150px] bg-gray-800/80 border-gray-700 text-gray-200 text-xs h-8 focus:border-red-500 focus:ring-red-500">
+                       <SelectValue placeholder="Select Driver" />
+                     </SelectTrigger>
+                     <SelectContent className="bg-gray-900 border-gray-700 text-gray-200 max-h-[200px]"> {/* Added max-height */}
+                       <SelectGroup>
+                         <SelectLabel className="text-xs text-gray-500">Driver {index + 1}</SelectLabel>
+                         {availableDrivers?.map((drv) => (
+                           <SelectItem key={drv.code} value={drv.code} className="text-xs">
+                             {drv.code} ({drv.name})
+                           </SelectItem>
+                         ))}
+                       </SelectGroup>
+                     </SelectContent>
+                   </Select>
+                   {/* Show remove button only if more than MIN_DRIVERS */}
+                   {selectedDrivers.length > MIN_DRIVERS && (
+                     <Button
+                       variant="ghost"
+                       size="icon"
+                       className="h-8 w-8 text-gray-500 hover:text-red-400 hover:bg-gray-700/50"
+                       onClick={() => removeDriver(index)}
+                       aria-label={`Remove Driver ${index + 1}`}
+                     >
+                       <XCircle className="h-4 w-4" />
+                     </Button>
+                   )}
+                 </div>
+               ))}
+               {/* Add Driver Button */}
+               {selectedDrivers.length < MAX_DRIVERS && (
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   className="h-8 text-xs border-gray-700 text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
+                   onClick={addDriver}
                    disabled={isLoadingDrivers || !availableDrivers}
                  >
-                   <SelectTrigger className="w-full sm:w-[150px] bg-gray-800/80 border-gray-700 text-gray-200 text-xs h-8 focus:border-red-500 focus:ring-red-500">
-                   <SelectValue placeholder="Select Driver" />
-                 </SelectTrigger>
-                 <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
-                   <SelectGroup>
-                     <SelectLabel className="text-xs text-gray-500">Driver {index + 1}</SelectLabel>
-                     {availableDrivers?.map((drv) => (
-                       <SelectItem key={drv.code} value={drv.code} className="text-xs">
-                         {drv.code} ({drv.name})
-                       </SelectItem>
-                     ))}
-                   </SelectGroup>
-                 </SelectContent>
-                </Select>
-              ))}
-              {/* Optional: Add button to add/remove 3rd driver */}
-            </div>
-           )} {/* <-- Added closing parenthesis for conditional rendering */}
+                   <PlusCircle className="h-4 w-4 mr-1.5" />
+                   Add Driver
+                 </Button>
+               )}
+             </div>
+           )} {/* End conditional rendering for selectors */}
          </div>
        </CardHeader>
       <CardContent className="pt-0">

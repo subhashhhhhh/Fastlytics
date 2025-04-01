@@ -1,15 +1,16 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Award, Calendar, AlertCircle, ArrowUp, ArrowDown, MinusCircle } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom'; // Import Link
+import { ArrowLeft, Trophy, CheckCircle, MinusCircle, Award, Calendar, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react'; // Added ArrowUp/Down
 import Navbar from '@/components/Navbar';
 import { Button } from "@/components/ui/button";
+// Import API function and type
 import { fetchDriverStandings, DriverStanding } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSeason } from '@/contexts/SeasonContext';
-import F1Card from '@/components/F1Card';
+import { useSeason } from '@/contexts/SeasonContext'; // Import useSeason
 
 const DriverStandings = () => {
   const navigate = useNavigate();
@@ -101,21 +102,53 @@ const DriverStandings = () => {
                 <span className="text-xs text-gray-500">{(error as Error)?.message || 'Please try again later.'}</span>
              </div>
           ) : driverStandings && driverStandings.length > 0 ? (
-            driverStandings.map((driver, index) => {
+            driverStandings.map((driver, index) => { // Use fetched data
+              const indicator = getChangeIndicator(driver.points_change); // Use points_change
               const teamColor = getTeamColorClass(driver.team);
 
               return (
-                <F1Card
-                  key={driver.driverId}
-                  type="driver"
-                  id={driver.driverId}
-                  title={driver.name}
-                  value={`${driver.points} PTS`}
-                  team={teamColor as any}
-                  className="bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm hover:bg-gray-800/80 hover:border-gray-600 transition-all duration-300 ease-in-out animate-fade-in"
+                <Card
+                  key={driver.code}
+                  className={cn(
+                    "bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm",
+                    "p-4 md:p-5 flex items-center gap-4 md:gap-6",
+                    "transition-all duration-300 ease-in-out hover:bg-gray-800/80 hover:border-gray-600",
+                    "animate-fade-in"
+                  )}
                   style={{ animationDelay: `${index * 60}ms` }}
-                  icon={<Award className="w-5 h-5 text-gray-400" />}
-                />
+                >
+                  <div className="text-xl md:text-2xl font-bold text-gray-500 w-8 text-center">{driver.rank}</div>
+                  <div className="flex-grow">
+                    {/* Driver name (no longer linked) */}
+                    <h2 className="text-lg md:text-xl font-semibold text-white">{driver.name}</h2>
+                    <div className="flex items-center gap-2 text-sm text-gray-400 mt-0.5"> {/* Added slight margin-top */}
+                       <span className={cn("w-2 h-2 rounded-full", `bg-f1-${teamColor}`)}></span>
+                       {/* Team name (not linked) */}
+                       <span>{driver.team}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 md:gap-6 text-sm text-gray-400 flex-shrink-0">
+                     <div className="flex items-center gap-1.5" title="Wins">
+                       <Trophy className="w-4 h-4 text-yellow-500"/>
+                       <span>{driver.wins ?? '-'}</span>
+                     </div>
+                     <div className="flex items-center gap-1.5" title="Podiums">
+                       <Award className="w-4 h-4 text-gray-400"/>
+                       <span>{driver.podiums ?? '-'}</span>
+                     </div>
+                     {/* Display points change if indicator is not null */}
+                     {indicator && (
+                        <div className={cn("flex items-center gap-1", indicator.color)} title="Points Change Since Last Race">
+                          {indicator.icon}
+                          {/* Show absolute value for non-zero change */}
+                          <span>{driver.points_change !== 0 ? Math.abs(driver.points_change ?? 0) : '-'}</span>
+                        </div>
+                     )}
+                  </div>
+                   <div className="text-lg md:text-xl font-bold text-white w-20 text-right">
+                     {driver.points} <span className="text-xs font-normal text-gray-500">PTS</span>
+                   </div>
+                </Card>
               );
             })
           ) : (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Import Link
 import { Award, Flag, Lock, Cpu, Timer, User, Gauge, ArrowRight, CreditCard, Calendar } from 'lucide-react'; // Removed BarChart2
 import Navbar from '@/components/Navbar';
 import F1Card from '@/components/F1Card';
@@ -146,20 +146,23 @@ const Dashboard = () => {
                   </div>
                 ) : (
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-                    {teamStandings?.slice(0, 4).map((team) => (
-                      <F1Card
-                        key={team.shortName || team.team}
-                        title={team.team}
-                        value={`${team.points} PTS`}
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+                   {teamStandings?.slice(0, 4).map((team) => (
+                     // Wrap F1Card with Link for team details
+                     // TODO: Use a proper teamId if available instead of team.team
+                     <Link key={team.shortName || team.team} to={`/team/${encodeURIComponent(team.team)}`} className="no-underline">
+                       <F1Card
+                         title={team.team}
+                         value={`${team.points} PTS`}
                         team={getTeamColorClass(team.team) as any}
-                        icon={<Award className={`h-5 w-5 text-f1-${getTeamColorClass(team.team)}`} />}
-                        points_change={team.points_change} // Pass points_change
-                        className="bg-gray-900/80 border border-gray-700/80 hover:border-gray-600 transition-colors duration-200"
-                      />
-                    ))}
-                 </div>
-               )}
+                         icon={<Award className={`h-5 w-5 text-f1-${getTeamColorClass(team.team)}`} />}
+                         points_change={team.points_change} // Pass points_change
+                         className="bg-gray-900/80 border border-gray-700/80 hover:border-red-600/50 transition-colors duration-200 h-full" // Added h-full for consistent height
+                       />
+                     </Link>
+                   ))}
+                  </div>
+                )}
             </section>
 
             {/* Driver Standings Section */}
@@ -180,18 +183,20 @@ const Dashboard = () => {
 
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                    {driverStandings?.slice(0, 4).map((driver) => (
-                     <F1Card
-                       key={driver.code}
-                        title={driver.name}
-                        value={`${driver.points} PTS`}
+                     // Wrap F1Card with Link for driver details
+                     <Link key={driver.code} to={`/driver/${driver.code}`} className="no-underline">
+                       <F1Card
+                         title={driver.name}
+                         value={`${driver.points} PTS`}
                         team={getTeamColorClass(driver.team) as any}
-                        icon={<Users className={`h-5 w-5 text-f1-${getTeamColorClass(driver.team)}`} />}
-                        points_change={driver.points_change} // Pass points_change
-                        className="bg-gray-900/80 border border-gray-700/80 hover:border-gray-600 transition-colors duration-200"
-                      />
-                    ))}
-                 </div>
-               )}
+                         icon={<Users className={`h-5 w-5 text-f1-${getTeamColorClass(driver.team)}`} />}
+                         points_change={driver.points_change} // Pass points_change
+                         className="bg-gray-900/80 border border-gray-700/80 hover:border-red-600/50 transition-colors duration-200 h-full" // Added h-full for consistent height
+                       />
+                     </Link>
+                   ))}
+                  </div>
+                )}
             </section>
 
             {/* Recent Races Section */}

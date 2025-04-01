@@ -1,13 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, AlertCircle, Zap, Calendar, MapPin, Users, Timer, Sparkles } from 'lucide-react'; // Added Sparkles
+import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, AlertCircle, Zap, Calendar, MapPin, Users, Timer, Sparkles, TrendingUp } from 'lucide-react'; // Added Sparkles, TrendingUp
 import Navbar from '@/components/Navbar';
 import RacingChart from '@/components/RacingChart';
 import TireStrategy from '@/components/TireStrategy';
 import SpeedTraceChart from '@/components/SpeedTraceChart';
 import GearMapChart from '@/components/GearMapChart';
 import PositionChart from '@/components/PositionChart';
+// Import the new chart component
+import TrackEvolutionChart from '@/components/TrackEvolutionChart';
 import F1Card from '@/components/F1Card';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -298,7 +300,8 @@ const Race = () => {
              </Card>
         ) : (
           <Tabs defaultValue="results" className="mt-6">
-            <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 p-1 bg-gray-800/80 border border-gray-700 rounded-lg h-auto mb-6">
+            {/* Adjust grid columns based on number of tabs */}
+            <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1 p-1 bg-gray-800/80 border border-gray-700 rounded-lg h-auto mb-6">
               <TabsTrigger value="results" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Users className="w-4 h-4 mr-1.5 inline"/>Results</TabsTrigger>
               {/* Only show certain tabs if it's Race or Sprint */}
               {(selectedSession === 'R' || selectedSession === 'Sprint') && (
@@ -306,6 +309,8 @@ const Race = () => {
                   <TabsTrigger value="positions" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><MapPin className="w-4 h-4 mr-1.5 inline"/>Positions</TabsTrigger>
                   <TabsTrigger value="laptimes" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Timer className="w-4 h-4 mr-1.5 inline"/>Lap Times</TabsTrigger>
                   <TabsTrigger value="strategy" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Flag className="w-4 h-4 mr-1.5 inline"/>Strategy</TabsTrigger>
+                  {/* Add Track Evolution Tab */}
+                  <TabsTrigger value="evolution" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><TrendingUp className="w-4 h-4 mr-1.5 inline"/>Evolution</TabsTrigger>
                   <TabsTrigger value="telemetry" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><BarChart2 className="w-4 h-4 mr-1.5 inline"/>Telemetry</TabsTrigger>
                 </>
               )}
@@ -380,6 +385,17 @@ const Race = () => {
                  </div>
               </TabsContent>
             )}
+
+            {/* Track Evolution Tab Content (Race or Sprint) */}
+            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
+              <TabsContent value="evolution" className="pt-2">
+                {year && eventName && (
+                  // Render the actual TrackEvolutionChart component
+                  <TrackEvolutionChart year={year} event={eventName} session={selectedSession} />
+                )}
+              </TabsContent>
+            )}
+
           </Tabs>
         )}
       </div>

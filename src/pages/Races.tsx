@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Flag, Calendar, AlertCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react'; // Keep the combined import
+import { useNavigate } from 'react-router-dom'; // Keep single import
+import { ArrowLeft, Flag, Calendar, AlertCircle, Clock } from 'lucide-react'; // Added Clock icon
 import Navbar from '@/components/Navbar';
 import { Button } from "@/components/ui/button";
-import { fetchRaceResults, RaceResult } from '@/lib/api';
+// Import both schedule and results functions/types
+import { fetchRaceResults, RaceResult, fetchSchedule, ScheduleEvent } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card'; // Removed unused CardHeader, CardContent, CardTitle
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,18 +16,48 @@ const Races = () => {
   const navigate = useNavigate();
   const { selectedYear, setSelectedYear, availableYears } = useSeason(); // Use context
 
-  // Fetch Race Results for the selected year
-  const { data: raceResults, isLoading, error, isError } = useQuery<RaceResult[]>({
-     queryKey: ['raceResults', selectedYear], // Use the same query key as Dashboard for caching
+  // Fetch Full Schedule for the selected year
+  const { data: scheduleData, isLoading: isLoadingSchedule, error: scheduleError } = useQuery<ScheduleEvent[]>({
+     queryKey: ['schedule', selectedYear],
+     queryFn: () => fetchSchedule(selectedYear),
+     staleTime: 1000 * 60 * 60 * 24, // Cache schedule for a day
+     gcTime: 1000 * 60 * 60 * 48,
+     retry: 1,
+  });
+
+  // Fetch Race Results Summary for the selected year
+  const { data: resultsData, isLoading: isLoadingResults, error: resultsError } = useQuery<RaceResult[]>({
+     queryKey: ['raceResults', selectedYear], // Use the same query key as Dashboard
      queryFn: () => fetchRaceResults(selectedYear),
      staleTime: 1000 * 60 * 30, // 30 minutes
      gcTime: 1000 * 60 * 60, // 1 hour
      retry: 1,
   });
 
-  const handleRaceClick = (race: RaceResult) => {
-    // Navigate to the specific race page (assuming this route exists)
-    const raceId = `${race.year}-${race.event.toLowerCase().replace(/\s+/g, '-')}`;
+  // Combine schedule and results data
+  const combinedRaceData = useMemo(() => {
+    if (!scheduleData) return [];
+
+    const resultsMap = new Map(resultsData?.map(res => [res.event, res]));
+    const now = new Date(); // Get current date/time
+
+    return scheduleData.map(event => {
+      const result = resultsMap.get(event.EventName);
+      const eventDate = new Date(event.EventDate); // Use the main EventDate from schedule
+      const isUpcoming = eventDate > now;
+
+      return {
+        ...event, // Spread schedule event properties
+        result, // Attach result if found
+        isUpcoming,
+        displayDate: eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      };
+    });
+  }, [scheduleData, resultsData]);
+
+  const handleRaceClick = (eventName: string, year: number) => {
+    // Navigate to the specific race page
+    const raceId = `${year}-${eventName.toLowerCase().replace(/\s+/g, '-')}`;
     navigate(`/race/${raceId}`);
   };
 
@@ -81,45 +112,64 @@ const Races = () => {
            </Select>
         </header>
 
-        {/* Races List */}
+        {/* Races List - Updated Logic */}
         <div className="space-y-3 md:space-y-4">
-          {isLoading ? (
-             [...Array(10)].map((_, i) => <Skeleton key={i} className="h-[76px] bg-gray-800/50 rounded-lg"/>)
-          ) : isError ? (
+          {isLoadingSchedule || isLoadingResults ? (
+             // Show more skeletons based on typical season length
+             [...Array(15)].map((_, i) => <Skeleton key={i} className="h-[76px] bg-gray-800/50 rounded-lg"/>)
+          ) : scheduleError || resultsError ? (
              <div className="text-center py-10 text-red-400">
                 <AlertCircle className="w-10 h-10 mx-auto mb-2" />
-                Error loading race results for {selectedYear}. <br/>
-                <span className="text-xs text-gray-500">{(error as Error)?.message || 'Please try again later.'}</span>
+                Error loading data for {selectedYear}. <br/>
+                <span className="text-xs text-gray-500">
+                  {((scheduleError || resultsError) as Error)?.message || 'Please try again later.'}
+                </span>
              </div>
-          ) : raceResults && raceResults.length > 0 ? (
-            raceResults.map((race, index) => {
-              const teamColor = getTeamColorClass(race.team);
-              const raceDate = race.date ? new Date(race.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBA';
+          ) : combinedRaceData.length > 0 ? (
+            combinedRaceData.map((race, index) => {
+              const teamColor = race.result ? getTeamColorClass(race.result.team) : 'gray'; // Default to gray if no result/upcoming
+              const isClickable = !race.isUpcoming && !!race.result; // Clickable only if completed and has result
 
               return (
                 <Card
-                  key={`${race.year}-${race.event}`}
-                  onClick={() => handleRaceClick(race)}
+                  key={`${selectedYear}-${race.EventName}`}
+                  onClick={isClickable ? () => handleRaceClick(race.EventName, selectedYear) : undefined}
                   className={cn(
                     "bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm",
                     "p-4 md:p-5 flex items-center gap-4 md:gap-6",
-                    "transition-all duration-300 ease-in-out hover:bg-gray-800/80 hover:border-gray-600 cursor-pointer",
+                    "transition-all duration-300 ease-in-out",
+                    isClickable ? "hover:bg-gray-800/80 hover:border-gray-600 cursor-pointer" : "opacity-60 cursor-default",
                     "animate-fade-in"
                   )}
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  style={{ animationDelay: `${index * 40}ms` }} // Slightly faster animation
                 >
-                  <div className="text-lg md:text-xl font-semibold text-gray-400 w-16 text-center">{raceDate}</div>
+                  {/* Display Date */}
+                  <div className="text-base md:text-lg font-medium text-gray-400 w-16 text-center">{race.displayDate}</div>
+                  {/* Color Bar */}
                   <div className={cn("w-1.5 h-10 rounded-full", `bg-f1-${teamColor}`)}></div>
+                  {/* Event Name & Location */}
                   <div className="flex-grow">
-                    <h2 className="text-lg md:text-xl font-semibold text-white">{race.event}</h2>
-                    <p className="text-sm text-gray-500">{race.location}</p>
+                    <h2 className="text-lg md:text-xl font-semibold text-white">{race.EventName}</h2>
+                    <p className="text-sm text-gray-500">{race.Location}</p>
                   </div>
-                  <div className="flex flex-col items-end text-sm text-gray-400 flex-shrink-0">
-                     <div className="flex items-center gap-1.5" title="Winner">
-                       <Flag className="w-4 h-4 text-yellow-500"/>
-                       <span>{race.driver ?? 'N/A'}</span>
-                     </div>
-                     <span className="text-xs text-gray-500">{race.team ?? ''}</span>
+                  {/* Winner Info or Upcoming Status */}
+                  <div className="flex flex-col items-end text-sm text-gray-400 flex-shrink-0 w-28 md:w-32">
+                    {race.isUpcoming ? (
+                      <div className="flex items-center gap-1.5 text-blue-400">
+                        <Clock className="w-4 h-4" />
+                        <span className="font-medium">UPCOMING</span>
+                      </div>
+                    ) : race.result ? (
+                      <>
+                        <div className="flex items-center gap-1.5" title="Winner">
+                          <Flag className="w-4 h-4 text-yellow-500"/>
+                          <span className="font-medium text-gray-200">{race.result.driver ?? 'N/A'}</span>
+                        </div>
+                        <span className="text-xs text-gray-500 mt-0.5">{race.result.team ?? ''}</span>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-500 italic">Results Pending</span>
+                    )}
                   </div>
                 </Card>
               );

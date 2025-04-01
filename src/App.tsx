@@ -12,6 +12,8 @@ import DriverStandings from "./pages/DriverStandings";
 import Races from "./pages/Races"; // Import Races page
 import Profile from "./pages/Profile"; // Import Profile page
 import Settings from "./pages/Settings"; // Import Settings page
+import DriverDetailsPage from "./pages/DriverDetailsPage"; // Import Driver Details page
+import TeamDetailsPage from "./pages/TeamDetailsPage"; // Import Team Details page
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Footer from "./components/Footer";
@@ -70,6 +72,7 @@ const App = () => (
             <Route path="/standings/drivers" element={<MainLayout><DriverStandings /></MainLayout>} />
             <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} /> {/* New Profile route */}
             <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} /> {/* New Settings route */}
+            {/* Driver and Team Detail Routes Removed */}
           </Route>
 
           {/* 404 page - Keep outside protected routes or handle within if needed */}

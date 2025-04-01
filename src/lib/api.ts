@@ -27,9 +27,9 @@ export interface GearMapDataPoint { X: number; Y: number; nGear: number; }
 export interface TireStint { compound: string; startLap: number; endLap: number; lapCount: number; }
 export interface DriverStrategy { driver: string; stints: TireStint[]; }
 export interface SessionDriver { code: string; name: string; team: string; }
-export interface DriverStanding { rank: number; code: string; name: string; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; driverId: string;}
-export interface TeamStanding { rank: number; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; shortName?: string; teamId: string; }
-export interface RaceResult { year: number; event: string; round: number; driver: string; team: string; teamColor: string; date?: string; location?: string; }
+export interface DriverStanding { rank: number; code: string; name: string; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; } // Use points_change?
+export interface TeamStanding { rank: number; team: string; points: number; wins: number; podiums: number; points_change?: number; teamColor?: string; shortName?: string; } // Use points_change?
+export interface RaceResult { year: number; event: string; round: number; driver: string; team: string; teamColor: string; date?: string; location?: string; } // Added date and location
 export interface DetailedRaceResult {
     position: number | null;
     driverCode: string;
@@ -55,8 +55,89 @@ export interface LapPositionDataPoint {
 export interface AvailableSession {
     name: string;
     type: string;
-    startTime: string;
+    startTime: string; // Note: This might not be directly available from the schedule endpoint
 }
+
+// --- Schedule Interface ---
+export interface ScheduleEvent {
+    RoundNumber: number;
+    Country: string;
+    Location: string;
+    EventName: string;
+    EventDate: string; // ISO Date string
+    EventFormat: string;
+    Session1: string;
+    Session1Date: string; // ISO Date string
+    Session2: string;
+    Session2Date: string; // ISO Date string
+    Session3: string;
+    Session3Date: string; // ISO Date string
+    Session4: string | null; // Can be null
+    Session4Date: string | null; // Can be null
+    Session5: string | null; // Can be null
+    Session5Date: string | null; // Can be null
+    F1ApiSupport: boolean;
+}
+
+
+// --- Driver/Team Detail Interfaces ---
+export interface DriverDetails {
+  driverId: string; // Usually the 3-letter code
+  name: string;
+  nationality: string;
+  dateOfBirth: string; // ISO string format ideally
+  bio?: string; // Optional
+  imageUrl?: string; // Optional URL for the large photo
+  careerStats?: { // Optional stats block
+    wins?: number;
+    podiums?: number;
+    poles?: number;
+    championships?: number;
+  };
+  // Add other relevant fields from backend if available
+}
+
+export interface TeamDetails {
+  teamId: string; // Usually the full team name used as ID
+  name: string;
+  nationality: string;
+  base?: string; // Optional
+  firstEntry?: number; // Optional
+  bio?: string; // Optional
+  imageUrl?: string; // Optional URL for the large photo/logo
+  careerStats?: { // Optional stats block
+    wins?: number;
+    podiums?: number;
+    poles?: number;
+    constructorsChampionships?: number;
+    driversChampionships?: number;
+  };
+  // Add other relevant fields (e.g., current drivers) if available
+}
+
+// --- Track Evolution Interfaces ---
+export interface RollingLapDataPoint {
+  lap: number;
+  time: number | null; // Rolling average time in seconds
+}
+
+export interface DriverEvolutionData {
+  code: string;
+  color: string;
+  rollingAverageLaps: RollingLapDataPoint[];
+}
+
+export interface TrackTemperatureDataPoint {
+  lap: number;
+  temp: number | null; // Track temperature in Celsius
+}
+
+export interface TrackEvolutionResponse {
+  drivers: DriverEvolutionData[];
+  trackTemperature: TrackTemperatureDataPoint[];
+  // TODO: Add interfaces for stint/compound analysis if implemented later
+}
+
 
 // --- API Fetch Functions ---
 
@@ -254,6 +335,49 @@ export const fetchSpecificRaceResults = async (year: number, eventSlug: string, 
     }
 };
 
+/** Fetches track evolution analysis data for a given session. */
+export const fetchTrackEvolution = async (year: number, event: string, session: string): Promise<TrackEvolutionResponse> => {
+    const params = new URLSearchParams({ year: year.toString(), event, session });
+    const url = `${API_BASE_URL}/api/analysis/track-evolution?${params.toString()}`;
+    console.log(`Fetching track evolution data from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error fetching track evolution for ${year} ${event} ${session}: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: TrackEvolutionResponse = await response.json();
+        console.log(`Successfully fetched track evolution data for ${year} ${event} ${session}.`);
+        return data;
+    } catch (error) {
+        console.error(`Error fetching track evolution data for ${year} ${event} ${session}:`, error);
+        throw error;
+    }
+};
+
+/** Fetches the event schedule for a given year. */
+export const fetchSchedule = async (year: number): Promise<ScheduleEvent[]> => {
+    const url = `${API_BASE_URL}/api/schedule/${year}`;
+    console.log(`Fetching schedule from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error fetching schedule for ${year}: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: ScheduleEvent[] = await response.json();
+        console.log(`Successfully fetched schedule for ${year} with ${data.length} events.`);
+        return data;
+    } catch (error) {
+        console.error(`Error fetching schedule for ${year}:`, error);
+        throw error;
+    }
+};
+
 /** Fetches lap-by-lap position data for a race session. */
 export const fetchLapPositions = async (year: number, event: string, session: string): Promise<LapPositionDataPoint[]> => {
     const params = new URLSearchParams({ year: year.toString(), event, session });
@@ -271,4 +395,54 @@ export const fetchLapPositions = async (year: number, event: string, session: st
         console.log(`Successfully fetched ${data.length} lap position records.`);
         return data;
     } catch (error) { console.error("Error fetching lap positions:", error); throw error; }
+};
+
+/** Fetches detailed information for a specific driver. */
+export const getDriverDetails = async (driverId: string): Promise<DriverDetails> => {
+    const url = `${API_BASE_URL}/api/driver/${driverId}`;
+    console.log(`Fetching driver details from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error fetching driver ${driverId}: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: DriverDetails = await response.json();
+        console.log(`Successfully fetched details for driver ${driverId}.`);
+        // TODO: Potentially add mock data here if API returns 404 during development
+        // if (!data && MOCK_ENABLED) return MOCK_DRIVER_DETAILS[driverId];
+        return data;
+    } catch (error) {
+        console.error(`Error fetching driver details for ${driverId}:`, error);
+        // TODO: Potentially return mock data on error during development
+        // if (MOCK_ENABLED) return MOCK_DRIVER_DETAILS[driverId];
+        throw error;
+    }
+};
+
+/** Fetches detailed information for a specific team. */
+export const getTeamDetails = async (teamId: string): Promise<TeamDetails> => {
+    // Team ID might contain spaces or special chars, ensure it's encoded for the URL path part
+    const encodedTeamId = encodeURIComponent(teamId);
+    const url = `${API_BASE_URL}/api/team/${encodedTeamId}`;
+    console.log(`Fetching team details from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error fetching team ${teamId}: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: TeamDetails = await response.json();
+        console.log(`Successfully fetched details for team ${teamId}.`);
+        // TODO: Potentially add mock data here if API returns 404 during development
+        return data;
+    } catch (error) {
+        console.error(`Error fetching team details for ${teamId}:`, error);
+        // TODO: Potentially return mock data on error during development
+        throw error;
+    }
 };
