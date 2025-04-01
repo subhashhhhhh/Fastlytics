@@ -14,9 +14,9 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { name: 'Twitter', href: 'https://twitter.com', icon: <Twitter className="h-5 w-5" /> },
+    { name: 'Twitter', href: 'https://x.com', icon: <Twitter className="h-5 w-5" /> },
     { name: 'GitHub', href: 'https://github.com', icon: <Github className="h-5 w-5" /> },
-    { name: 'Mail', href: 'mailto:info@fastlytics.app', icon: <Mail className="h-5 w-5" /> },
+    { name: 'Mail', href: 'mailto:contact@fastlytics.app', icon: <Mail className="h-5 w-5" /> },
   ];
 
   return (
@@ -30,7 +30,7 @@ const Footer = () => {
               <span className="font-bold text-xl">Fast<span className="text-red-500">lytics</span></span>
             </Link>
             <p className="text-sm max-w-xs">
-              The ultimate analytics platform for Formula 1 fans and professionals.
+              The ultimate analytics platform for Formula 1 fans.
             </p>
              <div className="flex space-x-4 pt-2">
               {socialLinks.map((link) => (
@@ -84,7 +84,7 @@ const Footer = () => {
           <div className="flex items-center text-gray-500">
             <span>Made with</span>
             <Heart className="h-3 w-3 mx-1.5 text-red-500 fill-current" />
-            <span>for F1 fans</span>
+            <span>for F1 fans by Subhash Gottumukkala</span>
           </div>
         </div>
       </div>
