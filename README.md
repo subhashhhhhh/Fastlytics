@@ -2,9 +2,6 @@
 
 *A lightning-fast platform for Formula 1 fans to explore historical data, compare drivers, and simulate race strategies – no engineering degree required.*  
 
-![Demo](https://media.giphy.com/media/3o7TKAZnI6cdsWXdtq/giphy.gif)  
-*(Replace with your actual demo GIF/video)*  
-
 ---
 
 ## 🚀 Features  
@@ -16,25 +13,13 @@
 - **Position Change Graphs**: Relive epic battles with lap-by-lap position swings.  
 - **Track Evolution Analysis**: Watch how lap times drop as rubber builds up on the circuit.  
 
-### 🔥 **Advanced Analytics (Premium)**  
-- **Fuel-Adjusted Pace**: Remove fuel bias to see drivers’ "true" performance.  
-- **AI Strategy Simulator**: Test "what-if" scenarios (*“What if Ferrari pitted 5 laps earlier?”*).  
-- **Driver DNA Profiles**: Compare driving styles (e.g., *Senna’s aggression vs. Prost’s precision*).  
-- **3D Telemetry Maps**: Interactive 3D circuits with speed/throttle overlays.  
-
-### 🕰️ **Historical Deep Dives**  
-- **Era vs. Era Speed**: Compare different eras at the same circuits.
-- **Rule Change Effect**: Model how regulation changes affect racing.
-- **Driver DNA Profiling**: Create fingerprints of unique driving styles.
-- **Team Dominance Cycles**: Chart periods of constructor dominance.
-
 ---
 
 ## 🛠️ Tech Stack  
 
 | **Category**       | **Tools**                                                                 |  
 |---------------------|---------------------------------------------------------------------------|  
-| **Frontend**        | Next.js, React, Tailwind CSS, shadcn/ui, Lucide React, Custom Charts     |  
+| **Frontend**        | React, Tailwind CSS, shadcn/ui, Lucide React, Custom Charts     |  
 | **Backend**         | Fast-F1 API, Supabase (Auth + PostgreSQL), Cloudflare R2 (Storage)       |  
 | **Infrastructure**  | Docker, Vercel/Cloudflare Pages, Redis (Caching)                          |  
 | **Misc**            | Python (Data Processing), GitHub Actions (CI/CD), Sentry (Error Tracking) |  
@@ -92,8 +77,7 @@ MIT License – *Do whatever you want, but don’t blame us if your AI predicts 
 
 ## 🙏 Acknowledgments  
 - **Fast-F1**: For the incredible Python library that makes this possible.  
-- **Supabase**: For auth and database magic.  
-- **Cloudflare**: For keeping our charts fast and cheap.  
+- **Supabase**: For auth and database.  
 - **You**: For not asking why we included the 2022 Ferrari strategy engine.  
 
 ---
