@@ -7,8 +7,10 @@ const Footer = () => {
 
   const footerLinks = [
     { title: 'Features', links: [ { name: 'Dashboard', href: '/dashboard'}, { name: 'Drivers', href: '/drivers'}, { name: 'Races', href: '/dashboard'} ] }, // Simplified links
-    { title: 'Resources', links: [ { name: 'Blog', href: 'https://subhashh.tech'}, { name: 'Support', href: '#'}, { name: 'FAQ', href: '#'} ] },
-    { title: 'Legal', links: [ { name: 'Privacy Policy', href: '#'}, { name: 'Terms of Service', href: '#'} ] },
+    // Updated 'Support' link to be external and renamed, linked FAQ
+    { title: 'Resources', links: [ { name: 'Blog', href: 'https://subhashh.tech'}, { name: 'Support the Project', href: '#', external: true }, { name: 'FAQ', href: '/faq'} ] },
+    // Linked Legal pages
+    { title: 'Legal', links: [ { name: 'Privacy Policy', href: '/privacy-policy'}, { name: 'Terms of Service', href: '/terms-of-service'} ] },
   ];
 
   const socialLinks = [
@@ -53,9 +55,20 @@ const Footer = () => {
               <ul className="space-y-2 text-sm">
                 {section.links.map((link) => (
                   <li key={link.name}>
-                    <Link to={link.href} className="hover:text-white transition-colors">
-                      {link.name}
-                    </Link>
+                    {link.external ? (
+                      <a
+                        href={link.href} // Use href directly
+                        target="_blank" // Open in new tab
+                        rel="noopener noreferrer" // Security best practice
+                        className="hover:text-white transition-colors"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link to={link.href} className="hover:text-white transition-colors">
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

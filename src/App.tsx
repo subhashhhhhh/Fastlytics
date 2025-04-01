@@ -12,10 +12,12 @@ import DriverStandings from "./pages/DriverStandings";
 import Races from "./pages/Races"; // Import Races page
 import Profile from "./pages/Profile"; // Import Profile page
 import Settings from "./pages/Settings"; // Import Settings page
-import DriverDetailsPage from "./pages/DriverDetailsPage"; // Import Driver Details page
-import TeamDetailsPage from "./pages/TeamDetailsPage"; // Import Team Details page
+// Driver/Team details removed
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import PrivacyPolicy from "./pages/PrivacyPolicy"; // Import Privacy Policy page
+import TermsOfService from "./pages/TermsOfService"; // Import Terms of Service page
+import FAQ from "./pages/FAQ"; // Import FAQ page
 import Footer from "./components/Footer";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SeasonProvider } from "./contexts/SeasonContext"; // Import SeasonProvider
@@ -58,11 +60,17 @@ const App = () => (
               {/* Auth routes without footer */}
               <Route path="/auth" element={<AuthLayout><Auth /></AuthLayout>} />
 
-          {/* Landing Page Route (No Footer) */}
-          <Route path="/" element={<LandingLayout><Landing /></LandingLayout>} />
+              {/* Landing Page Route (No Footer) */}
+              <Route path="/" element={<LandingLayout><Landing /></LandingLayout>} />
 
-          {/* Protected Routes */}
-          <Route element={<ProtectedRoute />}>
+              {/* Public Info Pages (No Footer, Navbar included in page) */}
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/faq" element={<FAQ />} />
+
+
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute />}>
             {/* Routes within here require authentication */}
             <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
             <Route path="/race/:raceId" element={<MainLayout><Race /></MainLayout>} />
