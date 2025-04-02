@@ -257,7 +257,8 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!agreeTerms) {
+    // Only check terms agreement if we're in signup tab
+    if (activeTab === 'signup' && !agreeTerms) {
       toast({
         title: "Terms Agreement Required",
         description: "Please agree to the terms of service to create an account.",
@@ -277,8 +278,6 @@ const Auth = () => {
       });
       
       if (error) throw error;
-      
-      // No need for toast here as we're redirecting to Google
     } catch (error) {
       const authError = error as AuthError;
       console.error("Google sign-in error:", authError.message);
@@ -292,7 +291,8 @@ const Auth = () => {
   };
 
   const handleGithubSignIn = async () => {
-    if (!agreeTerms) {
+    // Only check terms agreement if we're in signup tab
+    if (activeTab === 'signup' && !agreeTerms) {
       toast({
         title: "Terms Agreement Required",
         description: "Please agree to the terms of service to create an account.",
@@ -312,8 +312,6 @@ const Auth = () => {
       });
       
       if (error) throw error;
-      
-      // No need for toast here as we're redirecting to GitHub
     } catch (error) {
       const authError = error as AuthError;
       console.error("GitHub sign-in error:", authError.message);
