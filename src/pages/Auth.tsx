@@ -16,7 +16,7 @@ import {
   KeyRound,
   Check
 } from 'lucide-react';
-import { siGoogle } from 'simple-icons/icons';
+import { siGoogle, siGithub } from 'simple-icons/icons';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -265,6 +265,32 @@ const Auth = () => {
     }
   };
 
+  const handleGithubSignIn = async () => {
+    setLoadingState('github', true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+      
+      if (error) throw error;
+      
+      // No need for toast here as we're redirecting to GitHub
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("GitHub sign-in error:", authError.message);
+      toast({
+        title: "GitHub Sign-in Failed",
+        description: authError.message || "Could not sign in with GitHub.",
+        variant: "destructive",
+      });
+      setLoadingState('github', false);
+    }
+  };
+
   // Prevent rendering the form while checking auth state or if redirecting
   if (authLoading || user) {
     return (
@@ -430,6 +456,23 @@ const Auth = () => {
                       </svg>
                     )}
                     {isLoading.google ? "Connecting..." : "Sign in with Google"}
+                  </Button>
+
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700 hover:text-white flex items-center justify-center"
+                    onClick={handleGithubSignIn}
+                    disabled={isLoading.github}
+                  >
+                    {isLoading.github ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="currentColor" d={siGithub.path} />
+                      </svg>
+                    )}
+                    {isLoading.github ? "Connecting..." : "Sign in with GitHub"}
                   </Button>
                 </CardFooter>
               </form>
@@ -603,6 +646,23 @@ const Auth = () => {
                         </svg>
                       )}
                       {isLoading.google ? "Connecting..." : "Sign up with Google"}
+                    </Button>
+
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700 hover:text-white flex items-center justify-center"
+                      onClick={handleGithubSignIn}
+                      disabled={isLoading.github}
+                    >
+                      {isLoading.github ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path fill="currentColor" d={siGithub.path} />
+                        </svg>
+                      )}
+                      {isLoading.github ? "Connecting..." : "Sign up with GitHub"}
                     </Button>
                   </CardFooter>
                 </form>
