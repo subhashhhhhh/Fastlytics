@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, User, Mail, Key, AlertCircle, Loader2, LogOut } from 'lucide-react';
-import { siGoogle, siApple, siFacebook } from 'simple-icons/icons';
+import { siGoogle } from 'simple-icons/icons';
 import Navbar from '@/components/Navbar';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,10 +17,26 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, setUser, signOut } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
+  
+  // Get tab from URL parameters on initial load
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && ['profile', 'connections', 'security'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location.search]);
+
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/profile?tab=${value}`, { replace: true });
+  };
   
   // Profile form state
   const [username, setUsername] = useState(user?.user_metadata?.username || '');
@@ -196,6 +212,32 @@ const Profile = () => {
     }
   };
 
+  // Add a Google sign-in handler function after the other handlers
+  const connectWithGoogle = async () => {
+    setLoadingState('google', true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/profile?tab=connections`
+        }
+      });
+      
+      if (error) throw error;
+      
+      // No toast needed since we're redirecting to Google
+    } catch (error) {
+      console.error("Google connection error:", error);
+      toast({
+        title: "Google Connection Failed",
+        description: (error as Error)?.message || "Could not connect with Google.",
+        variant: "destructive",
+      });
+      setLoadingState('google', false);
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white flex items-center justify-center">
@@ -234,18 +276,29 @@ const Profile = () => {
         </header>
 
         {/* Profile Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2 w-full bg-gray-800 mb-8">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="grid grid-cols-3 w-full bg-gray-800 mb-8">
             <TabsTrigger 
               value="profile" 
-              className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300"
+              className="data-[state=active]:bg-red-600 data-[state=active]:text-white"
             >
+              <User className="h-4 w-4 mr-2" />
               Profile
             </TabsTrigger>
             <TabsTrigger 
-              value="security" 
-              className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300"
+              value="connections" 
+              className="data-[state=active]:bg-red-600 data-[state=active]:text-white"
             >
+              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d={siGoogle.path} />
+              </svg>
+              Connections
+            </TabsTrigger>
+            <TabsTrigger 
+              value="security" 
+              className="data-[state=active]:bg-red-600 data-[state=active]:text-white"
+            >
+              <Key className="h-4 w-4 mr-2" />
               Security
             </TabsTrigger>
           </TabsList>
@@ -336,7 +389,10 @@ const Profile = () => {
                 </form>
               </CardContent>
             </Card>
+          </TabsContent>
 
+          {/* Connections Tab Content */}
+          <TabsContent value="connections" className="space-y-6">
             {/* Social Connections Card */}
             <Card className="bg-gray-900/80 border border-gray-700 shadow-lg overflow-hidden">
               <CardHeader>
@@ -352,45 +408,24 @@ const Profile = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="bg-gray-800/50 -mx-6 -mb-6 p-6 mt-2">
-                  <Alert className="bg-gray-800/80 border-yellow-600/30 text-yellow-500">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Social login options are coming soon! Stay tuned for updates.
-                    </AlertDescription>
-                  </Alert>
-                  
-                  <div className="space-y-3 mt-4">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between py-2">
                       <div className="flex items-center gap-3">
-                        <svg className="h-5 w-5 text-gray-400" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path fill="currentColor" d={siGoogle.path} />
                         </svg>
                         <span className="text-gray-300">Google</span>
                       </div>
-                      <Button variant="outline" disabled className="bg-gray-800 border-gray-700 text-gray-400">
-                        Coming Soon
-                      </Button>
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                      <div className="flex items-center gap-3">
-                        <svg className="h-5 w-5 text-gray-400" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path fill="currentColor" d={siApple.path} />
-                        </svg>
-                        <span className="text-gray-300">Apple</span>
-                      </div>
-                      <Button variant="outline" disabled className="bg-gray-800 border-gray-700 text-gray-400">
-                        Coming Soon
-                      </Button>
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                      <div className="flex items-center gap-3">
-                        <svg className="h-5 w-5 text-gray-400" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path fill="currentColor" d={siFacebook.path} />
-                        </svg>
-                        <span className="text-gray-300">Facebook</span>
-                      </div>
-                      <Button variant="outline" disabled className="bg-gray-800 border-gray-700 text-gray-400">
-                        Coming Soon
+                      <Button 
+                        variant="outline" 
+                        className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+                        onClick={connectWithGoogle}
+                        disabled={loading.google}
+                      >
+                        {loading.google ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : null}
+                        {loading.google ? "Connecting..." : "Connect"}
                       </Button>
                     </div>
                   </div>

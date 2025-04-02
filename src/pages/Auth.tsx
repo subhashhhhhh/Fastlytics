@@ -16,7 +16,7 @@ import {
   KeyRound,
   Check
 } from 'lucide-react';
-import { siGoogle, siApple, siFacebook } from 'simple-icons/icons';
+import { siGoogle } from 'simple-icons/icons';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -252,6 +252,32 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoadingState('google', true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+      
+      if (error) throw error;
+      
+      // No need for toast here as we're redirecting to Google
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("Google sign-in error:", authError.message);
+      toast({
+        title: "Google Sign-in Failed",
+        description: authError.message || "Could not sign in with Google.",
+        variant: "destructive",
+      });
+      setLoadingState('google', false);
+    }
+  };
+
   // Prevent rendering the form while checking auth state or if redirecting
   if (authLoading || user) {
     return (
@@ -402,30 +428,22 @@ const Auth = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-2 w-full">
-                    <Button variant="outline" disabled className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700 hover:text-white flex items-center justify-center"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading.google}
+                  >
+                    {isLoading.google ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
                       <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path fill="currentColor" d={siGoogle.path} />
                       </svg>
-                      <span className="text-xs">Google</span>
-                    </Button>
-                    <Button variant="outline" disabled className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white">
-                      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path fill="currentColor" d={siApple.path} />
-                      </svg>
-                      <span className="text-xs">Apple</span>
-                    </Button>
-                    <Button variant="outline" disabled className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white">
-                      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path fill="currentColor" d={siFacebook.path} />
-                      </svg>
-                      <span className="text-xs">Facebook</span>
-                    </Button>
-                  </div>
-                  
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Social login options coming soon!
-                  </p>
+                    )}
+                    {isLoading.google ? "Connecting..." : "Sign in with Google"}
+                  </Button>
                 </CardFooter>
               </form>
             </Card>
@@ -582,30 +600,22 @@ const Auth = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-2 w-full">
-                    <Button variant="outline" disabled className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700 hover:text-white flex items-center justify-center"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading.google}
+                  >
+                    {isLoading.google ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
                       <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path fill="currentColor" d={siGoogle.path} />
                       </svg>
-                      <span className="text-xs">Google</span>
-                    </Button>
-                    <Button variant="outline" disabled className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white">
-                      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path fill="currentColor" d={siApple.path} />
-                      </svg>
-                      <span className="text-xs">Apple</span>
-                    </Button>
-                    <Button variant="outline" disabled className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white">
-                      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path fill="currentColor" d={siFacebook.path} />
-                      </svg>
-                      <span className="text-xs">Facebook</span>
-                    </Button>
-                  </div>
-                  
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Social login options coming soon!
-                  </p>
+                    )}
+                    {isLoading.google ? "Connecting..." : "Sign up with Google"}
+                  </Button>
                 </CardFooter>
               </form>
             </Card>
