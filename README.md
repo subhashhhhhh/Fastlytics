@@ -1,6 +1,9 @@
 # 🏎️ Fastlytics 
 
 *A lightning-fast platform for Formula 1 fans to explore historical data, compare drivers, and simulate race strategies – no engineering degree required.*  
+## Demo Video
+
+https://github.com/user-attachments/assets/7070a62a-6b06-4011-a378-13fcea220023
 
 ---
 
@@ -21,8 +24,8 @@
 |---------------------|---------------------------------------------------------------------------|  
 | **Frontend**        | React, Tailwind CSS, shadcn/ui, Lucide React, Custom Charts     |  
 | **Backend**         | Fast-F1 API, Supabase (Auth + PostgreSQL), Cloudflare R2 (Storage)       |  
-| **Infrastructure**  | Docker, Vercel/Cloudflare Pages, Redis (Caching)                          |  
-| **Misc**            | Python (Data Processing), GitHub Actions (CI/CD), Sentry (Error Tracking) |  
+| **Infrastructure**  | Docker, Oracle, Redis (Caching)                          |  
+| **Misc**            | Python (Data Processing), |  
 
 ---
 
@@ -48,7 +51,6 @@
 3. Configure environment variables:  
    ```bash  
    cp .env.example .env.local  
-   # Add your Supabase/R2 credentials  
    ```  
 
 4. Start the dev server:  
