@@ -158,7 +158,7 @@ const PositionChart: React.FC<PositionChartProps> = ({
             return (
               <Line
                 key={driverCode}
-                type="monotone"
+                type="stepAfter" // Changed from monotone for sharp position changes
                 dataKey={driverCode}
                 stroke={color}
                 strokeWidth={2}

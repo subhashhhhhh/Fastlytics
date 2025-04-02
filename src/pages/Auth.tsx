@@ -41,6 +41,7 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<string>('login');
   const [magicLinkEmail, setMagicLinkEmail] = useState('');
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   // Helper function to set loading state for specific actions
   const setLoadingState = (key: string, isLoading: boolean) => {
@@ -148,25 +149,11 @@ const Auth = () => {
       if (error) throw error;
 
       if (data.session === null && data.user !== null) {
-        toast({
-          title: "Signup Almost Complete!",
-          description: "Please check your email to verify your account.",
-          variant: "default",
-          duration: 5000,
-        });
+        setSignupSuccess(true);
       } else if (data.session && data.user) {
-        toast({
-          title: "Account Created!",
-          description: "Welcome to Fastlytics! You are now logged in.",
-          variant: "default",
-        });
         navigate('/dashboard');
       } else {
-        toast({
-          title: "Signup Initiated",
-          description: "Please check your email if verification is required.",
-          variant: "default",
-        });
+        setSignupSuccess(true);
       }
 
     } catch (error) {
@@ -452,172 +439,185 @@ const Auth = () => {
           {/* SIGNUP TAB */}
           <TabsContent value="signup">
             <Card className="bg-gray-900/80 border-gray-700 shadow-xl">
-              <form onSubmit={handleSignup}>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl text-white">Create Account</CardTitle>
-                  <CardDescription className="text-gray-400">
-                    Join Fastlytics for premium F1 analytics and insights
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+              {!signupSuccess ? (
+                <form onSubmit={handleSignup}>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-xl text-white">Create Account</CardTitle>
+                    <CardDescription className="text-gray-400">
+                      Join Fastlytics for premium F1 analytics and insights
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="first-name" className="text-gray-300">First Name</Label>
+                        <div className="relative">
+                          <Input
+                            id="first-name"
+                            placeholder="John"
+                            className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="last-name" className="text-gray-300">Last Name</Label>
+                        <div className="relative">
+                          <Input
+                            id="last-name"
+                            placeholder="Doe"
+                            className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div className="space-y-2">
-                      <Label htmlFor="first-name" className="text-gray-300">First Name</Label>
+                      <div className="flex items-end justify-between">
+                        <Label htmlFor="username" className="text-gray-300">Username</Label>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleGenerateUsername}
+                          className="h-8 text-xs bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                        >
+                          <Sparkles className="h-3 w-3 mr-1" />
+                          Generate Racing Username
+                        </Button>
+                      </div>
+                      <Input
+                        id="username"
+                        placeholder="Choose a username or generate one"
+                        className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email" className="text-gray-300">Email</Label>
                       <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                         <Input
-                          id="first-name"
-                          placeholder="John"
-                          className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
+                          id="signup-email"
+                          type="email"
+                          placeholder="name@example.com"
+                          className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                          value={signupEmail}
+                          onChange={(e) => setSignupEmail(e.target.value)}
                           required
                         />
                       </div>
                     </div>
+                    
                     <div className="space-y-2">
-                      <Label htmlFor="last-name" className="text-gray-300">Last Name</Label>
+                      <Label htmlFor="signup-password" className="text-gray-300">Password</Label>
                       <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                         <Input
-                          id="last-name"
-                          placeholder="Doe"
-                          className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
+                          id="signup-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Create a secure password"
+                          className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                          value={signupPassword}
+                          onChange={(e) => setSignupPassword(e.target.value)}
                           required
                         />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-1/2 transform -translate-y-1/2 h-full aspect-square p-0 text-gray-400 hover:text-white"
+                          onClick={togglePasswordVisibility}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-end justify-between">
-                      <Label htmlFor="username" className="text-gray-300">Username</Label>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={handleGenerateUsername}
-                        className="h-8 text-xs bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                      >
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        Generate Racing Username
-                      </Button>
-                    </div>
-                    <Input
-                      id="username"
-                      placeholder="Choose a username or generate one"
-                      className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-gray-300">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="name@example.com"
-                        className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
-                        value={signupEmail}
-                        onChange={(e) => setSignupEmail(e.target.value)}
-                        required
+                    
+                    <div className="flex items-center space-x-2 pt-2">
+                      <Checkbox 
+                        id="terms" 
+                        checked={agreeTerms}
+                        onCheckedChange={(checked) => setAgreeTerms(checked === true)}
+                        className="data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                       />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-gray-300">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                      <Input
-                        id="signup-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Create a secure password"
-                        className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-1/2 transform -translate-y-1/2 h-full aspect-square p-0 text-gray-400 hover:text-white"
-                        onClick={togglePasswordVisibility}
+                      <label
+                        htmlFor="terms"
+                        className="text-sm text-gray-400 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
+                        I agree to the <Link to="/terms-of-service" className="text-red-500 hover:underline">Terms of Service</Link> and{" "}
+                        <Link to="/privacy-policy" className="text-red-500 hover:underline">Privacy Policy</Link>
+                      </label>
                     </div>
-                  </div>
+                  </CardContent>
                   
-                  <div className="flex items-center space-x-2 pt-2">
-                    <Checkbox 
-                      id="terms" 
-                      checked={agreeTerms}
-                      onCheckedChange={(checked) => setAgreeTerms(checked === true)}
-                      className="data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
-                    />
-                    <label
-                      htmlFor="terms"
-                      className="text-sm text-gray-400 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  <CardFooter className="flex flex-col gap-4">
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-red-600 hover:bg-red-700"
+                      disabled={isLoading.signup}
                     >
-                      I agree to the <Link to="/terms-of-service" className="text-red-500 hover:underline">Terms of Service</Link> and{" "}
-                      <Link to="/privacy-policy" className="text-red-500 hover:underline">Privacy Policy</Link>
-                    </label>
-                  </div>
-                </CardContent>
-                
-                <CardFooter className="flex flex-col gap-4">
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-red-600 hover:bg-red-700"
-                    disabled={isLoading.signup}
-                  >
-                    {isLoading.signup ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating Account...
-                      </>
-                    ) : (
-                      <>
-                        Create Account
-                        <UserPlus className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                  
-                  <div className="relative w-full">
-                    <div className="absolute inset-0 flex items-center">
-                      <Separator className="w-full bg-gray-700" />
+                      {isLoading.signup ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating Account...
+                        </>
+                      ) : (
+                        <>
+                          Create Account
+                          <UserPlus className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                    
+                    <div className="relative w-full">
+                      <div className="absolute inset-0 flex items-center">
+                        <Separator className="w-full bg-gray-700" />
+                      </div>
+                      <div className="relative flex justify-center">
+                        <span className="bg-gray-900 px-2 text-xs text-gray-400">
+                          OR SIGN UP WITH
+                        </span>
+                      </div>
                     </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-gray-900 px-2 text-xs text-gray-400">
-                        OR SIGN UP WITH
-                      </span>
-                    </div>
+                    
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700 hover:text-white flex items-center justify-center"
+                      onClick={handleGoogleSignIn}
+                      disabled={isLoading.google}
+                    >
+                      {isLoading.google ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path fill="currentColor" d={siGoogle.path} />
+                        </svg>
+                      )}
+                      {isLoading.google ? "Connecting..." : "Sign up with Google"}
+                    </Button>
+                  </CardFooter>
+                </form>
+              ) : (
+                <div className="p-6 text-center">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-green-900/30 flex items-center justify-center mb-4">
+                    <Check className="h-6 w-6 text-green-500" />
                   </div>
-                  
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700 hover:text-white flex items-center justify-center"
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading.google}
-                  >
-                    {isLoading.google ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path fill="currentColor" d={siGoogle.path} />
-                      </svg>
-                    )}
-                    {isLoading.google ? "Connecting..." : "Sign up with Google"}
-                  </Button>
-                </CardFooter>
-              </form>
+                  <h3 className="text-xl font-medium text-white mb-2">Account Created!</h3>
+                  <p className="text-gray-400">
+                    We've sent a verification link to <strong className="text-red-400">{signupEmail}</strong>.<br />
+                    Please check your email to verify your account.
+                  </p>
+                </div>
+              )}
             </Card>
           </TabsContent>
 
