@@ -121,6 +121,14 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Temporarily disable email signup
+    toast({
+      title: "Email Registration Temporarily Unavailable",
+      description: "Due to overwhelming response, email registration is temporarily unavailable. Please use Google or GitHub to sign up.",
+      variant: "destructive",
+    });
+    return;
+
     if (!agreeTerms) {
       toast({
         title: "Terms Agreement Required",
@@ -171,6 +179,15 @@ const Auth = () => {
 
   const handleMagicLinkLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Temporarily disable magic link
+    toast({
+      title: "Magic Link Login Temporarily Unavailable",
+      description: "Due to overwhelming response, magic link login is temporarily unavailable. Please use password or social login options.",
+      variant: "destructive",
+    });
+    return;
+
     setLoadingState('magicLink', true);
     
     try {
@@ -240,6 +257,15 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!agreeTerms) {
+      toast({
+        title: "Terms Agreement Required",
+        description: "Please agree to the terms of service to create an account.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoadingState('google', true);
     
     try {
@@ -266,6 +292,15 @@ const Auth = () => {
   };
 
   const handleGithubSignIn = async () => {
+    if (!agreeTerms) {
+      toast({
+        title: "Terms Agreement Required",
+        description: "Please agree to the terms of service to create an account.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoadingState('github', true);
     
     try {
@@ -489,6 +524,12 @@ const Auth = () => {
                     <CardDescription className="text-gray-400">
                       Join Fastlytics for premium F1 analytics and insights
                     </CardDescription>
+                    <Alert className="mt-4 bg-yellow-900/30 border-yellow-500/30 text-yellow-400">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Due to overwhelming response, email registration is temporarily unavailable. Please use Google or GitHub to sign up.
+                      </AlertDescription>
+                    </Alert>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -498,10 +539,11 @@ const Auth = () => {
                           <Input
                             id="first-name"
                             placeholder="John"
-                            className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                            className="bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
                             required
+                            disabled
                           />
                         </div>
                       </div>
@@ -511,10 +553,11 @@ const Auth = () => {
                           <Input
                             id="last-name"
                             placeholder="Doe"
-                            className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                            className="bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
                             required
+                            disabled
                           />
                         </div>
                       </div>
@@ -528,7 +571,8 @@ const Auth = () => {
                           variant="outline" 
                           size="sm" 
                           onClick={handleGenerateUsername}
-                          className="h-8 text-xs bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                          className="h-8 text-xs bg-gray-800/50 border-gray-700 text-gray-500 cursor-not-allowed"
+                          disabled
                         >
                           <Sparkles className="h-3 w-3 mr-1" />
                           Generate Racing Username
@@ -537,9 +581,10 @@ const Auth = () => {
                       <Input
                         id="username"
                         placeholder="Choose a username or generate one"
-                        className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                        className="bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        disabled
                       />
                     </div>
                     
@@ -551,10 +596,11 @@ const Auth = () => {
                           id="signup-email"
                           type="email"
                           placeholder="name@example.com"
-                          className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                          className="pl-10 bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
                           value={signupEmail}
                           onChange={(e) => setSignupEmail(e.target.value)}
                           required
+                          disabled
                         />
                       </div>
                     </div>
@@ -567,17 +613,19 @@ const Auth = () => {
                           id="signup-password"
                           type={showPassword ? "text" : "password"}
                           placeholder="Create a secure password"
-                          className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                          className="pl-10 pr-10 bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
                           value={signupPassword}
                           onChange={(e) => setSignupPassword(e.target.value)}
                           required
+                          disabled
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute right-0 top-1/2 transform -translate-y-1/2 h-full aspect-square p-0 text-gray-400 hover:text-white"
+                          className="absolute right-0 top-1/2 transform -translate-y-1/2 h-full aspect-square p-0 text-gray-500 cursor-not-allowed"
                           onClick={togglePasswordVisibility}
+                          disabled
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
@@ -593,7 +641,7 @@ const Auth = () => {
                       />
                       <label
                         htmlFor="terms"
-                        className="text-sm text-gray-400 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="text-sm text-gray-400 leading-none"
                       >
                         I agree to the <Link to="/terms-of-service" className="text-red-500 hover:underline">Terms of Service</Link> and{" "}
                         <Link to="/privacy-policy" className="text-red-500 hover:underline">Privacy Policy</Link>
@@ -604,20 +652,11 @@ const Auth = () => {
                   <CardFooter className="flex flex-col gap-4">
                     <Button 
                       type="submit" 
-                      className="w-full bg-red-600 hover:bg-red-700"
-                      disabled={isLoading.signup}
+                      className="w-full bg-gray-700 hover:bg-gray-700 cursor-not-allowed"
+                      disabled
                     >
-                      {isLoading.signup ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating Account...
-                        </>
-                      ) : (
-                        <>
-                          Create Account
-                          <UserPlus className="ml-2 h-4 w-4" />
-                        </>
-                      )}
+                      Create Account
+                      <UserPlus className="ml-2 h-4 w-4" />
                     </Button>
                     
                     <div className="relative w-full">
@@ -626,7 +665,7 @@ const Auth = () => {
                       </div>
                       <div className="relative flex justify-center">
                         <span className="bg-gray-900 px-2 text-xs text-gray-400">
-                          OR SIGN UP WITH
+                          SIGN UP WITH
                         </span>
                       </div>
                     </div>
@@ -691,9 +730,15 @@ const Auth = () => {
                     <CardDescription className="text-gray-400">
                       Get a special link sent to your email to sign in without a password
                     </CardDescription>
+                    <Alert className="mt-4 bg-yellow-900/30 border-yellow-500/30 text-yellow-400">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Due to overwhelming response, magic link login is temporarily unavailable. Please use password or social login options.
+                      </AlertDescription>
+                    </Alert>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Alert className="bg-gray-800/70 border-blue-500/30 text-blue-400">
+                    <Alert className="bg-gray-800/70 border-blue-500/30 text-gray-500">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
                         We'll send you a special link that you can use to sign in instantly, no password required!
@@ -708,10 +753,11 @@ const Auth = () => {
                           id="magic-email"
                           type="email"
                           placeholder="name@example.com"
-                          className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"
+                          className="pl-10 bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
                           value={magicLinkEmail}
                           onChange={(e) => setMagicLinkEmail(e.target.value)}
                           required
+                          disabled
                         />
                       </div>
                     </div>
@@ -719,20 +765,11 @@ const Auth = () => {
                   <CardFooter>
                     <Button 
                       type="submit" 
-                      className="w-full bg-red-600 hover:bg-red-700"
-                      disabled={isLoading.magicLink}
+                      className="w-full bg-gray-700 hover:bg-gray-700 cursor-not-allowed"
+                      disabled
                     >
-                      {isLoading.magicLink ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending Magic Link...
-                        </>
-                      ) : (
-                        <>
-                          Send Magic Link
-                          <Sparkles className="ml-2 h-4 w-4" />
-                        </>
-                      )}
+                      Send Magic Link
+                      <Sparkles className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </form>
