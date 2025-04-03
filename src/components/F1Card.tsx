@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { ArrowUp, ArrowDown, MinusCircle } from 'lucide-react'; // Import icons
@@ -12,9 +11,10 @@ interface F1CardProps {
   subValue?: string | null; // Optional sub-value (e.g., lap time)
   className?: string;
   style?: React.CSSProperties;
+  isRookie?: boolean; // Add isRookie prop
 }
 
-const F1Card = ({ title, value, team, icon, points_change, subValue, className, style }: F1CardProps) => {
+const F1Card = ({ title, value, team, icon, points_change, subValue, className, style, isRookie }: F1CardProps) => {
 
   // Function to determine change indicator color and icon (copied from standings pages)
   const getChangeIndicator = (change: number | undefined) => {
@@ -36,7 +36,14 @@ const F1Card = ({ title, value, team, icon, points_change, subValue, className, 
     <div className={cn(`team-card bg-f1-${team}-gradient border border-f1-${team}/30 rounded-lg p-4 shadow-md`, className)} style={style}> {/* Use team prop for styling */}
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="text-sm text-gray-300 font-medium mb-1">{title}</h3>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-sm text-gray-300 font-medium">{title}</h3>
+            {isRookie && (
+              <span className="text-xs px-1.5 py-0.5 bg-blue-600/40 text-blue-200 rounded font-medium">
+                Rookie
+              </span>
+            )}
+          </div>
           <div className="text-2xl font-bold text-white">{value}</div>
           {/* Display subValue (lap time) if available */}
           {subValue && (

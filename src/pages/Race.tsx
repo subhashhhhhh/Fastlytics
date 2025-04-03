@@ -1,15 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, AlertCircle, Zap, Calendar, MapPin, Users, Timer, Sparkles, TrendingUp } from 'lucide-react'; // Added Sparkles, TrendingUp
+import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, AlertCircle, Zap, Calendar, MapPin, Users, Timer, Sparkles, TrendingUp, Map } from 'lucide-react'; // Added Map icon
 import Navbar from '@/components/Navbar';
 import RacingChart from '@/components/RacingChart';
 import TireStrategy from '@/components/TireStrategy';
 import SpeedTraceChart from '@/components/SpeedTraceChart';
 import GearMapChart from '@/components/GearMapChart';
 import PositionChart from '@/components/PositionChart';
-// Import the new chart component
+// Import TrackEvolutionChart for merging with Lap Times
 import TrackEvolutionChart from '@/components/TrackEvolutionChart';
+// Import the new CircuitComparisonChart component
+import CircuitComparisonChart from '@/components/CircuitComparisonChart';
 import F1Card from '@/components/F1Card';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -45,8 +47,25 @@ const getTeamColorClass = (teamName: string | undefined): string => {
     return 'gray';
 }
 
+// Define rookies by season year
+const rookiesByYear: { [year: string]: string[] } = {
+  '2025': ['ANT', 'BOR', 'DOO', 'BEA', 'HAD', 'LAW'], // Antonelli, Bortoleto, Doohan, Bearman, Hadjar, Lawson
+  '2024': ['BEA', 'COL'], // Bearman, Colapinto
+  '2023': ['PIA', 'SAR', 'DEV'], // Piastri, Sargeant, De Vries
+  '2022': ['ZHO'], // Zhou
+  '2021': ['MSC', 'MAZ', 'TSU'], // Mick Schumacher, Mazepin, Tsunoda
+  '2020': ['LAT'], // Latifi
+  '2019': ['NOR', 'RUS', 'ALB'] // Norris, Russell, Albon
+};
+
+// Helper function to check if a driver is a rookie in a given year
+const isRookie = (driverCode: string, year: number): boolean => {
+  const yearStr = year.toString();
+  return rookiesByYear[yearStr]?.includes(driverCode) || false;
+};
+
 // Component for rendering the results table dynamically
-const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType: string }> = ({ results, sessionType }) => {
+const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType: string, year: number }> = ({ results, sessionType, year }) => {
   const isPractice = sessionType.startsWith('FP');
   const isQualifying = sessionType.startsWith('Q') || sessionType.startsWith('SQ');
   const isRaceOrSprint = sessionType === 'R' || sessionType === 'Sprint';
@@ -93,7 +112,14 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
               {columns.map(col => (
                 <TableCell key={`${res.driverCode}-${String(col.key)}`} className={cn(col.className)}>
                   {col.key === 'driver' ? (
-                    res.fullName
+                    <div className="flex items-center gap-2">
+                      <span>{res.fullName}</span>
+                      {isRookie(res.driverCode, year) && (
+                        <span className="text-xs px-1.5 py-0.5 bg-blue-600/40 text-blue-200 rounded font-medium">
+                          Rookie
+                        </span>
+                      )}
+                    </div>
                   ) : col.key === 'team' ? (
                     <span className="flex items-center gap-2">
                       <span className={cn("w-2 h-2 rounded-full", `bg-f1-${getTeamColorClass(res.team)}`)}></span>
@@ -319,8 +345,8 @@ const Race = () => {
                   <TabsTrigger value="positions" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><MapPin className="w-4 h-4 mr-1.5 inline"/>Positions</TabsTrigger>
                   <TabsTrigger value="laptimes" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Timer className="w-4 h-4 mr-1.5 inline"/>Lap Times</TabsTrigger>
                   <TabsTrigger value="strategy" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Flag className="w-4 h-4 mr-1.5 inline"/>Strategy</TabsTrigger>
-                  {/* Add Track Evolution Tab */}
-                  <TabsTrigger value="evolution" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><TrendingUp className="w-4 h-4 mr-1.5 inline"/>Evolution</TabsTrigger>
+                  {/* Replace Track Evolution with Circuit Comparison */}
+                  <TabsTrigger value="circuit" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Map className="w-4 h-4 mr-1.5 inline"/>Circuit</TabsTrigger>
                   <TabsTrigger value="telemetry" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><BarChart2 className="w-4 h-4 mr-1.5 inline"/>Telemetry</TabsTrigger>
                 </>
               )}
@@ -329,7 +355,7 @@ const Race = () => {
             {/* Results Tab */}
             <TabsContent value="results" className="pt-2">
                <h2 className="text-xl font-semibold mb-4 text-white">Session Results: {availableSessions.find(s => s.type === selectedSession)?.name}</h2>
-               <SessionResultsTable results={sessionResults} sessionType={selectedSession} />
+               <SessionResultsTable results={sessionResults} sessionType={selectedSession} year={year} />
             </TabsContent>
 
             {/* Position Changes Tab (Only for Race 'R') */}
@@ -341,11 +367,39 @@ const Race = () => {
               </TabsContent>
             )}
 
-            {/* Lap Times Tab (Race or Sprint) */}
+            {/* Lap Times Tab (Race or Sprint) - now including track evolution */}
             {(selectedSession === 'R' || selectedSession === 'Sprint') && (
               <TabsContent value="laptimes" className="pt-2">
                 {year && eventName && (
-                  <RacingChart year={year} event={eventName} session={selectedSession} initialDrivers={["VER", "LEC"]} title="Lap Time Comparison" />
+                  <>
+                    <RacingChart 
+                      year={year} 
+                      event={eventName} 
+                      session={selectedSession} 
+                      initialDrivers={["VER", "LEC"]} 
+                      title="Lap Time Comparison" 
+                    />
+                    <div className="mt-8">
+                      <TrackEvolutionChart 
+                        year={year} 
+                        event={eventName} 
+                        session={selectedSession} 
+                      />
+                    </div>
+                  </>
+                )}
+              </TabsContent>
+            )}
+
+            {/* Circuit Comparison Tab (replacing Track Evolution) */}
+            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
+              <TabsContent value="circuit" className="pt-2">
+                {year && eventName && (
+                  <CircuitComparisonChart
+                    year={year}
+                    event={eventName}
+                    session={selectedSession}
+                  />
                 )}
               </TabsContent>
             )}
@@ -393,16 +447,6 @@ const Race = () => {
                    <FeatureCard title="ERS Deployment" icon={<BarChart2 />} description="Energy deployment and harvesting patterns..." />
                    <FeatureCard title="Aero Efficiency" icon={<ArrowRightLeft />} description="Downforce vs drag trade-off analysis..." />
                  </div>
-              </TabsContent>
-            )}
-
-            {/* Track Evolution Tab Content (Race or Sprint) */}
-            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
-              <TabsContent value="evolution" className="pt-2">
-                {year && eventName && (
-                  // Render the actual TrackEvolutionChart component
-                  <TrackEvolutionChart year={year} event={eventName} session={selectedSession} />
-                )}
               </TabsContent>
             )}
 

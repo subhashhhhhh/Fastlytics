@@ -9,6 +9,7 @@ import { fetchLapTimes, fetchSessionDrivers, SessionDriver, LapTimeDataPoint } f
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1"; // Import the spinner
 import { AlertCircle, Users, PlusCircle, XCircle } from 'lucide-react'; // Added PlusCircle, XCircle icons
 import { driverColor } from '@/lib/driverColor';
+import { areTeammates, getLineStylesForDriver, groupDriversByTeam } from '@/lib/teamUtils';
 // Import Select components
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Use Card for layout
@@ -26,19 +27,21 @@ const formatLapTime = (totalSeconds: number | null): string => {
   return `${minutes}:${formattedSeconds}`;
 };
 
+// Define props for the component
 interface RacingChartProps {
   className?: string;
   delay?: number;
-  title: string;
   year: number;
   event: string;
   session: string;
-  initialDrivers: string[]; // Expect array of 2 to 5 driver codes
-  staticData?: LapTimeDataPoint[]; // Optional static data prop
+  initialDrivers?: string[];
+  staticData?: LapTimeDataPoint[];
+  title?: string;
 }
 
-const MAX_DRIVERS = 5; // Define max drivers constant
-const MIN_DRIVERS = 2; // Define min drivers constant
+// Constants for driver limits
+const MIN_DRIVERS = 2;
+const MAX_DRIVERS = 6;
 
 const RacingChart: React.FC<RacingChartProps> = ({
   className,
@@ -133,7 +136,6 @@ const RacingChart: React.FC<RacingChartProps> = ({
   const isLoading = !staticData && (isLoadingDrivers || isLoadingLapTimes);
 
   // --- Render States ---
-  // Simplified loading/error checks
   const renderContent = () => {
     if (isLoading) {
       // Use LoadingSpinnerF1 instead of Skeleton
@@ -160,6 +162,9 @@ const RacingChart: React.FC<RacingChartProps> = ({
       );
     }
 
+    // Group drivers by team to determine styling
+    const teamGroups = groupDriversByTeam(driversToDisplay, year);
+
     // --- Render Chart ---
     return (
       <ResponsiveContainer width="100%" height={300}>
@@ -171,9 +176,16 @@ const RacingChart: React.FC<RacingChartProps> = ({
           {/* Updated Tooltip: isAnimationActive=false helps focus on single item */}
           <Tooltip
             isAnimationActive={false} // Prevent showing all lines on hover
-            contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(100, 116, 139, 0.5)', color: '#E5E7EB', borderRadius: '6px', boxShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
-            labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }}
-            itemStyle={{ padding: '2px 0' }}
+            contentStyle={{ 
+              backgroundColor: 'rgba(15, 23, 42, 0.95)', // Darker, more solid background
+              borderColor: 'rgba(71, 85, 105, 0.6)', 
+              color: '#E5E7EB', 
+              borderRadius: '6px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)', // Stronger shadow
+              padding: '8px 12px' // More padding
+            }}
+            labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '8px', borderBottom: '1px solid rgba(100, 116, 139, 0.3)', paddingBottom: '4px' }}
+            itemStyle={{ padding: '3px 0' }} // More padding between items
             formatter={(value: number | null, name: string, props) => {
                 // Only return the value for the specific item being hovered (if active)
                 // Note: This might still show multiple if lines overlap perfectly.
@@ -181,19 +193,91 @@ const RacingChart: React.FC<RacingChartProps> = ({
                 return [`${formatLapTime(value)}`, name];
             }}
             labelFormatter={(label) => `Lap ${label}`}
+            // Sort items by lap time (ascending, so fastest driver comes first)
+            itemSorter={(item) => {
+              // Sort by lap time (null values at the end)
+              return item.value === null ? Infinity : item.value;
+            }}
             // cursor={{ stroke: 'rgba(156, 163, 175, 0.5)', strokeWidth: 1 }} // Optional: customize cursor line
           />
-          <Legend wrapperStyle={{ paddingTop: '20px' }} />
+          <Legend 
+            wrapperStyle={{ paddingTop: '20px' }} 
+            formatter={(value, entry) => {
+              // Find the team this driver belongs to
+              let team = "";
+              Object.entries(teamGroups).forEach(([teamName, drivers]) => {
+                if (drivers.includes(value)) {
+                  team = teamName;
+                }
+              });
+              
+              // Find teammates for this driver
+              let teammates: string[] = [];
+              Object.values(teamGroups).forEach(drivers => {
+                if (drivers.includes(value)) {
+                  teammates = drivers;
+                }
+              });
+              
+              // Determine driver's position in the team
+              const driverIndex = teammates.indexOf(value);
+              let lineStyle = "";
+              
+              // Add line style indicator if driver has teammates
+              if (teammates.length > 1) {
+                switch (driverIndex % 3) {
+                  case 0:
+                    lineStyle = "solid";
+                    break;
+                  case 1:
+                    lineStyle = "dashed";
+                    break;
+                  case 2:
+                    lineStyle = "dotted";
+                    break;
+                }
+              }
+              
+              // Determine if driver is part of a team with multiple drivers
+              const isInMultiDriverTeam = teammates.length > 1;
+              
+              // Return with team name and line style if multiple drivers from same team
+              if (isInMultiDriverTeam) {
+                return (
+                  <span style={{ color: entry.color }}>
+                    {value} ({team}) 
+                    <span style={{ fontSize: '0.85em', opacity: 0.8 }}> - {lineStyle} line</span>
+                  </span>
+                );
+              }
+              
+              // Regular driver display
+              return <span style={{ color: entry.color }}>{value}</span>;
+            }}
+          />
           {/* Dynamically render lines */}
-          {driversToDisplay.map((driverCode) => {
+          {driversToDisplay.map((driverCode, index) => {
             const color = driverColor(driverCode, year); // Pass year to driverColor
+            
+            // Find teammates for this driver
+            let teammates: string[] = [];
+            Object.values(teamGroups).forEach(drivers => {
+              if (drivers.includes(driverCode)) {
+                teammates = drivers;
+              }
+            });
+            
+            // Get line style based on teammates
+            const lineStyle = getLineStylesForDriver(driverCode, teammates, index);
+            
             return (
               <Line
                 key={driverCode}
                 type="monotone"
                 dataKey={driverCode}
                 stroke={color}
-                strokeWidth={2.5}
+                strokeWidth={lineStyle.strokeWidth}
+                strokeDasharray={lineStyle.strokeDasharray}
                 dot={false}
                 activeDot={{ r: 5, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: color }}
                 name={driverCode}

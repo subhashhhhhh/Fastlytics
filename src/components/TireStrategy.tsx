@@ -1,7 +1,7 @@
 import React, { useState } from 'react'; // Import useState
 import { cn } from "@/lib/utils"; // Corrected path
 import { useQuery } from '@tanstack/react-query';
-import { fetchTireStrategy, DriverStrategy } from '@/lib/api'; // Corrected path & added DriverStrategy type
+import { fetchTireStrategy, DriverStrategy, fetchSpecificRaceResults, DetailedRaceResult } from '@/lib/api'; // Added imports for race results
 import { Skeleton } from "@/components/ui/skeleton"; // Corrected path
 import { AlertCircle, ChevronDown } from 'lucide-react'; // Import ChevronDown
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Corrected path
@@ -40,6 +40,27 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
 
   const [visibleDrivers, setVisibleDrivers] = useState(5); // State for pagination
 
+  // Fetch race results to get finishing order
+  const { data: raceResults } = useQuery<DetailedRaceResult[]>({
+    queryKey: ['sessionResult', year, event, session],
+    queryFn: () => fetchSpecificRaceResults(year, event, session),
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    retry: 1,
+    enabled: !!year && !!event && !!session,
+  });
+
+  // Create a map of driver codes to their finishing positions
+  const driverPositionMap = React.useMemo(() => {
+    if (!raceResults) return new Map<string, number>();
+    
+    const positionMap = new Map<string, number>();
+    raceResults.forEach(result => {
+      positionMap.set(result.driverCode, result.position || Infinity);
+    });
+    return positionMap;
+  }, [raceResults]);
+
   // Added DriverStrategy[] type annotation for data
   const { data: strategyData, isLoading, error, isError } = useQuery<DriverStrategy[]>({
     queryKey: ['tireStrategy', year, event, session],
@@ -48,8 +69,19 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
     gcTime: 1000 * 60 * 30,
     retry: 1,
     enabled: !!year && !!event && !!session,
-    // Sort data once fetched (e.g., by driver number or name)
-    select: (data) => data?.sort((a, b) => a.driver.localeCompare(b.driver)),
+    // Sort data by race finishing order instead of alphabetically
+    select: (data) => {
+      if (!data) return [];
+      
+      return [...data].sort((a, b) => {
+        // Get positions from the map (default to Infinity if not found)
+        const posA = driverPositionMap.get(a.driver) || Infinity;
+        const posB = driverPositionMap.get(b.driver) || Infinity;
+        
+        // Sort by position (ascending)
+        return posA - posB;
+      });
+    },
   });
 
   const showMoreDrivers = () => {
@@ -121,40 +153,53 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
         </div>
         {/* Driver Stint List */}
         <div className="space-y-2.5">
-          {driversToShow.map((driverData) => (
-            <div key={driverData.driver} className="flex items-center gap-3">
-              <span className="w-12 text-sm font-mono text-gray-400 text-right flex-shrink-0">
-                {driverData.driver}
-              </span>
-              <div className="flex-grow h-6 bg-gray-800/50 rounded overflow-hidden flex relative"> {/* Added relative */}
-                {driverData.stints.map((stint, index) => {
-                  const widthPercentage = ((stint.endLap - stint.startLap + 1) / maxLaps) * 100;
-                  // Calculate left offset based on previous stints' widths
-                  const leftOffsetPercentage = ((stint.startLap - 1) / maxLaps) * 100;
-                  const bgColorClass = getTireColorClass(stint.compound); // Use class getter
-                  const tooltipContent = `${stint.compound} (L${stint.startLap}-L${stint.endLap}, ${stint.lapCount} laps)`;
+          {driversToShow.map((driverData, index) => {
+            // Get position from map for display
+            const position = driverPositionMap.get(driverData.driver);
+            const positionText = position !== undefined ? `P${position}` : '';
+            
+            return (
+              <div key={driverData.driver} className="flex items-center gap-3">
+                <span className="w-12 text-sm font-mono text-gray-400 text-right flex-shrink-0">
+                  {positionText ? (
+                    <span className="flex items-center justify-end">
+                      <span className="text-xs text-gray-500 mr-1">{positionText}</span>
+                      {driverData.driver}
+                    </span>
+                  ) : (
+                    driverData.driver
+                  )}
+                </span>
+                <div className="flex-grow h-6 bg-gray-800/50 rounded overflow-hidden flex relative"> {/* Added relative */}
+                  {driverData.stints.map((stint, index) => {
+                    const widthPercentage = ((stint.endLap - stint.startLap + 1) / maxLaps) * 100;
+                    // Calculate left offset based on previous stints' widths
+                    const leftOffsetPercentage = ((stint.startLap - 1) / maxLaps) * 100;
+                    const bgColorClass = getTireColorClass(stint.compound); // Use class getter
+                    const tooltipContent = `${stint.compound} (L${stint.startLap}-L${stint.endLap}, ${stint.lapCount} laps)`;
 
-                  return (
-                    <Tooltip key={index}>
-                      <TooltipTrigger asChild>
-                        <div
-                          className={cn("h-full absolute transition-opacity hover:opacity-80", bgColorClass)} // Use class
-                          style={{
-                              left: `${leftOffsetPercentage}%`,
-                              width: `${widthPercentage}%`,
-                           }}
-                          aria-label={tooltipContent}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-black/80 text-white border-gray-700">
-                        <p>{tooltipContent}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
+                    return (
+                      <Tooltip key={index}>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={cn("h-full absolute transition-opacity hover:opacity-80", bgColorClass)} // Use class
+                            style={{
+                                left: `${leftOffsetPercentage}%`,
+                                width: `${widthPercentage}%`,
+                             }}
+                            aria-label={tooltipContent}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-black/80 text-white border-gray-700">
+                          <p>{tooltipContent}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         {/* Show More Button */}
         {canShowMore && (

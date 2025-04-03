@@ -12,6 +12,23 @@ import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSeason } from '@/contexts/SeasonContext'; // Import useSeason
 
+// Define rookies by season year
+const rookiesByYear: { [year: string]: string[] } = {
+  '2025': ['ANT', 'BOR', 'DOO', 'BEA', 'HAD', 'LAW'], // Antonelli, Bortoleto, Doohan, Bearman, Hadjar, Lawson
+  '2024': ['BEA', 'COL'], // Bearman, Colapinto
+  '2023': ['PIA', 'SAR', 'DEV'], // Piastri, Sargeant, De Vries
+  '2022': ['ZHO'], // Zhou
+  '2021': ['MSC', 'MAZ', 'TSU'], // Mick Schumacher, Mazepin, Tsunoda
+  '2020': ['LAT'], // Latifi
+  '2019': ['NOR', 'RUS', 'ALB'] // Norris, Russell, Albon
+};
+
+// Helper function to check if a driver is a rookie in a given year
+const isRookie = (driverCode: string, year: number): boolean => {
+  const yearStr = year.toString();
+  return rookiesByYear[yearStr]?.includes(driverCode) || false;
+};
+
 const DriverStandings = () => {
   const navigate = useNavigate();
   const { selectedYear, setSelectedYear, availableYears } = useSeason(); // Use context
@@ -105,6 +122,7 @@ const DriverStandings = () => {
             driverStandings.map((driver, index) => { // Use fetched data
               const indicator = getChangeIndicator(driver.points_change); // Use points_change
               const teamColor = getTeamColorClass(driver.team);
+              const driverIsRookie = isRookie(driver.code, selectedYear);
 
               return (
                 <Card
@@ -120,7 +138,14 @@ const DriverStandings = () => {
                   <div className="text-xl md:text-2xl font-bold text-gray-500 w-8 text-center">{driver.rank}</div>
                   <div className="flex-grow">
                     {/* Driver name display */}
-                    <h2 className="text-lg md:text-xl font-semibold text-white">{driver.name}</h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg md:text-xl font-semibold text-white">{driver.name}</h2>
+                      {driverIsRookie && (
+                        <span className="text-xs px-1.5 py-0.5 bg-blue-600/40 text-blue-200 rounded font-medium">
+                          Rookie
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 text-sm text-gray-400 mt-0.5"> {/* Added slight margin-top */}
                        <span className={cn("w-2 h-2 rounded-full", `bg-f1-${teamColor}`)}></span>
                        {/* Team name display */}

@@ -548,7 +548,6 @@ const Profile = () => {
                     Update Password
                   </Button>
                 </form>
-                
               </CardContent>
             </Card>
           </TabsContent>

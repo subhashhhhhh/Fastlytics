@@ -142,14 +142,28 @@ const TrackEvolutionChart: React.FC<TrackEvolutionChartProps> = ({
             />
           )}
           <Tooltip
-            contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(100, 116, 139, 0.5)', color: '#E5E7EB', borderRadius: '6px' }}
-            labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }}
-            itemStyle={{ padding: '2px 0' }}
+            contentStyle={{ 
+              backgroundColor: 'rgba(15, 23, 42, 0.95)', // Darker, more solid background 
+              borderColor: 'rgba(71, 85, 105, 0.6)', 
+              color: '#E5E7EB', 
+              borderRadius: '6px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)', // Stronger shadow
+              padding: '8px 12px' // More padding 
+            }}
+            labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '8px', borderBottom: '1px solid rgba(100, 116, 139, 0.3)', paddingBottom: '4px' }}
+            itemStyle={{ padding: '3px 0' }} // More padding between items
             formatter={(value: number | null, name: string) => {
                 if (name === 'Track Temp') return [`${value?.toFixed(1) ?? 'N/A'} °C`, name];
                 return [formatLapTime(value), name]; // name is driver code
             }}
             labelFormatter={(label) => `Lap ${label}`}
+            // Sort items by lap time (ascending, so fastest driver comes first)
+            // But always keep Track Temp at the bottom
+            itemSorter={(item) => {
+                if (item.name === 'Track Temp') return Infinity; // Always put track temp last
+                // Sort by lap time (null values at the end)
+                return item.value === null ? Infinity - 1 : item.value;
+            }}
           />
           <Legend wrapperStyle={{ paddingTop: '20px' }} />
 

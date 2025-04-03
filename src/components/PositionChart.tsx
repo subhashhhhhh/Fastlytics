@@ -126,9 +126,16 @@ const PositionChart: React.FC<PositionChartProps> = ({
             width={45}
           />
           <Tooltip
-            contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(100, 116, 139, 0.5)', color: '#E5E7EB', borderRadius: '6px' }}
-            labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }}
-            itemStyle={{}} // Handled by formatter
+            contentStyle={{ 
+              backgroundColor: 'rgba(15, 23, 42, 0.95)', // Darker, more solid background
+              borderColor: 'rgba(71, 85, 105, 0.6)', 
+              color: '#E5E7EB', 
+              borderRadius: '6px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)', // Stronger shadow
+              padding: '8px 12px' // More padding
+            }}
+            labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '8px', borderBottom: '1px solid rgba(100, 116, 139, 0.3)', paddingBottom: '4px' }}
+            itemStyle={{ padding: '3px 0' }} // More padding between items
             formatter={(value: number | null, name: string, props: any) => {
                 if (value === null) return ['DNF/N/A', name]; // Handle null positions
                 const color = driverColor(name, year); // Get color for the item, passing the year
@@ -139,6 +146,12 @@ const PositionChart: React.FC<PositionChartProps> = ({
             }}
             labelFormatter={(label) => `Lap ${label}`}
             cursor={{ stroke: 'rgba(156, 163, 175, 0.5)', strokeWidth: 1, strokeDasharray: '3 3' }}
+            // Sort items by position (ascending, so P1 comes first)
+            itemSorter={(item) => {
+              // Get the position, which is the value, and sort numerically
+              // For DNF (null values), place them at the end
+              return item.value === null ? Infinity : item.value;
+            }}
           />
           <Legend
             wrapperStyle={{ paddingTop: '20px' }}

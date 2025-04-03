@@ -22,6 +22,23 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSeason } from '@/contexts/SeasonContext'; // Import useSeason
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// Define rookies by season year
+const rookiesByYear: { [year: string]: string[] } = {
+  '2025': ['ANT', 'BOR', 'DOO', 'BEA', 'HAD', 'LAW'], // Antonelli, Bortoleto, Doohan, Bearman, Hadjar, Lawson
+  '2024': ['BEA', 'COL'], // Bearman, Colapinto
+  '2023': ['PIA', 'SAR', 'DEV'], // Piastri, Sargeant, De Vries
+  '2022': ['ZHO'], // Zhou
+  '2021': ['MSC', 'MAZ', 'TSU'], // Mick Schumacher, Mazepin, Tsunoda
+  '2020': ['LAT'], // Latifi
+  '2019': ['NOR', 'RUS', 'ALB'] // Norris, Russell, Albon
+};
+
+// Helper function to check if a driver is a rookie in a given year
+const isRookie = (driverCode: string, year: number): boolean => {
+  const yearStr = year.toString();
+  return rookiesByYear[yearStr]?.includes(driverCode) || false;
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -190,6 +207,7 @@ const Dashboard = () => {
                         team={getTeamColorClass(driver.team) as any}
                          icon={<Users className={`h-5 w-5 text-f1-${getTeamColorClass(driver.team)}`} />}
                          points_change={driver.points_change} // Pass points_change
+                         isRookie={isRookie(driver.code, selectedYear)} // Add rookie status
                          className="bg-gray-900/80 border border-gray-700/80 hover:border-red-600/50 transition-colors duration-200 h-full" // Added h-full for consistent height
                        />
                      </div>
@@ -197,75 +215,53 @@ const Dashboard = () => {
                   </div>
                 )}
             </section>
-
-            {/* Recent Races Section */}
-            <section className="animate-fade-in" style={{ animationDelay: '200ms' }}>
-              <div className="flex justify-between items-center mb-4">
-                {/* Responsive section title size */}
-                <h2 className="text-lg sm:text-xl md:text-2xl font-bold">Recent Race Results ({selectedYear})</h2>
-                <Button variant="link" className="text-red-400 hover:text-red-300 px-0 text-sm" onClick={() => navigate('/races')}>
-                  View all races <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-               {isLoadingRaces ? (
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-                     {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] bg-gray-800/50 rounded-lg"/>)}
-                  </div>
-               ) : recentRaces.length > 0 ? (
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-                  {recentRaces.map((race) => (
-                    <div
-                      key={`${race.year}-${race.event}`}
-                      onClick={() => handleRaceClick(race)}
-                      className="cursor-pointer group transition-transform duration-200 ease-in-out hover:scale-[1.03]"
-                    >
-                      <F1Card
-                        title={race.event}
-                        value={`Winner: ${race.driver}`}
-                         team={getTeamColorClass(race.team) as any}
-                         icon={<Flag className={`h-5 w-5 text-f1-${getTeamColorClass(race.team)}`} />}
-                         // points_change is optional, so no need to pass null if not applicable
-                         className="bg-gray-900/80 border border-gray-700/80 group-hover:border-red-500/50 transition-colors duration-200"
-                       />
-                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 italic py-10 text-center">No race results available for {selectedYear}.</p>
-              )}
-            </section>
           </div>
 
-          {/* Right Column */}
+          {/* Right Column - Replaced with "Explore Analytics by Race" */}
           <aside className="lg:col-span-1 space-y-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
              {/* Responsive section title size */}
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">Explore Analytics</h2>
-            <FeatureCardRedesigned
-              title="Session Analysis"
-              description="Track evolution, weather, safety cars"
-              icon={<Timer className="h-6 w-6 text-red-400" />}
-              linkTo="/dashboard" // Update links later
-            />
-            <FeatureCardRedesigned
-              title="Driver Performance"
-              description="Metrics, styles, comparisons"
-              icon={<User className="h-6 w-6 text-blue-400" />}
-              linkTo="/drivers"
-            />
-            <FeatureCardRedesigned
-              title="Telemetry Deep Dive"
-              description="Car data, G-forces, ERS usage"
-              icon={<Gauge className="h-6 w-6 text-green-400" />}
-              linkTo="/dashboard" // Update links later
-            />
-             <FeatureCardRedesigned
-              title="Strategy Insights"
-              description="Pit stops, tire wear, simulations"
-              icon={<Cpu className="h-6 w-6 text-yellow-400" />}
-              linkTo="/dashboard" // Update links later
-            />
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">Explore Analytics by Race</h2>
+            {isLoadingRaces ? (
+              <div className="space-y-4">
+                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] bg-gray-800/50 rounded-lg"/>)}
+              </div>
+            ) : recentRaces.length > 0 ? (
+              <div className="space-y-4">
+                {recentRaces.slice(0, 4).map((race) => (
+                  <div
+                    key={`${race.year}-${race.event}`}
+                    onClick={() => handleRaceClick(race)}
+                    className="cursor-pointer group transition-transform duration-200 ease-in-out hover:scale-[1.03]"
+                  >
+                    <Card 
+                      className="bg-gray-900/80 border border-gray-700/80 group-hover:border-red-500/50 transition-colors duration-200"
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <CardTitle className="text-lg font-semibold text-white">{race.event}</CardTitle>
+                            <CardDescription className="text-gray-400 text-sm">
+                              {race.date || `Round ${race.round}`}{race.location ? `, ${race.location}` : ''}
+                            </CardDescription>
+                          </div>
+                          <div className={`p-2 bg-gray-800 rounded-lg border border-gray-700 text-f1-${getTeamColorClass(race.team)}`}>
+                            <Flag className="h-5 w-5" />
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-300">Winner: {race.driver}</span>
+                          <ArrowRight className="w-4 h-4 text-red-400"/>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic py-10 text-center">No race results available for {selectedYear}.</p>
+            )}
           </aside>
 
         </div>
@@ -274,7 +270,7 @@ const Dashboard = () => {
   );
 };
 
-// Redesigned Feature Card Component with Coming Soon state
+// Replaced the FeatureCardRedesigned component since it's no longer used
 const FeatureCardRedesigned = ({
   title, description, icon, linkTo
 }: {
@@ -284,29 +280,23 @@ const FeatureCardRedesigned = ({
     <Card
       className={cn(
         "bg-gray-900/70 border-gray-700/80",
-        "cursor-not-allowed transition-all duration-200 ease-in-out",
-        // Removed hover effect, added opacity
-        "opacity-75 relative overflow-hidden" 
+        "cursor-pointer transition-all duration-200 ease-in-out hover:bg-gray-800/80 hover:border-red-500/50",
+        "relative overflow-hidden" 
       )}
     >
-      {/* Coming Soon Ribbon */}
-      <div className="absolute top-2 right-[-30px] w-[110px] transform rotate-45 bg-red-600 text-center text-[10px] font-bold text-white py-0.5">
-        COMING SOON
-      </div>
-      
       <CardHeader>
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <CardTitle className="text-lg font-semibold text-gray-400">{title}</CardTitle>
-            <CardDescription className="text-gray-500 text-sm">{description}</CardDescription>
+            <CardTitle className="text-lg font-semibold text-white">{title}</CardTitle>
+            <CardDescription className="text-gray-400 text-sm">{description}</CardDescription>
           </div>
-          <div className="p-2 bg-gray-800 rounded-lg border border-gray-700 opacity-50">
+          <div className="p-2 bg-gray-800 rounded-lg border border-gray-700">
             {icon}
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-2">
-        <div className="flex justify-end items-center text-xs text-gray-500">
+        <div className="flex justify-end items-center text-xs text-red-400">
           <ArrowRight className="w-3 h-3 ml-1"/>
         </div>
       </CardContent>
