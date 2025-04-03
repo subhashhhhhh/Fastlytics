@@ -6,11 +6,9 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = [
-    { title: 'Features', links: [ { name: 'Dashboard', href: '/dashboard'}, { name: 'Drivers', href: '/drivers'}, { name: 'Races', href: '/dashboard'} ] }, // Simplified links
-    // Updated 'Support' link to be external and renamed, linked FAQ
-    { title: 'Resources', links: [ { name: 'Blog', href: 'https://subhashh.tech'}, { name: 'Support the Project', href: 'https://buymeacoffee.com/subhashh', external: true }, { name: 'FAQ', href: '/faq'} ] },
-    // Linked Legal pages
     { title: 'Legal', links: [ { name: 'Privacy Policy', href: '/privacy-policy'}, { name: 'Terms of Service', href: '/terms-of-service'} ] },
+    { title: 'Resources', links: [ { name: 'Blog', href: 'https://subhashh.tech'}, { name: 'Support the Project', href: 'https://buymeacoffee.com/subhashh', external: true }, { name: 'FAQ', href: '/faq'} ] },
+    { title: 'Features', links: [ { name: 'Dashboard', href: '/dashboard'}, { name: 'Drivers', href: '/standings/drivers'}, { name: 'Races', href: '/races'}, { name: 'Teams', href: 'standings/teams'} ] }, // Simplified links
   ];
 
   const socialLinks = [

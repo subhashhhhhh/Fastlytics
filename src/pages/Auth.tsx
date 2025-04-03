@@ -31,6 +31,14 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { generateRacingUsername } from '@/lib/usernameGenerator';
 
+// Feature flags - Change these values to enable/disable authentication features
+const AUTH_CONFIG = {
+  ENABLE_EMAIL_SIGNUP: true, // Set to true to enable email-based signup
+  ENABLE_MAGIC_LINK: true,   // Set to true to enable magic link login
+  SIGNUP_DISABLED_MESSAGE: "Due to overwhelming response, email registration is temporarily unavailable. Please use Google or GitHub to sign up.",
+  MAGIC_LINK_DISABLED_MESSAGE: "Due to overwhelming response, magic link login is temporarily unavailable. Please use password or social login options."
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -121,13 +129,15 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Temporarily disable email signup
-    toast({
-      title: "Email Registration Temporarily Unavailable",
-      description: "Due to overwhelming response, email registration is temporarily unavailable. Please use Google or GitHub to sign up.",
-      variant: "destructive",
-    });
-    return;
+    // Check if email signup is disabled
+    if (!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP) {
+      toast({
+        title: "Email Registration Temporarily Unavailable",
+        description: AUTH_CONFIG.SIGNUP_DISABLED_MESSAGE,
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!agreeTerms) {
       toast({
@@ -180,13 +190,15 @@ const Auth = () => {
   const handleMagicLinkLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Temporarily disable magic link
-    toast({
-      title: "Magic Link Login Temporarily Unavailable",
-      description: "Due to overwhelming response, magic link login is temporarily unavailable. Please use password or social login options.",
-      variant: "destructive",
-    });
-    return;
+    // Check if magic link is disabled
+    if (!AUTH_CONFIG.ENABLE_MAGIC_LINK) {
+      toast({
+        title: "Magic Link Login Temporarily Unavailable",
+        description: AUTH_CONFIG.MAGIC_LINK_DISABLED_MESSAGE,
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoadingState('magicLink', true);
     
@@ -522,12 +534,14 @@ const Auth = () => {
                     <CardDescription className="text-gray-400">
                       Join Fastlytics for premium F1 analytics and insights
                     </CardDescription>
-                    <Alert className="mt-4 bg-yellow-900/30 border-yellow-500/30 text-yellow-400">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Due to overwhelming response, email registration is temporarily unavailable. Please use Google or GitHub to sign up.
-                      </AlertDescription>
-                    </Alert>
+                    {!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP && (
+                      <Alert className="mt-4 bg-yellow-900/30 border-yellow-500/30 text-yellow-400">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          {AUTH_CONFIG.SIGNUP_DISABLED_MESSAGE}
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -537,11 +551,11 @@ const Auth = () => {
                           <Input
                             id="first-name"
                             placeholder="John"
-                            className="bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
+                            className={`${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed" : "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"}`}
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
                             required
-                            disabled
+                            disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP}
                           />
                         </div>
                       </div>
@@ -551,11 +565,11 @@ const Auth = () => {
                           <Input
                             id="last-name"
                             placeholder="Doe"
-                            className="bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
+                            className={`${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed" : "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"}`}
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
                             required
-                            disabled
+                            disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP}
                           />
                         </div>
                       </div>
@@ -569,8 +583,8 @@ const Auth = () => {
                           variant="outline" 
                           size="sm" 
                           onClick={handleGenerateUsername}
-                          className="h-8 text-xs bg-gray-800/50 border-gray-700 text-gray-500 cursor-not-allowed"
-                          disabled
+                          className={`h-8 text-xs ${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "bg-gray-800/50 border-gray-700 text-gray-500 cursor-not-allowed" : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"}`}
+                          disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP}
                         >
                           <Sparkles className="h-3 w-3 mr-1" />
                           Generate Racing Username
@@ -579,10 +593,10 @@ const Auth = () => {
                       <Input
                         id="username"
                         placeholder="Choose a username or generate one"
-                        className="bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
+                        className={`${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed" : "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"}`}
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        disabled
+                        disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP}
                       />
                     </div>
                     
@@ -594,11 +608,11 @@ const Auth = () => {
                           id="signup-email"
                           type="email"
                           placeholder="name@example.com"
-                          className="pl-10 bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
+                          className={`pl-10 ${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed" : "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"}`}
                           value={signupEmail}
                           onChange={(e) => setSignupEmail(e.target.value)}
                           required
-                          disabled
+                          disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP}
                         />
                       </div>
                     </div>
@@ -611,19 +625,19 @@ const Auth = () => {
                           id="signup-password"
                           type={showPassword ? "text" : "password"}
                           placeholder="Create a secure password"
-                          className="pl-10 pr-10 bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
+                          className={`pl-10 pr-10 ${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed" : "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"}`}
                           value={signupPassword}
                           onChange={(e) => setSignupPassword(e.target.value)}
                           required
-                          disabled
+                          disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP}
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute right-0 top-1/2 transform -translate-y-1/2 h-full aspect-square p-0 text-gray-500 cursor-not-allowed"
+                          className={`absolute right-0 top-1/2 transform -translate-y-1/2 h-full aspect-square p-0 ${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "text-gray-500 cursor-not-allowed" : "text-gray-400 hover:text-white"}`}
                           onClick={togglePasswordVisibility}
-                          disabled
+                          disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP}
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
@@ -650,11 +664,20 @@ const Auth = () => {
                   <CardFooter className="flex flex-col gap-4">
                     <Button 
                       type="submit" 
-                      className="w-full bg-gray-700 hover:bg-gray-700 cursor-not-allowed"
-                      disabled
+                      className={`w-full ${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "bg-gray-700 hover:bg-gray-700 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"}`}
+                      disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP || isLoading.signup}
                     >
-                      Create Account
-                      <UserPlus className="ml-2 h-4 w-4" />
+                      {isLoading.signup ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating Account...
+                        </>
+                      ) : (
+                        <>
+                          Create Account
+                          <UserPlus className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                     
                     <div className="relative w-full">
@@ -663,7 +686,7 @@ const Auth = () => {
                       </div>
                       <div className="relative flex justify-center">
                         <span className="bg-gray-900 px-2 text-xs text-gray-400">
-                          SIGN UP WITH
+                          {AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "OR SIGN UP WITH" : "SIGN UP WITH"}
                         </span>
                       </div>
                     </div>
@@ -728,15 +751,17 @@ const Auth = () => {
                     <CardDescription className="text-gray-400">
                       Get a special link sent to your email to sign in without a password
                     </CardDescription>
-                    <Alert className="mt-4 bg-yellow-900/30 border-yellow-500/30 text-yellow-400">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Due to overwhelming response, magic link login is temporarily unavailable. Please use password or social login options.
-                      </AlertDescription>
-                    </Alert>
+                    {!AUTH_CONFIG.ENABLE_MAGIC_LINK && (
+                      <Alert className="mt-4 bg-yellow-900/30 border-yellow-500/30 text-yellow-400">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          {AUTH_CONFIG.MAGIC_LINK_DISABLED_MESSAGE}
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Alert className="bg-gray-800/70 border-blue-500/30 text-gray-500">
+                    <Alert className={`bg-gray-800/70 border-blue-500/30 ${!AUTH_CONFIG.ENABLE_MAGIC_LINK ? "text-gray-500" : "text-blue-400"}`}>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
                         We'll send you a special link that you can use to sign in instantly, no password required!
@@ -751,11 +776,11 @@ const Auth = () => {
                           id="magic-email"
                           type="email"
                           placeholder="name@example.com"
-                          className="pl-10 bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed"
+                          className={`pl-10 ${!AUTH_CONFIG.ENABLE_MAGIC_LINK ? "bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed" : "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"}`}
                           value={magicLinkEmail}
                           onChange={(e) => setMagicLinkEmail(e.target.value)}
                           required
-                          disabled
+                          disabled={!AUTH_CONFIG.ENABLE_MAGIC_LINK}
                         />
                       </div>
                     </div>
@@ -763,11 +788,20 @@ const Auth = () => {
                   <CardFooter>
                     <Button 
                       type="submit" 
-                      className="w-full bg-gray-700 hover:bg-gray-700 cursor-not-allowed"
-                      disabled
+                      className={`w-full ${!AUTH_CONFIG.ENABLE_MAGIC_LINK ? "bg-gray-700 hover:bg-gray-700 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"}`}
+                      disabled={!AUTH_CONFIG.ENABLE_MAGIC_LINK || isLoading.magicLink}
                     >
-                      Send Magic Link
-                      <Sparkles className="ml-2 h-4 w-4" />
+                      {isLoading.magicLink ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending Magic Link...
+                        </>
+                      ) : (
+                        <>
+                          Send Magic Link
+                          <Sparkles className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   </CardFooter>
                 </form>
