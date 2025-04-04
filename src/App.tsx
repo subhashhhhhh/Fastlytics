@@ -64,7 +64,6 @@ const DonationThankYouBanner = () => {
 // Layout component to add footer to all pages except Auth
 const MainLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen flex flex-col">
-    <DonationThankYouBanner />
     {children}
     <Footer />
   </div>
@@ -73,7 +72,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => (
 // Landing layout without footer
 const LandingLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen flex flex-col">
-    <DonationThankYouBanner />
     {children}
     {/* No Footer here */}
   </div>
@@ -82,7 +80,6 @@ const LandingLayout = ({ children }: { children: React.ReactNode }) => (
 // Auth layout without footer
 const AuthLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen">
-    <DonationThankYouBanner />
     {children}
   </div>
 );
