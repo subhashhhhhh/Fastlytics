@@ -64,15 +64,52 @@ const isRookie = (driverCode: string, year: number): boolean => {
   return rookiesByYear[yearStr]?.includes(driverCode) || false;
 };
 
+// Helper function to parse lap time string (e.g., "1:30.123") to seconds
+const parseLapTime = (timeStr: string | null | undefined): number => {
+  if (!timeStr) return Infinity; // Treat null/undefined as slowest
+  try {
+    const parts = timeStr.split(/[:.]/);
+    if (parts.length === 3) { // MM:SS.ms
+      const minutes = parseInt(parts[0], 10);
+      const seconds = parseInt(parts[1], 10);
+      const milliseconds = parseInt(parts[2], 10);
+      return minutes * 60 + seconds + milliseconds / 1000;
+    } else if (parts.length === 2) { // SS.ms - less likely but handle
+      const seconds = parseInt(parts[0], 10);
+      const milliseconds = parseInt(parts[1], 10);
+      return seconds + milliseconds / 1000;
+    }
+  } catch (e) {
+    console.error(`Error parsing lap time: ${timeStr}`, e);
+  }
+  return Infinity; // Return Infinity if parsing fails
+};
+
 // Component for rendering the results table dynamically
 const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType: string, year: number }> = ({ results, sessionType, year }) => {
   const isPractice = sessionType.startsWith('FP');
   const isQualifying = sessionType.startsWith('Q') || sessionType.startsWith('SQ');
   const isRaceOrSprint = sessionType === 'R' || sessionType === 'Sprint';
 
+  // Sort results for Practice or Qualifying sessions by fastest lap time
+  const sortedResults = useMemo(() => {
+    // Sort if Practice OR Qualifying
+    if ((isPractice || isQualifying) && results) {
+      // Create a copy before sorting to avoid mutating the prop
+      return [...results].sort((a, b) => {
+        const timeA = parseLapTime(a.fastestLapTime);
+        const timeB = parseLapTime(b.fastestLapTime);
+        return timeA - timeB;
+      });
+    } 
+    // For other sessions, assume backend provides sorted data or default order is fine
+    return results;
+  }, [results, isPractice, isQualifying]);
+
   // Determine columns based on session type
-  const columns: { key: keyof DetailedRaceResult | 'driver' | 'team', label: string, className?: string }[] = [
-    { key: 'position', label: 'Pos', className: 'w-[50px] text-center' },
+  const columns: { key: keyof DetailedRaceResult | 'driver' | 'team' | 'displayPosition', label: string, className?: string }[] = [
+    // Use 'displayPosition' key for the first column
+    { key: 'displayPosition', label: 'Pos', className: 'w-[50px] text-center' },
     { key: 'driver', label: 'Driver' }, // Combine name/code later
     { key: 'team', label: 'Team' }, // Combine color/name later
   ];
@@ -82,13 +119,13 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
     columns.push({ key: 'status', label: 'Status' });
     columns.push({ key: 'points', label: 'Points', className: 'text-right font-bold' });
   } else if (isQualifying) {
-    // Add Q1, Q2, Q3 based on which segment it is or if it's the parent Q/SQ
-    if (sessionType === 'Q1' || sessionType === 'Q' || sessionType === 'SQ1' || sessionType === 'SQ') columns.push({ key: 'q1Time', label: 'Q1', className: 'text-right font-mono text-sm' });
-    if (sessionType === 'Q2' || sessionType === 'Q' || sessionType === 'SQ2' || sessionType === 'SQ') columns.push({ key: 'q2Time', label: 'Q2', className: 'text-right font-mono text-sm' });
-    if (sessionType === 'Q3' || sessionType === 'Q' || sessionType === 'SQ3' || sessionType === 'SQ') columns.push({ key: 'q3Time', label: 'Q3', className: 'text-right font-mono text-sm' });
-    // If viewing a specific segment (Q1/Q2/Q3), maybe highlight that column or only show relevant times?
-    // For simplicity now, show all available Q times if viewing Q parent.
-    // If viewing Q1, maybe only show Q1? Let's show all for now.
+    // Remove Q1, Q2, Q3 columns
+    // if (sessionType === 'Q1' || sessionType === 'Q' || sessionType === 'SQ1' || sessionType === 'SQ') columns.push({ key: 'q1Time', label: 'Q1', className: 'text-right font-mono text-sm' });
+    // if (sessionType === 'Q2' || sessionType === 'Q' || sessionType === 'SQ2' || sessionType === 'SQ') columns.push({ key: 'q2Time', label: 'Q2', className: 'text-right font-mono text-sm' });
+    // if (sessionType === 'Q3' || sessionType === 'Q' || sessionType === 'SQ3' || sessionType === 'SQ') columns.push({ key: 'q3Time', label: 'Q3', className: 'text-right font-mono text-sm' });
+    
+    // Add Fastest Lap column for Qualifying instead
+    columns.push({ key: 'fastestLapTime', label: 'Fastest Lap', className: 'text-right font-mono text-sm' });
   } else if (isPractice) {
     columns.push({ key: 'fastestLapTime', label: 'Fastest Lap', className: 'text-right font-mono text-sm' });
     columns.push({ key: 'lapsCompleted', label: 'Laps', className: 'text-center' });
@@ -107,11 +144,16 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
           </TableRow>
         </TableHeader>
         <TableBody>
-          {results?.map((res) => (
+          {/* Use sortedResults for rendering */}
+          {sortedResults?.map((res, index) => (
             <TableRow key={res.driverCode} className="border-gray-700/50 hover:bg-gray-800/40 transition-colors">
               {columns.map(col => (
                 <TableCell key={`${res.driverCode}-${String(col.key)}`} className={cn(col.className)}>
-                  {col.key === 'driver' ? (
+                  {/* Handle the display position based on session type */}
+                  {col.key === 'displayPosition' ? (
+                    // Show index+1 for Practice and Qualifying (since we sorted by time)
+                    (isPractice || isQualifying) ? index + 1 : (res.position ?? '-') 
+                  ) : col.key === 'driver' ? (
                     <div className="flex items-center gap-2">
                       <span>{res.fullName}</span>
                       {isRookie(res.driverCode, year) && (
@@ -140,6 +182,31 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
   );
 };
 
+// Re-add FeatureCard definition before Race component
+const FeatureCard = ({ title, icon, description }: { title: string; icon: React.ReactNode; description: string }) => {
+  return (
+    <Card className="bg-gray-900/80 border-gray-700 overflow-hidden relative backdrop-blur-sm hover:border-gray-600 transition-colors">
+      {/* "Coming Soon" Badge */}
+      <div className="absolute top-0 right-0 bg-blue-600/80 px-3 py-1 text-xs font-medium flex items-center rounded-bl-md text-white">
+        <Sparkles className="h-3 w-3 mr-1" /> Coming Soon
+      </div>
+      <CardHeader className="pb-2 pt-8">
+        <div className="flex items-center gap-3">
+          {/* Use a neutral color for the icon background */}
+          <div className="p-2.5 rounded-full bg-gray-700/50 text-gray-400">{icon}</div>
+          <CardTitle className="text-lg text-white">{title}</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-gray-400 mb-4">{description}</p>
+        {/* Optional: Add a disabled button or remove it */}
+        <Button size="sm" className="w-full bg-gray-700 hover:bg-gray-600 text-gray-400 cursor-not-allowed" disabled>
+          Coming Soon
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Race = () => {
   const { raceId } = useParams<{ raceId: string }>();
@@ -339,17 +406,17 @@ const Race = () => {
             {/* Adjust grid columns based on number of tabs */}
             <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1 p-1 bg-gray-800/80 border border-gray-700 rounded-lg h-auto mb-6">
               <TabsTrigger value="results" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Users className="w-4 h-4 mr-1.5 inline"/>Results</TabsTrigger>
-              {/* Only show certain tabs if it's Race or Sprint */}
+              {/* Only show Positions/Strategy tabs if it's Race or Sprint */}
               {(selectedSession === 'R' || selectedSession === 'Sprint') && (
                 <>
                   <TabsTrigger value="positions" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><MapPin className="w-4 h-4 mr-1.5 inline"/>Positions</TabsTrigger>
-                  <TabsTrigger value="laptimes" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Timer className="w-4 h-4 mr-1.5 inline"/>Lap Times</TabsTrigger>
                   <TabsTrigger value="strategy" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Flag className="w-4 h-4 mr-1.5 inline"/>Strategy</TabsTrigger>
-                  {/* Replace Track Evolution with Circuit Comparison */}
-                  <TabsTrigger value="circuit" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Map className="w-4 h-4 mr-1.5 inline"/>Circuit</TabsTrigger>
-                  <TabsTrigger value="telemetry" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><BarChart2 className="w-4 h-4 mr-1.5 inline"/>Telemetry</TabsTrigger>
                 </>
               )}
+              {/* Show Lap Times, Circuit, Telemetry for all applicable sessions */}
+              <TabsTrigger value="laptimes" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Timer className="w-4 h-4 mr-1.5 inline"/>Lap Times</TabsTrigger>
+              <TabsTrigger value="circuit" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Map className="w-4 h-4 mr-1.5 inline"/>Circuit</TabsTrigger>
+              <TabsTrigger value="telemetry" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><BarChart2 className="w-4 h-4 mr-1.5 inline"/>Telemetry</TabsTrigger>
             </TabsList>
 
             {/* Results Tab */}
@@ -367,44 +434,40 @@ const Race = () => {
               </TabsContent>
             )}
 
-            {/* Lap Times Tab (Race or Sprint) - now including track evolution */}
-            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
-              <TabsContent value="laptimes" className="pt-2">
-                {year && eventName && (
-                  <>
-                    <RacingChart 
+            {/* Lap Times Tab (Show for all sessions now) */}
+            <TabsContent value="laptimes" className="pt-2">
+              {year && eventName && (
+                <>
+                  <RacingChart 
+                    year={year} 
+                    event={eventName} 
+                    session={selectedSession} 
+                    initialDrivers={["VER", "LEC"]} 
+                    title="Lap Time Comparison" 
+                  />
+                  <div className="mt-8">
+                    <TrackEvolutionChart 
                       year={year} 
                       event={eventName} 
                       session={selectedSession} 
-                      initialDrivers={["VER", "LEC"]} 
-                      title="Lap Time Comparison" 
                     />
-                    <div className="mt-8">
-                      <TrackEvolutionChart 
-                        year={year} 
-                        event={eventName} 
-                        session={selectedSession} 
-                      />
-                    </div>
-                  </>
-                )}
-              </TabsContent>
-            )}
+                  </div>
+                </>
+              )}
+            </TabsContent>
 
-            {/* Circuit Comparison Tab (replacing Track Evolution) */}
-            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
-              <TabsContent value="circuit" className="pt-2">
-                {year && eventName && (
-                  <CircuitComparisonChart
-                    year={year}
-                    event={eventName}
-                    session={selectedSession}
-                  />
-                )}
-              </TabsContent>
-            )}
+            {/* Circuit Comparison Tab (Show for all sessions now) */}
+            <TabsContent value="circuit" className="pt-2">
+              {year && eventName && (
+                <CircuitComparisonChart
+                  year={year}
+                  event={eventName}
+                  session={selectedSession}
+                />
+              )}
+            </TabsContent>
 
-            {/* Strategy Tab (Race or Sprint) */}
+            {/* Strategy Tab (Only Race or Sprint) */}
             {(selectedSession === 'R' || selectedSession === 'Sprint') && (
               <TabsContent value="strategy" className="pt-2">
                  {year && eventName && (
@@ -417,69 +480,41 @@ const Race = () => {
               </TabsContent>
             )}
 
-            {/* Telemetry Tab (Race or Sprint) */}
-            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
-              <TabsContent value="telemetry" className="pt-2">
-                 {year && eventName && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        {/* Speed Trace */}
-                        <SpeedTraceChart
-                            year={year}
-                            event={eventName}
-                            session={selectedSession}
-                            initialDriver={sessionResults[0]?.driverCode || "VER"} // Use first driver or default
-                            lap={selectedLap} // Pass selected lap state
-                            title="" // Title is handled internally now
-                        />
-                        {/* Gear Map */}
-                        <GearMapChart
-                            year={year}
-                            event={eventName}
-                            session={selectedSession}
-                            initialDriver={sessionResults[0]?.driverCode || "VER"}
-                            lap={selectedLap} // Pass selected lap state
-                        />
-                    </div>
-                 )}
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-                   <FeatureCard title="G-Force Analysis" icon={<Gauge />} description="Explore lateral and longitudinal G-forces..." />
-                   <FeatureCard title="Brake Temperature" icon={<Cpu />} description="Animated brake temperature visualization..." />
-                   <FeatureCard title="ERS Deployment" icon={<BarChart2 />} description="Energy deployment and harvesting patterns..." />
-                   <FeatureCard title="Aero Efficiency" icon={<ArrowRightLeft />} description="Downforce vs drag trade-off analysis..." />
-                 </div>
-              </TabsContent>
-            )}
+            {/* Telemetry Tab (Show for all sessions now) */}
+            <TabsContent value="telemetry" className="pt-2">
+               {year && eventName && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                      {/* Speed Trace */}
+                      <SpeedTraceChart
+                          year={year}
+                          event={eventName}
+                          session={selectedSession}
+                          initialDriver={sessionResults[0]?.driverCode || "VER"} // Use first driver or default
+                          lap={selectedLap} // Pass selected lap state
+                          title="" // Title is handled internally now
+                      />
+                      {/* Gear Map */}
+                      <GearMapChart
+                          year={year}
+                          event={eventName}
+                          session={selectedSession}
+                          initialDriver={sessionResults[0]?.driverCode || "VER"}
+                          lap={selectedLap} // Pass selected lap state
+                      />
+                  </div>
+               )}
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                 <FeatureCard title="G-Force Analysis" icon={<Gauge />} description="Explore lateral and longitudinal G-forces..." />
+                 <FeatureCard title="Brake Temperature" icon={<Cpu />} description="Animated brake temperature visualization..." />
+                 <FeatureCard title="ERS Deployment" icon={<BarChart2 />} description="Energy deployment and harvesting patterns..." />
+                 <FeatureCard title="Aero Efficiency" icon={<ArrowRightLeft />} description="Downforce vs drag trade-off analysis..." />
+               </div>
+            </TabsContent>
 
           </Tabs>
         )}
       </div>
     </div>
-  );
-};
-
-// Updated FeatureCard component for "Coming Soon" features
-const FeatureCard = ({ title, icon, description }: { title: string; icon: React.ReactNode; description: string }) => {
-  return (
-    <Card className="bg-gray-900/80 border-gray-700 overflow-hidden relative backdrop-blur-sm hover:border-gray-600 transition-colors">
-      {/* "Coming Soon" Badge */}
-      <div className="absolute top-0 right-0 bg-blue-600/80 px-3 py-1 text-xs font-medium flex items-center rounded-bl-md text-white">
-        <Sparkles className="h-3 w-3 mr-1" /> Coming Soon
-      </div>
-      <CardHeader className="pb-2 pt-8">
-        <div className="flex items-center gap-3">
-          {/* Use a neutral color for the icon background */}
-          <div className="p-2.5 rounded-full bg-gray-700/50 text-gray-400">{icon}</div>
-          <CardTitle className="text-lg text-white">{title}</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-gray-400 mb-4">{description}</p>
-        {/* Optional: Add a disabled button or remove it */}
-        <Button size="sm" className="w-full bg-gray-700 hover:bg-gray-600 text-gray-400 cursor-not-allowed" disabled>
-          Coming Soon
-        </Button>
-      </CardContent>
-    </Card>
   );
 };
 
