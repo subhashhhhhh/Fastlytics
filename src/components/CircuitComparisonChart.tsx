@@ -232,7 +232,7 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
                 <path
                   d={comparisonData.circuitLayout}
                   fill="none"
-                  stroke="rgba(156, 163, 175, 0.4)"
+                  stroke="rgba(255, 255, 0, 0.9)"
                   strokeWidth="10" // Slightly thinner base outline
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -241,7 +241,7 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
                 {/* Circuit sections highlighting advantages */}
                 {comparisonData.sections.map((section) => {
                   // Determine which driver has advantage
-                  let strokeColor = "rgba(156, 163, 175, 0.4)"; // Neutral color if no significant advantage
+                  let strokeColor = "rgba(255, 255, 0, 0.9)"; // Bright yellow
                   let advantageText = "Neutral or negligible difference";
 
                   // Check advantage without threshold
@@ -359,7 +359,7 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 16 16" className="inline-block">
-               <line x1="0" y1="8" x2="16" y2="8" stroke="rgba(156, 163, 175, 0.6)" strokeWidth="3" />
+               <line x1="0" y1="8" x2="16" y2="8" stroke="rgba(255, 255, 0, 0.9)" strokeWidth="3" />
             </svg>
             <span>Neutral</span>
           </div>
