@@ -8,6 +8,7 @@ import { fetchLapPositions, LapPositionDataPoint } from '@/lib/api'; // Import n
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1";
 import { AlertCircle, Check, ChevronsUpDown, Download } from 'lucide-react';
 import { driverColor } from '@/lib/driverColor'; // Use existing driver color mapping
+import { groupDriversByTeam, getLineStylesForDriver } from '@/lib/teamUtils'; // Import team utilities
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -124,6 +125,9 @@ const PositionChart: React.FC<PositionChartProps> = ({
       );
     }
 
+    // Group drivers by team to determine styling
+    const teamGroups = groupDriversByTeam(selectedDrivers, year);
+
     // --- Render Chart ---
     return (
       <ResponsiveContainer width="100%" height={400} className="export-chart-container">
@@ -178,26 +182,90 @@ const PositionChart: React.FC<PositionChartProps> = ({
           />
           <Legend
             wrapperStyle={{ paddingTop: '20px' }}
-            payload={selectedDrivers.map(driverCode => ({
-              value: driverCode,
-              type: 'line',
-              id: driverCode,
-              color: driverColor(driverCode, year), // Pass year to legend color
-            }))}
+            payload={selectedDrivers.map(driverCode => {
+              const color = driverColor(driverCode, year);
+              
+              // Find the team this driver belongs to
+              let team = "";
+              Object.entries(teamGroups).forEach(([teamName, drivers]) => {
+                if (drivers.includes(driverCode)) {
+                  team = teamName;
+                }
+              });
+              
+              // Find teammates for this driver
+              let teammates: string[] = [];
+              Object.values(teamGroups).forEach(drivers => {
+                if (drivers.includes(driverCode)) {
+                  teammates = drivers;
+                }
+              });
+              
+              // Count how many teammates are actually selected
+              const selectedTeammates = teammates.filter(t => selectedDrivers.includes(t));
+              
+              // Only determine line style if multiple drivers from the same team are selected
+              let lineStyle = "";
+              if (selectedTeammates.length > 1) {
+                const driverIndex = teammates.indexOf(driverCode);
+                switch (driverIndex % 3) {
+                  case 0:
+                    lineStyle = ""; // No display for solid lines
+                    break;
+                  case 1:
+                    lineStyle = "dashed line";
+                    break;
+                  case 2:
+                    lineStyle = "dotted line";
+                    break;
+                }
+              }
+              
+              // Only show team and line style if multiple drivers from the same team are selected
+              const isInMultiDriverTeam = selectedTeammates.length > 1;
+              
+              return {
+                value: isInMultiDriverTeam && lineStyle !== "" 
+                  ? `${driverCode} - ${lineStyle}` 
+                  : driverCode,
+                type: 'line',
+                id: driverCode,
+                color: color
+              };
+            })}
           />
           {/* Dynamically render lines for selected drivers */}
-          {selectedDrivers.map((driverCode) => {
+          {selectedDrivers.map((driverCode, index) => {
             const color = driverColor(driverCode, year); // Pass year to line color
             // Check if the driver exists in the base driverCodes list to prevent errors
             // if selectedDrivers somehow gets out of sync (shouldn't happen with useEffect)
             if (!driverCodes.includes(driverCode)) return null;
+            
+            // Find teammates for this driver
+            let teammates: string[] = [];
+            Object.values(teamGroups).forEach(drivers => {
+              if (drivers.includes(driverCode)) {
+                teammates = drivers;
+              }
+            });
+            
+            // Only get special line styles if multiple drivers from the same team are *actually selected*
+            // Find how many teammates are selected
+            const selectedTeammates = teammates.filter(t => selectedDrivers.includes(t));
+            
+            // Get line style based on teammates - only if multiple from same team are selected
+            const lineStyle = selectedTeammates.length > 1 
+              ? getLineStylesForDriver(driverCode, teammates, teammates.indexOf(driverCode))
+              : { strokeWidth: 2 }; // Default style if no teammates are selected
+            
             return (
               <Line
                 key={driverCode}
                 type="stepAfter" // Changed from monotone for sharp position changes
                 dataKey={driverCode}
                 stroke={color}
-                strokeWidth={2}
+                strokeWidth={lineStyle.strokeWidth}
+                strokeDasharray={lineStyle.strokeDasharray}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: color }}
                 name={driverCode}
