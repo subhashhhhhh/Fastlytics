@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; // Import Link
-import { Award, Flag, Lock, Cpu, Timer, User, Gauge, ArrowRight, CreditCard, Calendar } from 'lucide-react'; // Removed BarChart2
+import { Award, Flag, Lock, Cpu, Timer, User, Gauge, ArrowRight, CreditCard, Calendar, Clock } from 'lucide-react'; // Added Clock icon
 import Navbar from '@/components/Navbar';
 import F1Card from '@/components/F1Card';
 // Removed TrackProgress import as it's no longer used
@@ -9,9 +9,11 @@ import {
   fetchTeamStandings,
   fetchDriverStandings,
   fetchRaceResults,
+  fetchSchedule,
   TeamStanding,
   DriverStanding,
-  RaceResult
+  RaceResult,
+  ScheduleEvent
 } from '@/lib/api'; // Import API functions and types
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -21,6 +23,14 @@ import { Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSeason } from '@/contexts/SeasonContext'; // Import useSeason
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Define a type for combined race data
+interface CombinedRaceData extends ScheduleEvent {
+  result?: RaceResult;
+  isUpcoming: boolean;
+  isOngoing: boolean;
+  displayDate: string;
+}
 
 // Define rookies by season year
 const rookiesByYear: { [year: string]: string[] } = {
@@ -61,18 +71,79 @@ const Dashboard = () => {
   });
 
   // Fetch Race Results
-  const { data: raceResults, isLoading: isLoadingRaces } = useQuery<RaceResult[]>({
+  const { data: raceResults, isLoading: isLoadingRaceResults } = useQuery<RaceResult[]>({
      queryKey: ['raceResults', selectedYear],
      queryFn: () => fetchRaceResults(selectedYear),
      staleTime: 1000 * 60 * 30,
      gcTime: 1000 * 60 * 60,
   });
 
-  // Show top 4 recent races
-  const recentRaces = raceResults?.slice(-6).reverse() ?? [];
+  // NEW: Fetch Schedule to show ongoing races
+  const { data: scheduleData, isLoading: isLoadingSchedule } = useQuery<ScheduleEvent[]>({
+     queryKey: ['schedule', selectedYear],
+     queryFn: () => fetchSchedule(selectedYear),
+     staleTime: 1000 * 60 * 60 * 24, // Cache schedule for a day
+     gcTime: 1000 * 60 * 60 * 48,
+     retry: 1,
+  });
 
-  const handleRaceClick = (race: RaceResult) => {
-    const raceId = `${race.year}-${race.event.toLowerCase().replace(/\s+/g, '-')}`;
+  // Combine schedule and results data like the Races page
+  const combinedRaceData = useMemo<CombinedRaceData[]>(() => {
+    if (!scheduleData) return [];
+
+    const resultsMap = new Map(raceResults?.map(res => [res.event, res]));
+    const now = new Date(); // Get current date/time
+    // Current date + 3 days to determine the "ongoing" window
+    const nearFuture = new Date();
+    nearFuture.setDate(now.getDate() + 3);
+
+    return scheduleData.map(event => {
+      const result = resultsMap.get(event.EventName);
+      const eventDate = new Date(event.EventDate); // Use the main EventDate from schedule
+      
+      // First determine if it's a future race
+      const isUpcoming = eventDate > now;
+      
+      // Then determine if it's the current ongoing race (within the next 3 days)
+      const isOngoing = isUpcoming && eventDate <= nearFuture;
+
+      return {
+        ...event, // Spread schedule event properties
+        result, // Attach result if found
+        isUpcoming,
+        isOngoing,
+        displayDate: eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      };
+    });
+  }, [scheduleData, raceResults]);
+
+  // Get 6 most recent races (either completed or ongoing)
+  const recentRaces = useMemo<CombinedRaceData[]>(() => {
+    if (!combinedRaceData.length) return [];
+    
+    const now = new Date();
+    // Current date + 3 days to consider only current race weekend as "ongoing"
+    const nearFuture = new Date();
+    nearFuture.setDate(now.getDate() + 3);
+    
+    // Filter to include:
+    // 1. Races that have already happened (not upcoming) - these have results
+    // 2. Current race weekend - date is within 3 days of now
+    const filteredRaces = combinedRaceData.filter(race => {
+      const eventDate = new Date(race.EventDate);
+      return !race.isUpcoming || (eventDate <= nearFuture);
+    });
+    
+    // Sort by date (most recent first)
+    return filteredRaces
+      .sort((a, b) => new Date(b.EventDate).getTime() - new Date(a.EventDate).getTime())
+      .slice(0, 6);
+  }, [combinedRaceData]);
+
+  const handleRaceClick = (race: CombinedRaceData) => {
+    // Use the event name from either result or schedule
+    const eventName = race.result?.event || race.EventName;
+    const raceId = `${selectedYear}-${eventName.toLowerCase().replace(/\s+/g, '-')}`;
     navigate(`/race/${raceId}`);
   };
 
@@ -221,43 +292,61 @@ const Dashboard = () => {
           <aside className="lg:col-span-1 space-y-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
              {/* Responsive section title size */}
             <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">Explore Analytics by Race</h2>
-            {isLoadingRaces ? (
+            {isLoadingRaceResults || isLoadingSchedule ? (
               <div className="space-y-4">
                 {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] bg-gray-800/50 rounded-lg"/>)}
               </div>
             ) : recentRaces.length > 0 ? (
               <div className="space-y-4">
-                {recentRaces.slice(0, 4).map((race) => (
-                  <div
-                    key={`${race.year}-${race.event}`}
-                    onClick={() => handleRaceClick(race)}
-                    className="cursor-pointer group transition-transform duration-200 ease-in-out hover:scale-[1.03]"
-                  >
-                    <Card 
-                      className="bg-gray-900/80 border border-gray-700/80 group-hover:border-red-500/50 transition-colors duration-200"
+                {recentRaces.slice(0, 4).map((race) => {
+                  const teamColor = race.result ? getTeamColorClass(race.result.team) : 'gray';
+                  
+                  return (
+                    <div
+                      key={`${selectedYear}-${race.EventName}`}
+                      onClick={() => handleRaceClick(race)}
+                      className="cursor-pointer group transition-transform duration-200 ease-in-out hover:scale-[1.03]"
                     >
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-1">
-                            <CardTitle className="text-lg font-semibold text-white">{race.event}</CardTitle>
-                            <CardDescription className="text-gray-400 text-sm">
-                              {race.date || `Round ${race.round}`}{race.location ? `, ${race.location}` : ''}
-                            </CardDescription>
+                      <Card 
+                        className="bg-gray-900/80 border border-gray-700/80 group-hover:border-red-500/50 transition-colors duration-200"
+                      >
+                        <CardHeader className="pb-2">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <CardTitle className="text-lg font-semibold text-white">{race.EventName}</CardTitle>
+                              <CardDescription className="text-gray-400 text-sm">
+                                {race.displayDate}{race.Location ? `, ${race.Location}` : ''}
+                              </CardDescription>
+                            </div>
+                            <div className={`p-2 bg-gray-800 rounded-lg border border-gray-700 text-f1-${teamColor}`}>
+                              <Flag className="h-5 w-5" />
+                            </div>
                           </div>
-                          <div className={`p-2 bg-gray-800 rounded-lg border border-gray-700 text-f1-${getTeamColorClass(race.team)}`}>
-                            <Flag className="h-5 w-5" />
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                          <div className="flex justify-between items-center">
+                            {race.isOngoing ? (
+                              <div className="flex items-center gap-1.5 text-amber-400">
+                                <Clock className="w-4 h-4" />
+                                <span className="font-medium">ONGOING</span>
+                              </div>
+                            ) : race.isUpcoming ? (
+                              <div className="flex items-center gap-1.5 text-blue-400">
+                                <Clock className="w-4 h-4" />
+                                <span className="font-medium">UPCOMING</span>
+                              </div>
+                            ) : race.result ? (
+                              <span className="text-sm text-gray-300">Winner: {race.result.driver}</span>
+                            ) : (
+                              <span className="text-sm text-gray-300 italic">Race in progress</span>
+                            )}
+                            <ArrowRight className="w-4 h-4 text-red-400"/>
                           </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-300">Winner: {race.driver}</span>
-                          <ArrowRight className="w-4 h-4 text-red-400"/>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-gray-500 italic py-10 text-center">No race results available for {selectedYear}.</p>

@@ -30,6 +30,25 @@ const Footer = () => {
             <p className="text-sm max-w-xs">
               The ultimate analytics platform for Formula 1 fans.
             </p>
+            
+            {/* Supporters Thank You */}
+            <div className="mt-3 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md p-3 border border-gray-700">
+              <p className="text-sm text-gray-300 flex flex-col gap-1">
+                <span className="text-red-500 font-semibold flex items-center gap-1">
+                  <Heart className="h-4 w-4 fill-current" /> Supporters
+                </span>
+                <span>Special thanks to <span className="font-semibold text-white">sf1club</span> for their generous €50 donation!</span>
+                <a 
+                  href="https://buymeacoffee.com/subhashh" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-red-400 hover:text-red-300 font-medium mt-1 text-xs inline-flex items-center"
+                >
+                  Support this project <span className="ml-1 text-xs">→</span>
+                </a>
+              </p>
+            </div>
+            
              <div className="flex space-x-4 pt-2">
               {socialLinks.map((link) => (
                 <a

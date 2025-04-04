@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ZAxis, Cell // Import Cell
 } from 'recharts';
-import { cn } from "@/lib/utils";
+import { cn, exportChartAsImage } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
 import { fetchTelemetryGear, fetchSessionDrivers, fetchLapTimes, SessionDriver, GearMapDataPoint } from '@/lib/api'; // Added fetchLapTimes
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1";
-import { AlertCircle, User, Clock } from 'lucide-react'; // Added Clock icon
+import { AlertCircle, User, Clock, Download } from 'lucide-react'; // Added Download icon
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 // Define a color scale for gears - Updated for better dark UI contrast
 const gearColors = [
@@ -18,8 +19,8 @@ const gearColors = [
   '#cc3311', // 4th Gear (Red)
   '#ee3377', // 5th Gear (Magenta)
   '#0077bb', // 6th Gear (Blue)
-  '#bbbbbb', // 7th Gear (Light Gray)
-  '#dddddd'  // 8th Gear (Lighter Gray) - Assuming 8 gears max
+  '#aacc00', // 7th Gear (Lime Green) - Changed from Light Gray
+  '#ffdd55'  // 8th Gear (Yellow) - Changed from Lighter Gray
 ];
 const getGearColor = (gear: number): string => {
     // Handle potential gear 0 (Neutral) or gears outside 1-8
@@ -49,10 +50,11 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
   initialDriver,
   lap = 'fastest' // Default lap prop to 'fastest'
 }) => {
-
+  const chartRef = useRef<HTMLDivElement>(null);
   const [selectedDriver, setSelectedDriver] = useState<string>(initialDriver);
   const [selectedLap, setSelectedLap] = useState<string | number>(lap); // Initialize state with prop
   const [lapOptions, setLapOptions] = useState<Array<string | number>>(['fastest']);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data: availableDrivers, isLoading: isLoadingDrivers } = useQuery<SessionDriver[]>({
     queryKey: ['sessionDrivers', year, event, session], // Keep this query
@@ -96,6 +98,27 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
   const isLoading = isLoadingDrivers || isLoadingGear;
   const chartTitle = `${selectedDriver}'s ${selectedLap === 'fastest' ? 'Fastest Lap' : `Lap ${selectedLap}`} Gear Shifts`;
 
+  // Handle chart download
+  const handleDownload = async () => {
+    if (!chartRef.current || isLoading || !gearData || gearData.length === 0) {
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      // Brief delay to ensure chart is fully rendered
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Use event name, driver, and lap for the filename
+      const filename = `${event.toLowerCase().replace(/\s+/g, '-')}_${selectedDriver}_${selectedLap === 'fastest' ? 'fastest' : `lap${selectedLap}`}_gearmap`;
+      await exportChartAsImage(chartRef, filename);
+    } catch (error) {
+      console.error('Failed to export chart:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const renderContent = () => {
     // Use LoadingSpinnerF1 instead of Skeleton
     if (isLoading) {
@@ -129,8 +152,8 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
     }));
 
     return (
-      <ResponsiveContainer width="100%" height={350}>
-        <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+      <ResponsiveContainer width="100%" height={350} className="export-chart-container">
+        <ScatterChart margin={{ top: 15, right: 10, bottom: 10, left: 10 }}>
           <XAxis type="number" dataKey="x" hide={true} domain={['dataMin', 'dataMax']} />
           <YAxis type="number" dataKey="y" hide={true} domain={['dataMin', 'dataMax']} axisLine={false} tickLine={false} />
           <ZAxis type="number" dataKey="z" range={[1, 8]} name="Gear" />
@@ -160,10 +183,16 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
   };
 
   return (
-     <Card className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}>
+     <Card 
+       ref={chartRef}
+       className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} 
+       style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}
+     >
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-           <CardTitle className="text-lg font-semibold text-white">{chartTitle}</CardTitle>
+           <div className="flex items-center gap-2">
+             <CardTitle className="text-lg font-semibold text-white">{chartTitle}</CardTitle>
+           </div>
            {/* Driver and Lap Selectors */}
            <div className="flex gap-2">
              <Select
@@ -217,6 +246,21 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
       </CardHeader>
       <CardContent className="pt-0">
         {renderContent()}
+        {!isLoading && gearData && gearData.length > 0 && (
+          <div className="flex justify-end mt-4">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="h-7 px-2.5 text-xs bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-1.5 border border-gray-700" 
+              onClick={handleDownload}
+              disabled={isExporting}
+              title="Download chart"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {isExporting ? "Exporting..." : "Download Chart"}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { cn } from "@/lib/utils";
+import { cn, exportChartAsImage } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
 // Import API functions and types
 import { fetchLapTimes, fetchSessionDrivers, SessionDriver, LapTimeDataPoint } from '@/lib/api';
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1"; // Import the spinner
-import { AlertCircle, Users, PlusCircle, XCircle } from 'lucide-react'; // Added PlusCircle, XCircle icons
+import { AlertCircle, Users, PlusCircle, XCircle, Download } from 'lucide-react'; // Added Download icon
 import { driverColor } from '@/lib/driverColor';
 import { areTeammates, getLineStylesForDriver, groupDriversByTeam } from '@/lib/teamUtils';
 // Import Select components
@@ -53,6 +53,8 @@ const RacingChart: React.FC<RacingChartProps> = ({
   initialDrivers, // Should be length 2 to 5
   staticData // Destructure the new prop
 }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Validate initialDrivers prop length and clamp if necessary
   let validatedInitialDrivers = initialDrivers || [];
@@ -135,6 +137,27 @@ const RacingChart: React.FC<RacingChartProps> = ({
   // Adjust isLoading check for static data
   const isLoading = !staticData && (isLoadingDrivers || isLoadingLapTimes);
 
+  // Handle chart download
+  const handleDownload = async () => {
+    if (!chartRef.current || isLoading || !lapData || lapData.length === 0) {
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      // Brief delay to ensure chart is fully rendered
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Use event name and session for the filename
+      const filename = `${event.toLowerCase().replace(/\s+/g, '-')}_${session.toLowerCase()}_lap_times_comparison`;
+      await exportChartAsImage(chartRef, filename);
+    } catch (error) {
+      console.error('Failed to export chart:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // --- Render States ---
   const renderContent = () => {
     if (isLoading) {
@@ -167,8 +190,8 @@ const RacingChart: React.FC<RacingChartProps> = ({
 
     // --- Render Chart ---
     return (
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={lapData} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={300} className="export-chart-container">
+        <LineChart data={lapData} margin={{ top: 15, right: 10, left: -15, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
           <XAxis dataKey="LapNumber" stroke="rgba(156, 163, 175, 0.7)" tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} padding={{ left: 10, right: 10 }} />
           {/* Updated YAxis tickFormatter */}
@@ -291,67 +314,87 @@ const RacingChart: React.FC<RacingChartProps> = ({
   };
 
   return (
-    <Card className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm", className)}>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-           <CardTitle className="text-lg font-semibold text-white">{title}</CardTitle>
-           {/* Driver Selectors (Hide if using static data) */}
-           {!staticData && (
-             <div className="flex flex-wrap items-center gap-2"> {/* This div is the direct child */}
-               {selectedDrivers.map((driverCode, index) => (
-                 <div key={index} className="flex items-center gap-1">
-                   <Select
-                     value={driverCode}
-                     onValueChange={(value) => handleDriverChange(index, value)}
-                     disabled={isLoadingDrivers || !availableDrivers}
-                   >
-                     <SelectTrigger className="w-full sm:w-[150px] bg-gray-800/80 border-gray-700 text-gray-200 text-xs h-8 focus:border-red-500 focus:ring-red-500">
-                       <SelectValue placeholder="Select Driver" />
-                     </SelectTrigger>
-                     <SelectContent className="bg-gray-900 border-gray-700 text-gray-200 max-h-[200px]"> {/* Added max-height */}
-                       <SelectGroup>
-                         <SelectLabel className="text-xs text-gray-500">Driver {index + 1}</SelectLabel>
-                         {availableDrivers?.map((drv) => (
-                           <SelectItem key={drv.code} value={drv.code} className="text-xs">
-                             {drv.code} ({drv.name})
-                           </SelectItem>
-                         ))}
-                       </SelectGroup>
-                     </SelectContent>
-                   </Select>
-                   {/* Show remove button only if more than MIN_DRIVERS */}
-                   {selectedDrivers.length > MIN_DRIVERS && (
-                     <Button
-                       variant="ghost"
-                       size="icon"
-                       className="h-8 w-8 text-gray-500 hover:text-red-400 hover:bg-gray-700/50"
-                       onClick={() => removeDriver(index)}
-                       aria-label={`Remove Driver ${index + 1}`}
-                     >
-                       <XCircle className="h-4 w-4" />
-                     </Button>
-                   )}
-                 </div>
-               ))}
-               {/* Add Driver Button */}
-               {selectedDrivers.length < MAX_DRIVERS && (
-                 <Button
-                   variant="outline"
-                   size="sm"
-                   className="h-8 text-xs border-gray-700 text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
-                   onClick={addDriver}
-                   disabled={isLoadingDrivers || !availableDrivers}
-                 >
-                   <PlusCircle className="h-4 w-4 mr-1.5" />
-                   Add Driver
-                 </Button>
-               )}
-             </div>
-           )} {/* End conditional rendering for selectors */}
-         </div>
-       </CardHeader>
+    <Card 
+      ref={chartRef}
+      className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} 
+      style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}
+    >
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+        <div className="space-y-1 flex items-center gap-2">
+          <CardTitle className="text-lg font-semibold text-white">{title || 'Lap Time Comparison'}</CardTitle>
+        </div>
+        
+        {/* Driver Selectors (Hide if using static data) */}
+        {!staticData && (
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedDrivers.map((driverCode, index) => (
+              <div key={index} className="flex items-center gap-1">
+                <Select
+                  value={driverCode}
+                  onValueChange={(value) => handleDriverChange(index, value)}
+                  disabled={isLoadingDrivers || !availableDrivers}
+                >
+                  <SelectTrigger className="w-full sm:w-[150px] bg-gray-800/80 border-gray-700 text-gray-200 text-xs h-8 focus:border-red-500 focus:ring-red-500">
+                    <SelectValue placeholder="Select Driver" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900 border-gray-700 text-gray-200 max-h-[200px]"> {/* Added max-height */}
+                    <SelectGroup>
+                      <SelectLabel className="text-xs text-gray-500">Driver {index + 1}</SelectLabel>
+                      {availableDrivers?.map((drv) => (
+                        <SelectItem key={drv.code} value={drv.code} className="text-xs">
+                          {drv.code} ({drv.name})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                {/* Show remove button only if more than MIN_DRIVERS */}
+                {selectedDrivers.length > MIN_DRIVERS && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-gray-500 hover:text-red-400 hover:bg-gray-700/50"
+                    onClick={() => removeDriver(index)}
+                    aria-label={`Remove Driver ${index + 1}`}
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            {/* Add Driver Button */}
+            {selectedDrivers.length < MAX_DRIVERS && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs border-gray-700 text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
+                onClick={addDriver}
+                disabled={isLoadingDrivers || !availableDrivers}
+              >
+                <PlusCircle className="h-4 w-4 mr-1.5" />
+                Add Driver
+              </Button>
+            )}
+          </div>
+        )} {/* End conditional rendering for selectors */}
+      </CardHeader>
       <CardContent className="pt-0">
         {renderContent()}
+        {!isLoading && lapData && lapData.length > 0 && (
+          <div className="mt-4 flex justify-end">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="h-7 px-2.5 text-xs bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-1.5 border border-gray-700" 
+              onClick={handleDownload}
+              disabled={isExporting}
+              title="Download chart"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {isExporting ? "Exporting..." : "Download Chart"}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

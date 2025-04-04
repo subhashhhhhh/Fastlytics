@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { cn } from "@/lib/utils";
+import { cn, exportChartAsImage } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
 import { fetchTelemetrySpeed, fetchSessionDrivers, fetchLapTimes, SessionDriver, SpeedDataPoint } from '@/lib/api';
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1";
-import { AlertCircle, User, Clock } from 'lucide-react';
+import { AlertCircle, User, Clock, Download } from 'lucide-react';
 import { driverColor } from '@/lib/driverColor';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface SpeedTraceChartProps {
   className?: string;
@@ -31,9 +32,11 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
   initialDriver,
   lap = 'fastest'
 }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
   const [selectedDriver, setSelectedDriver] = useState<string>(initialDriver);
   const [selectedLap, setSelectedLap] = useState<string | number>(lap);
   const [lapOptions, setLapOptions] = useState<Array<string | number>>(['fastest']);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch available drivers
   const { data: availableDrivers, isLoading: isLoadingDrivers } = useQuery<SessionDriver[]>({
@@ -74,6 +77,27 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
   const isLoading = isLoadingDrivers || isLoadingSpeed;
   const chartTitle = `${selectedDriver}'s ${selectedLap === 'fastest' ? 'Fastest Lap' : `Lap ${selectedLap}`} Speed Trace`;
 
+  // Handle chart download
+  const handleDownload = async () => {
+    if (!chartRef.current || isLoading || !speedData || speedData.length === 0) {
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      // Brief delay to ensure chart is fully rendered
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Use event name, driver, and lap for the filename
+      const filename = `${event.toLowerCase().replace(/\s+/g, '-')}_${selectedDriver}_${selectedLap === 'fastest' ? 'fastest' : `lap${selectedLap}`}_speed`;
+      await exportChartAsImage(chartRef, filename);
+    } catch (error) {
+      console.error('Failed to export chart:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -100,8 +124,8 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
     }
 
     return (
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={speedData} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={300} className="export-chart-container">
+        <LineChart data={speedData} margin={{ top: 15, right: 10, left: -15, bottom: 5 }} className="chart-main-container">
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
           <XAxis 
             type="number" 
@@ -148,11 +172,16 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
   };
 
   return (
-    <Card className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} 
-          style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}>
+    <Card 
+      ref={chartRef}
+      className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} 
+      style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}
+    >
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <CardTitle className="text-lg font-semibold text-white">{chartTitle}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-lg font-semibold text-white">{chartTitle}</CardTitle>
+          </div>
           <div className="flex gap-2">
             <Select
               value={selectedDriver}
@@ -204,6 +233,21 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
       </CardHeader>
       <CardContent className="pt-0">
         {renderContent()}
+        {!isLoading && speedData && speedData.length > 0 && (
+          <div className="mt-4 flex justify-end">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="h-7 px-2.5 text-xs bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-1.5 border border-gray-700" 
+              onClick={handleDownload}
+              disabled={isExporting}
+              title="Download chart"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {isExporting ? "Exporting..." : "Download Chart"}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

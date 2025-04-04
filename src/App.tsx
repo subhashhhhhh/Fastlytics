@@ -20,12 +20,51 @@ import Footer from "./components/Footer";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SeasonProvider } from "./contexts/SeasonContext"; // Import SeasonProvider
 import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
+import { useState, useEffect } from "react"; // Import useState and useEffect
 
 const queryClient = new QueryClient();
+
+// Donation Thank You Banner Component
+const DonationThankYouBanner = () => {
+  const [isVisible, setIsVisible] = useState(true);
+  
+  useEffect(() => {
+    // Set a cookie to track if the banner has been shown
+    const hasSeenBanner = localStorage.getItem('donationThankYouSeen');
+    if (hasSeenBanner) {
+      setIsVisible(false);
+    } else {
+      // Set the cookie after 7 days
+      const timeout = setTimeout(() => {
+        localStorage.setItem('donationThankYouSeen', 'true');
+      }, 7 * 24 * 60 * 60 * 1000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, []);
+  
+  if (!isVisible) return null;
+  
+  return (
+    <div className="bg-red-500 text-white py-2 text-center relative">
+      <p className="text-sm md:text-base">
+        Special thanks to <span className="font-bold">sf1club</span> for the €50 donation! Your support helps keep Fastlytics running for the F1 community. ❤️
+      </p>
+      <button 
+        onClick={() => setIsVisible(false)} 
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-200"
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </div>
+  );
+};
 
 // Layout component to add footer to all pages except Auth
 const MainLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen flex flex-col">
+    <DonationThankYouBanner />
     {children}
     <Footer />
   </div>
@@ -34,6 +73,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => (
 // Landing layout without footer
 const LandingLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen flex flex-col">
+    <DonationThankYouBanner />
     {children}
     {/* No Footer here */}
   </div>
@@ -42,6 +82,7 @@ const LandingLayout = ({ children }: { children: React.ReactNode }) => (
 // Auth layout without footer
 const AuthLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen">
+    <DonationThankYouBanner />
     {children}
   </div>
 );

@@ -255,10 +255,10 @@ export const fetchTelemetryGear = async (year: number, event: string, session: s
     } catch (error) { console.error("Error fetching gear telemetry:", error); throw error; }
 };
 
-/** Fetches tire strategy data for all drivers in a session. */
+/** Fetches tire strategy data for a given race session. */
 export const fetchTireStrategy = async (year: number, event: string, session: string): Promise<DriverStrategy[]> => {
-    const params = new URLSearchParams({ year: year.toString(), event, session });
-    const url = `${API_BASE_URL}/api/strategy/tires?${params.toString()}`;
+    const params = new URLSearchParams({ year: year.toString(), event, session: session });
+    const url = `${API_BASE_URL}/api/strategy?${params.toString()}`;
     console.log(`Fetching tire strategy from: ${url}`);
     try {
         const response = await fetch(url, { headers: getHeaders() });

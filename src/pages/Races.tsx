@@ -40,16 +40,25 @@ const Races = () => {
 
     const resultsMap = new Map(resultsData?.map(res => [res.event, res]));
     const now = new Date(); // Get current date/time
+    // Current date + 3 days to determine the "ongoing" window
+    const nearFuture = new Date();
+    nearFuture.setDate(now.getDate() + 3);
 
     return scheduleData.map(event => {
       const result = resultsMap.get(event.EventName);
       const eventDate = new Date(event.EventDate); // Use the main EventDate from schedule
+      
+      // First determine if it's a future race
       const isUpcoming = eventDate > now;
+      
+      // Then determine if it's the current ongoing race (within the next 3 days)
+      const isOngoing = isUpcoming && eventDate <= nearFuture;
 
       return {
         ...event, // Spread schedule event properties
         result, // Attach result if found
         isUpcoming,
+        isOngoing,
         displayDate: eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       };
     });
@@ -128,7 +137,8 @@ const Races = () => {
           ) : combinedRaceData.length > 0 ? (
             combinedRaceData.map((race, index) => {
               const teamColor = race.result ? getTeamColorClass(race.result.team) : 'gray'; // Default to gray if no result/upcoming
-              const isClickable = !race.isUpcoming && !!race.result; // Clickable only if completed and has result
+              // Make both completed races and ongoing races clickable
+              const isClickable = !race.isUpcoming || race.isOngoing; 
 
               return (
                 <Card
@@ -154,7 +164,12 @@ const Races = () => {
                   </div>
                   {/* Winner Info or Upcoming Status */}
                   <div className="flex flex-col items-end text-sm text-gray-400 flex-shrink-0 w-28 md:w-32">
-                    {race.isUpcoming ? (
+                    {race.isOngoing ? (
+                      <div className="flex items-center gap-1.5 text-amber-400">
+                        <Clock className="w-4 h-4" />
+                        <span className="font-medium">ONGOING</span>
+                      </div>
+                    ) : race.isUpcoming ? (
                       <div className="flex items-center gap-1.5 text-blue-400">
                         <Clock className="w-4 h-4" />
                         <span className="font-medium">UPCOMING</span>

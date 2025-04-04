@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, AlertCircle, Zap, Calendar, MapPin, Users, Timer, Sparkles, TrendingUp, Map } from 'lucide-react'; // Added Map icon
+import { ArrowLeft, Trophy, Flag, BarChart2, Clock, Cpu, ArrowRightLeft, Gauge, User, Lock, AlertCircle, Zap, Calendar, MapPin, Users, Timer, TrendingUp, Map } from 'lucide-react'; // Removed Sparkles
 import Navbar from '@/components/Navbar';
 import RacingChart from '@/components/RacingChart';
 import TireStrategy from '@/components/TireStrategy';
@@ -182,32 +182,6 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
   );
 };
 
-// Re-add FeatureCard definition before Race component
-const FeatureCard = ({ title, icon, description }: { title: string; icon: React.ReactNode; description: string }) => {
-  return (
-    <Card className="bg-gray-900/80 border-gray-700 overflow-hidden relative backdrop-blur-sm hover:border-gray-600 transition-colors">
-      {/* "Coming Soon" Badge */}
-      <div className="absolute top-0 right-0 bg-blue-600/80 px-3 py-1 text-xs font-medium flex items-center rounded-bl-md text-white">
-        <Sparkles className="h-3 w-3 mr-1" /> Coming Soon
-      </div>
-      <CardHeader className="pb-2 pt-8">
-        <div className="flex items-center gap-3">
-          {/* Use a neutral color for the icon background */}
-          <div className="p-2.5 rounded-full bg-gray-700/50 text-gray-400">{icon}</div>
-          <CardTitle className="text-lg text-white">{title}</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-gray-400 mb-4">{description}</p>
-        {/* Optional: Add a disabled button or remove it */}
-        <Button size="sm" className="w-full bg-gray-700 hover:bg-gray-600 text-gray-400 cursor-not-allowed" disabled>
-          Coming Soon
-        </Button>
-      </CardContent>
-    </Card>
-  );
-};
-
 const Race = () => {
   const { raceId } = useParams<{ raceId: string }>();
   const navigate = useNavigate();
@@ -354,15 +328,17 @@ const Race = () => {
                          <SelectValue placeholder="Select Session" />
                      </SelectTrigger>
                      <SelectContent className="bg-gray-900 border-gray-700 text-white">
-                         {availableSessions.map(session => (
-                             <SelectItem
-                                 key={session.type}
-                                 value={session.type}
-                                 className="hover:bg-gray-800 focus:bg-gray-700"
-                             >
-                                 {session.name}
-                             </SelectItem>
-                         ))}
+                         {availableSessions
+                            .filter(session => session.type !== 'Q') // Filter out the 'Qualifying' session type
+                            .map(session => (
+                                <SelectItem
+                                    key={session.type}
+                                    value={session.type}
+                                    className="hover:bg-gray-800 focus:bg-gray-700"
+                                >
+                                    {session.name}
+                                </SelectItem>
+                            ))}
                      </SelectContent>
                  </Select>
              ) : (
@@ -470,13 +446,11 @@ const Race = () => {
             {/* Adjust grid columns based on number of tabs */}
             <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1 p-1 bg-gray-800/80 border border-gray-700 rounded-lg h-auto mb-6">
               <TabsTrigger value="results" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Users className="w-4 h-4 mr-1.5 inline"/>Results</TabsTrigger>
-              {/* Only show Positions/Strategy tabs if it's Race or Sprint */}
+              {/* Only show Positions tab if it's Race or Sprint */}
               {(selectedSession === 'R' || selectedSession === 'Sprint') && (
-                <>
-                  <TabsTrigger value="positions" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><MapPin className="w-4 h-4 mr-1.5 inline"/>Positions</TabsTrigger>
-                  <TabsTrigger value="strategy" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Flag className="w-4 h-4 mr-1.5 inline"/>Strategy</TabsTrigger>
-                </>
+                <TabsTrigger value="positions" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><MapPin className="w-4 h-4 mr-1.5 inline"/>Positions</TabsTrigger>
               )}
+              <TabsTrigger value="strategy" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Flag className="w-4 h-4 mr-1.5 inline"/>Strategy</TabsTrigger>
               {/* Show Lap Times, Circuit, Telemetry for all applicable sessions */}
               <TabsTrigger value="laptimes" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Timer className="w-4 h-4 mr-1.5 inline"/>Lap Times</TabsTrigger>
               <TabsTrigger value="circuit" className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-300 hover:bg-gray-700/50 rounded-md px-3 py-1.5 text-sm transition-colors"><Map className="w-4 h-4 mr-1.5 inline"/>Circuit</TabsTrigger>
@@ -525,17 +499,11 @@ const Race = () => {
             </TabsContent>
 
             {/* Strategy Tab (Only Race or Sprint) */}
-            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
-              <TabsContent value="strategy" className="pt-2">
-                 {year && eventName && (
-                   <TireStrategy year={year} event={eventName} session={selectedSession} />
-                 )}
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-                   <FeatureCard title="Undercut Simulation" icon={<ArrowRightLeft />} description="Test hypothetical pit windows..." />
-                   <FeatureCard title="Tire Degradation" icon={<BarChart2 />} description="Lap time analysis showing compound performance..." />
-                 </div>
-              </TabsContent>
-            )}
+            <TabsContent value="strategy" className="pt-2">
+               {year && eventName && (
+                 <TireStrategy year={year} event={eventName} session={selectedSession} />
+               )}
+            </TabsContent>
 
             {/* Telemetry Tab (Show for all sessions now) */}
             <TabsContent value="telemetry" className="pt-2">
@@ -560,12 +528,6 @@ const Race = () => {
                       />
                   </div>
                )}
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-                 <FeatureCard title="G-Force Analysis" icon={<Gauge />} description="Explore lateral and longitudinal G-forces..." />
-                 <FeatureCard title="Brake Temperature" icon={<Cpu />} description="Animated brake temperature visualization..." />
-                 <FeatureCard title="ERS Deployment" icon={<BarChart2 />} description="Energy deployment and harvesting patterns..." />
-                 <FeatureCard title="Aero Efficiency" icon={<ArrowRightLeft />} description="Downforce vs drag trade-off analysis..." />
-               </div>
             </TabsContent>
 
           </Tabs>

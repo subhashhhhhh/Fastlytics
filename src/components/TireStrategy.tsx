@@ -1,11 +1,10 @@
-import React, { useState } from 'react'; // Import useState
+import React from 'react'; // Removed useState import
 import { cn } from "@/lib/utils"; // Corrected path
 import { useQuery } from '@tanstack/react-query';
 import { fetchTireStrategy, DriverStrategy, fetchSpecificRaceResults, DetailedRaceResult } from '@/lib/api'; // Added imports for race results
 import { Skeleton } from "@/components/ui/skeleton"; // Corrected path
-import { AlertCircle, ChevronDown } from 'lucide-react'; // Import ChevronDown
+import { AlertCircle } from 'lucide-react'; // Removed ChevronDown import
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Corrected path
-import { Button } from '@/components/ui/button'; // Corrected path
 
 // Define props for the dynamic component
 interface TireStrategyProps {
@@ -38,8 +37,6 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
   session
 }) => {
 
-  const [visibleDrivers, setVisibleDrivers] = useState(5); // State for pagination
-
   // Fetch race results to get finishing order
   const { data: raceResults } = useQuery<DetailedRaceResult[]>({
     queryKey: ['sessionResult', year, event, session],
@@ -56,7 +53,10 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
     
     const positionMap = new Map<string, number>();
     raceResults.forEach(result => {
-      positionMap.set(result.driverCode, result.position || Infinity);
+      // Only set position if it's a valid number
+      if (result.position !== undefined && isFinite(result.position)) {
+        positionMap.set(result.driverCode, result.position);
+      }
     });
     return positionMap;
   }, [raceResults]);
@@ -74,19 +74,30 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
       if (!data) return [];
       
       return [...data].sort((a, b) => {
-        // Get positions from the map (default to Infinity if not found)
-        const posA = driverPositionMap.get(a.driver) || Infinity;
-        const posB = driverPositionMap.get(b.driver) || Infinity;
+        // Get positions from the map
+        const posA = driverPositionMap.get(a.driver);
+        const posB = driverPositionMap.get(b.driver);
         
-        // Sort by position (ascending)
-        return posA - posB;
+        // If both drivers have positions, compare them
+        if (posA !== undefined && posB !== undefined) {
+          return posA - posB;
+        }
+        
+        // If only driver A has a position, they come first
+        if (posA !== undefined) {
+          return -1;
+        }
+        
+        // If only driver B has a position, they come first
+        if (posB !== undefined) {
+          return 1;
+        }
+        
+        // If neither has a position, maintain original order by comparing driver codes
+        return a.driver.localeCompare(b.driver);
       });
     },
   });
-
-  const showMoreDrivers = () => {
-    setVisibleDrivers(prev => prev + 5);
-  };
 
   // --- Render States ---
   if (isLoading) {
@@ -129,9 +140,6 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
   // Find max laps for scaling the bars across all drivers
   const maxLaps = Math.max(...strategyData.flatMap(d => d.stints.map(s => s.endLap)), 1);
 
-  const driversToShow = strategyData.slice(0, visibleDrivers);
-  const canShowMore = visibleDrivers < strategyData.length;
-
   // --- Render Visualization ---
   return (
     <TooltipProvider delayDuration={100}>
@@ -153,10 +161,15 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
         </div>
         {/* Driver Stint List */}
         <div className="space-y-2.5">
-          {driversToShow.map((driverData, index) => {
-            // Get position from map for display
-            const position = driverPositionMap.get(driverData.driver);
-            const positionText = position !== undefined ? `P${position}` : '';
+          {strategyData.map((driverData, index) => {
+            // Only show positions for actual race results (R or Sprint), 
+            // not for practice sessions or qualifying
+            const isRaceSession = session === 'R' || session === 'Sprint';
+            
+            // Get position from map for display, but only if it's a race session
+            const position = isRaceSession ? driverPositionMap.get(driverData.driver) : undefined;
+            // Only show position text if position is a valid finite number and it's a race session
+            const positionText = position !== undefined && isFinite(position) ? `P${position}` : '';
             
             return (
               <div key={driverData.driver} className="flex items-center gap-3">
@@ -201,19 +214,6 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
             );
           })}
         </div>
-        {/* Show More Button */}
-        {canShowMore && (
-            <div className="mt-4 flex justify-center">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={showMoreDrivers}
-                    className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
-                >
-                    Show More Drivers <ChevronDown className="w-4 h-4 ml-1"/>
-                </Button>
-            </div>
-        )}
       </div>
     </TooltipProvider>
   );

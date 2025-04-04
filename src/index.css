@@ -338,3 +338,26 @@
 .footer-bottom {
   @apply mt-8 pt-4 border-t border-border/50 flex flex-col sm:flex-row justify-between items-center;
 }
+
+/* Chart Export Styling */
+.export-chart-container {
+  min-height: 300px !important;
+  min-width: 500px !important;
+  padding-top: 20px !important;
+}
+
+/* Ensure charts display properly during export */
+.recharts-responsive-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Make sure SVG elements are visible during export */
+.recharts-surface {
+  overflow: visible !important;
+}
+
+/* Fix title display in charts */
+.chart-container .recharts-wrapper {
+  margin-top: 15px;
+}

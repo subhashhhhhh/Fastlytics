@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { cn } from "@/lib/utils";
+import { cn, exportChartAsImage } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
 import { fetchLapPositions, LapPositionDataPoint } from '@/lib/api'; // Import new fetch function and type
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1";
-import { AlertCircle, Check, ChevronsUpDown } from 'lucide-react';
+import { AlertCircle, Check, ChevronsUpDown, Download } from 'lucide-react';
 import { driverColor } from '@/lib/driverColor'; // Use existing driver color mapping
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,8 +30,10 @@ const PositionChart: React.FC<PositionChartProps> = ({
   event,
   session // Expect 'R'
 }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
   const [selectedDrivers, setSelectedDrivers] = useState<string[]>([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch lap position data
   const { data: positionData, isLoading, error, isError } = useQuery<LapPositionDataPoint[]>({
@@ -75,6 +77,27 @@ const PositionChart: React.FC<PositionChartProps> = ({
     setSelectedDrivers([]);
   };
 
+  // Handle chart download
+  const handleDownload = async () => {
+    if (!chartRef.current || isLoading || !positionData || positionData.length === 0) {
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      // Brief delay to ensure chart is fully rendered
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Use event name for the filename
+      const filename = `${event.toLowerCase().replace(/\s+/g, '-')}_race_position_changes`;
+      await exportChartAsImage(chartRef, filename);
+    } catch (error) {
+      console.error('Failed to export chart:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // --- Render States ---
   const renderContent = () => {
     if (isLoading) {
@@ -103,8 +126,8 @@ const PositionChart: React.FC<PositionChartProps> = ({
 
     // --- Render Chart ---
     return (
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={positionData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={400} className="export-chart-container">
+        <LineChart data={positionData} margin={{ top: 15, right: 20, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
           <XAxis
             dataKey="LapNumber"
@@ -189,12 +212,19 @@ const PositionChart: React.FC<PositionChartProps> = ({
   };
 
   return (
-    <Card className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}>
+    <Card 
+      ref={chartRef}
+      className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} 
+      style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}
+    >
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <div className="space-y-1">
-          <CardTitle className="text-lg font-semibold text-white">Race Position Changes</CardTitle>
-          <CardDescription className="text-xs text-gray-400">Select drivers to view their position changes over the laps.</CardDescription>
+        <div className="space-y-1 flex items-center gap-2">
+          <div>
+            <CardTitle className="text-lg font-semibold text-white">Race Position Changes</CardTitle>
+            <CardDescription className="text-xs text-gray-400">Select drivers to view their position changes over the laps.</CardDescription>
+          </div>
         </div>
+
         {/* Driver Selection Popover */}
         {driverCodes.length > 0 && !isLoading && !isError && (
           <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -245,6 +275,21 @@ const PositionChart: React.FC<PositionChartProps> = ({
       </CardHeader>
       <CardContent className="pt-4"> {/* Added some top padding */}
         {renderContent()}
+        {!isLoading && positionData && positionData.length > 0 && (
+          <div className="flex justify-end mt-4">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="h-7 px-2.5 text-xs bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-1.5 border border-gray-700" 
+              onClick={handleDownload}
+              disabled={isExporting}
+              title="Download chart"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {isExporting ? "Exporting..." : "Download Chart"}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

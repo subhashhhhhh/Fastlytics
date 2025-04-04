@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react'; // Import useMemo
+import React, { useState, useEffect, useMemo, useRef } from 'react'; // Import useMemo and useRef
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 // Import new API function and update existing one
 import { fetchSessionDrivers, fetchSectorComparison, fetchDriverLapNumbers, SessionDriver, SectorComparisonData } from '@/lib/api';
 import { driverColor } from '@/lib/driverColor';
-import { cn } from "@/lib/utils";
-import { User, Clock } from 'lucide-react'; // Import icons
+import { cn, exportChartAsImage } from "@/lib/utils";
+import { User, Clock, Download } from 'lucide-react'; // Import icons including Download
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1";
 import { AlertCircle } from 'lucide-react';
 import { areTeammates } from '@/lib/teamUtils';
+import { Button } from '@/components/ui/button';
 
 // Interface definitions
 interface CircuitComparisonChartProps {
@@ -28,6 +29,8 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
   event,
   session
 }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
   // State for selected drivers and laps
   const [driver1, setDriver1] = useState<string>("");
   const [driver2, setDriver2] = useState<string>("");
@@ -103,6 +106,27 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
     driver2Color = '#FFFFFF'; // Use white for driver 2 when teammates
   }
 
+  // Handle chart download
+  const handleDownload = async () => {
+    if (!chartRef.current || isLoading || !comparisonData) {
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      // Brief delay to ensure chart is fully rendered
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Use event name and drivers for the filename
+      const filename = `${event.toLowerCase().replace(/\s+/g, '-')}_${driver1}_vs_${driver2}_circuit_comparison`;
+      await exportChartAsImage(chartRef, filename);
+    } catch (error) {
+      console.error('Failed to export chart:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Render function
   const renderContent = () => {
     if (isLoading) {
@@ -144,7 +168,7 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
           </div>
         </div>
 
-        <div className="circuit-map-container relative w-full h-[400px] bg-gray-900/50 rounded-lg overflow-hidden">
+        <div className="circuit-map-container relative w-full h-[400px] bg-gray-900/50 rounded-lg overflow-hidden" data-export="true">
           <svg viewBox="0 0 1000 500" className="w-full h-full">
             {/* Circuit base outline */}
             <path
@@ -226,10 +250,15 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
   };
 
   return (
-    <Card className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm", className)}>
+    <Card 
+      ref={chartRef}
+      className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm", className)}
+    >
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <CardTitle className="text-lg font-semibold text-white">Circuit Comparison by Lap</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-lg font-semibold text-white">Circuit Comparison by Lap</CardTitle>
+          </div>
 
           {/* Driver and Lap selectors */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -333,6 +362,21 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
        </CardHeader>
        <CardContent className="pt-0">
          {renderContent()}
+         {!isLoading && comparisonData && (
+           <div className="mt-4 flex justify-end">
+             <Button 
+               variant="secondary" 
+               size="sm" 
+               className="h-7 px-2.5 text-xs bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-1.5 border border-gray-700" 
+               onClick={handleDownload}
+               disabled={isExporting}
+               title="Download chart"
+             >
+               <Download className="h-3.5 w-3.5" />
+               {isExporting ? "Exporting..." : "Download Chart"}
+             </Button>
+           </div>
+         )}
        </CardContent>
      </Card>
    );
