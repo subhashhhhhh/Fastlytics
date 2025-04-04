@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 // Import new API function and update existing one
-import { fetchSessionDrivers, fetchSectorComparison, fetchDriverLapNumbers, SessionDriver, SectorComparisonData } from '@/lib/api';
+import { fetchSessionDrivers, fetchSectorComparison, fetchDriverLapNumbers, fetchTelemetrySpeed, SessionDriver, SectorComparisonData, SpeedDataPoint } from '@/lib/api';
 import { driverColor } from '@/lib/driverColor';
 import { cn, exportChartAsImage } from "@/lib/utils";
 import { User, Clock, Download } from 'lucide-react'; // Import icons including Download
@@ -11,6 +11,7 @@ import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1";
 import { AlertCircle } from 'lucide-react';
 import { areTeammates } from '@/lib/teamUtils';
 import { Button } from '@/components/ui/button';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 // Interface definitions
 interface CircuitComparisonChartProps {
@@ -91,8 +92,62 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
     enabled: !!year && !!event && !!session && !!driver1 && !!driver2 && driver1 !== driver2, // Keep existing enabled logic
   });
 
-  // Combined loading state
-  const isLoading = isLoadingDrivers || isLoadingComparison || isLoadingLaps1 || isLoadingLaps2;
+  // Fetch speed telemetry data for Driver 1
+  const { data: speedData1, isLoading: isLoadingSpeed1 } = useQuery<SpeedDataPoint[]>({
+    queryKey: ['speedTrace', year, event, session, driver1, selectedLap1],
+    queryFn: () => fetchTelemetrySpeed(year, event, session, driver1, selectedLap1),
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    retry: 1,
+    enabled: !!year && !!event && !!session && !!driver1 && !!selectedLap1,
+  });
+
+  // Fetch speed telemetry data for Driver 2
+  const { data: speedData2, isLoading: isLoadingSpeed2 } = useQuery<SpeedDataPoint[]>({
+    queryKey: ['speedTrace', year, event, session, driver2, selectedLap2],
+    queryFn: () => fetchTelemetrySpeed(year, event, session, driver2, selectedLap2),
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    retry: 1,
+    enabled: !!year && !!event && !!session && !!driver2 && !!selectedLap2,
+  });
+
+  // Combine speed data for both drivers
+  const combinedSpeedData = useMemo(() => {
+    if (!speedData1 || !speedData2) return [];
+    
+    // Create a map of distances to make lookup easier
+    const distanceMap = new Map();
+    
+    // Add driver1 data to the map
+    speedData1.forEach(point => {
+      distanceMap.set(point.Distance, {
+        Distance: point.Distance,
+        [`Speed_${driver1}`]: point.Speed,
+        [`Speed_${driver2}`]: null
+      });
+    });
+    
+    // Add or update with driver2 data
+    speedData2.forEach(point => {
+      if (distanceMap.has(point.Distance)) {
+        const existingPoint = distanceMap.get(point.Distance);
+        existingPoint[`Speed_${driver2}`] = point.Speed;
+      } else {
+        distanceMap.set(point.Distance, {
+          Distance: point.Distance,
+          [`Speed_${driver1}`]: null,
+          [`Speed_${driver2}`]: point.Speed
+        });
+      }
+    });
+    
+    // Convert map to array and sort by distance
+    return Array.from(distanceMap.values()).sort((a, b) => a.Distance - b.Distance);
+  }, [speedData1, speedData2, driver1, driver2]);
+
+  // Combined loading state including speed data
+  const isLoading = isLoadingDrivers || isLoadingComparison || isLoadingLaps1 || isLoadingLaps2 || isLoadingSpeed1 || isLoadingSpeed2;
 
   // Get driver colors
   let driver1Color = driverColor(driver1, year);
@@ -168,60 +223,124 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
           </div>
         </div>
 
-        <div className="circuit-map-container relative w-full h-[400px] bg-gray-900/50 rounded-lg overflow-hidden" data-export="true">
-          <svg viewBox="0 0 1000 500" className="w-full h-full">
-            {/* Circuit base outline */}
-            <path
-              d={comparisonData.circuitLayout}
-              fill="none"
-              stroke="rgba(156, 163, 175, 0.4)"
-              strokeWidth="10" // Slightly thinner base outline
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {/* Circuit sections highlighting advantages */}
-            {comparisonData.sections.map((section) => {
-              // Determine which driver has advantage
-              let strokeColor = "rgba(156, 163, 175, 0.4)"; // Neutral color if no significant advantage
-              let advantageText = "Neutral or negligible difference";
-
-              // Define a threshold for significant advantage
-              // const advantageThreshold = 0.02; // e.g., 20 milliseconds 
-
-              // Check advantage without threshold
-              if (section.driver1Advantage && section.driver1Advantage > 0) {
-                // Driver 1 advantage
-                strokeColor = driver1Color;
-                advantageText = `${driver1} faster by ${Math.abs(section.driver1Advantage).toFixed(3)}s`;
-              } else if (section.driver1Advantage && section.driver1Advantage < 0) {
-                // Driver 2 advantage
-                strokeColor = driver2Color; // Will be white if sameTeam is true due to override above
-                advantageText = `${driver2} faster by ${Math.abs(section.driver1Advantage).toFixed(3)}s`;
-              } else if (section.driver1Advantage === 0) {
-                // Explicitly handle exact zero difference as neutral
-                advantageText = "Identical time";
-              }
-
-              return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Circuit map container */}
+          <div className="circuit-map-container relative w-full h-[400px] bg-gray-900/50 rounded-lg overflow-hidden" data-export="true">
+            <svg viewBox="0 0 1000 500" className="w-full h-full">
+              <g transform="scale(1,-1) translate(0,-500)">
+                {/* Circuit base outline */}
                 <path
-                  key={section.id}
-                  d={section.path}
-                  fill="none" // No fill for section paths
-                  stroke={strokeColor}
-                  strokeWidth="12" // Make section highlight slightly thicker than base
+                  d={comparisonData.circuitLayout}
+                  fill="none"
+                  stroke="rgba(156, 163, 175, 0.4)"
+                  strokeWidth="10" // Slightly thinner base outline
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  data-section-name={section.name}
-                >
-                  <title>{section.name}: {advantageText}</title>
-                </path>
-              );
-            })}
+                />
 
-            {/* Add section labels (optional) */}
-            {/* ... */}
-          </svg>
+                {/* Circuit sections highlighting advantages */}
+                {comparisonData.sections.map((section) => {
+                  // Determine which driver has advantage
+                  let strokeColor = "rgba(156, 163, 175, 0.4)"; // Neutral color if no significant advantage
+                  let advantageText = "Neutral or negligible difference";
+
+                  // Check advantage without threshold
+                  if (section.driver1Advantage && section.driver1Advantage > 0) {
+                    // Driver 1 advantage
+                    strokeColor = driver1Color;
+                    advantageText = `${driver1} faster by ${Math.abs(section.driver1Advantage).toFixed(3)}s`;
+                  } else if (section.driver1Advantage && section.driver1Advantage < 0) {
+                    // Driver 2 advantage
+                    strokeColor = driver2Color; // Will be white if sameTeam is true due to override above
+                    advantageText = `${driver2} faster by ${Math.abs(section.driver1Advantage).toFixed(3)}s`;
+                  } else if (section.driver1Advantage === 0) {
+                    // Explicitly handle exact zero difference as neutral
+                    advantageText = "Identical time";
+                  }
+
+                  return (
+                    <path
+                      key={section.id}
+                      d={section.path}
+                      fill="none" // No fill for section paths
+                      stroke={strokeColor}
+                      strokeWidth="12" // Make section highlight slightly thicker than base
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      data-section-name={section.name}
+                    >
+                      <title>{section.name}: {advantageText}</title>
+                    </path>
+                  );
+                })}
+              </g>
+            </svg>
+          </div>
+
+          {/* Speed Trace Chart */}
+          <div className="speed-trace-container relative w-full h-[400px] bg-gray-900/50 rounded-lg overflow-hidden">
+            {combinedSpeedData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart 
+                  data={combinedSpeedData} 
+                  margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
+                  <XAxis 
+                    type="number" 
+                    dataKey="Distance" 
+                    stroke="rgba(156, 163, 175, 0.7)" 
+                    tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} 
+                    tickFormatter={(value: number) => `${value.toFixed(0)}m`} 
+                    domain={['dataMin', 'dataMax']} 
+                    label={{ value: 'Distance (m)', position: 'insideBottomRight', offset: -5, fill: 'rgba(156, 163, 175, 0.9)' }}
+                  />
+                  <YAxis 
+                    stroke="rgba(156, 163, 175, 0.7)" 
+                    tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} 
+                    domain={['auto', 'auto']} 
+                    tickFormatter={(value) => `${value}`} 
+                    label={{ value: 'Speed (km/h)', angle: -90, position: 'insideLeft', fill: 'rgba(156, 163, 175, 0.9)' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(31, 41, 55, 0.9)', 
+                      borderColor: 'rgba(100, 116, 139, 0.5)', 
+                      color: '#E5E7EB', 
+                      borderRadius: '6px', 
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.5)' 
+                    }} 
+                    labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }} 
+                    labelFormatter={(label: number) => `Distance: ${label.toFixed(2)}m`} 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey={`Speed_${driver1}`} 
+                    stroke={driver1Color} 
+                    strokeWidth={2} 
+                    dot={false} 
+                    activeDot={{ r: 4, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: driver1Color }} 
+                    name={`Speed_${driver1}`} 
+                    connectNulls={true} 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey={`Speed_${driver2}`} 
+                    stroke={driver2Color} 
+                    strokeWidth={2} 
+                    dot={false} 
+                    activeDot={{ r: 4, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: driver2Color }} 
+                    name={`Speed_${driver2}`}
+                    connectNulls={true} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
+                Select two drivers and their laps to view speed comparison
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Legend - Updated for lap display */}
@@ -257,7 +376,7 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg font-semibold text-white">Circuit Comparison by Lap</CardTitle>
+            <CardTitle className="text-lg font-semibold text-white">Circuit & Speed Comparison by Lap</CardTitle>
           </div>
 
           {/* Driver and Lap selectors */}

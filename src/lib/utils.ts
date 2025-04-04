@@ -7,7 +7,6 @@ import { toPng } from "html-to-image"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-
 /**
  * Exports a DOM element (chart) as a PNG image with Fastlytics branding
  * @param elementRef - React ref to the DOM element to export
@@ -34,7 +33,7 @@ export async function exportChartAsImage(
     const originalStyles = {
       position: originalElement.style.position,
       background: originalElement.style.background,
-      padding: originalElement.style.padding,
+      padding: originalElement.style.padding, // Store original padding
       borderRadius: originalElement.style.borderRadius,
       overflow: originalElement.style.overflow
     };
@@ -44,8 +43,8 @@ export async function exportChartAsImage(
     originalElement.style.borderRadius = '8px';
     originalElement.style.overflow = 'visible';
     
-    // Reduce padding to create less space between elements
-    originalElement.style.padding = '8px 8px 12px 8px';
+    // Reduce padding AND remove bottom padding specifically for height calculation
+    originalElement.style.padding = '8px 8px 0px 8px'; // Top, Right, Bottom=0, Left
     
     // Fix title display for export
     const cardHeader = originalElement.querySelector('div[class*="CardHeader"]');
@@ -92,45 +91,44 @@ export async function exportChartAsImage(
       (title as HTMLElement).style.whiteSpace = 'nowrap';
     }
     
-    // Find buttons and temporarily hide them
-    const buttons = originalElement.querySelectorAll('button');
-    const buttonDisplayStyles: string[] = [];
-    buttons.forEach(button => {
-      buttonDisplayStyles.push(button.style.display);
-      button.style.display = 'none';
-    });
+    // Find button container, calculate its height, and hide it
+    const buttonsContainer = originalElement.querySelector('.mt-4.flex.justify-end'); // Use the class from SpeedTraceChart.tsx
+    let buttonsContainerHeight = 0;
+    let originalButtonContainerDisplay = '';
+    if (buttonsContainer) {
+      buttonsContainerHeight = (buttonsContainer as HTMLElement).offsetHeight + 16; // Get height + margin-top (mt-4 -> 1rem -> 16px)
+      originalButtonContainerDisplay = (buttonsContainer as HTMLElement).style.display;
+      (buttonsContainer as HTMLElement).style.display = 'none'; // Hide the container
+    }
     
-    // Create and add branding container
+    // Create and add branding container (keeping previous styling)
     const brandingDiv = document.createElement('div');
     brandingDiv.style.position = 'absolute';
-    brandingDiv.style.bottom = '15px'; // Position at bottom instead of top
-    brandingDiv.style.right = '20px';
+    brandingDiv.style.bottom = '10px'; // Position near bottom
+    brandingDiv.style.right = '15px';
     brandingDiv.style.display = 'flex';
     brandingDiv.style.alignItems = 'center';
-    brandingDiv.style.gap = '6px';
+    brandingDiv.style.gap = '5px';
     brandingDiv.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
-    brandingDiv.style.fontSize = '16px';
+    brandingDiv.style.fontSize = '14px';
     brandingDiv.style.letterSpacing = '-0.02em';
     brandingDiv.style.color = 'white';
-    brandingDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    brandingDiv.style.padding = '6px 12px';
+    brandingDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.65)';
+    brandingDiv.style.padding = '4px 8px';
     brandingDiv.style.borderRadius = '4px';
     brandingDiv.style.zIndex = '9999';
     
-    // Create gauge icon
     const gaugeIcon = document.createElement('span');
-    gaugeIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gauge" style="color: #ef4444;"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>`;
-    
-    // Create Fastlytics text
+    gaugeIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gauge" style="color: #ef4444;"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>`;
     const fastlyticsText = document.createElement('span');
     fastlyticsText.innerHTML = '<span style="color: white; font-weight: 600; letter-spacing: -0.02em;">Fast</span><span style="color: #ef4444; font-weight: 600; letter-spacing: -0.02em;">lytics</span>';
-    
-    // Assemble branding
     brandingDiv.appendChild(gaugeIcon);
     brandingDiv.appendChild(fastlyticsText);
-    
-    // Add branding to original element
     originalElement.appendChild(brandingDiv);
+
+    // Calculate the height required, excluding hidden button container AND bottom padding
+    // Add a small buffer (e.g., 5px) to ensure the bottom logo isn't cut off
+    const calculatedHeight = originalElement.scrollHeight - buttonsContainerHeight + 5;
     
     // Convert to image, setting quality and resolution
     const dataUrl = await toPng(originalElement, {
@@ -141,29 +139,33 @@ export async function exportChartAsImage(
       skipFonts: true,
       fontEmbedCSS: '',
       filter: (node) => {
-        return true; // Include all nodes
+        // Explicitly exclude the button container if somehow still visible
+        if (buttonsContainer && node instanceof HTMLElement && node.isSameNode(buttonsContainer)) {
+          return false;
+        }
+        return true; // Include all other nodes
       },
       width: originalElement.offsetWidth,
-      height: originalElement.offsetHeight,
+      height: calculatedHeight, // Use calculated height
       style: {
         transform: 'scale(1)',
         transformOrigin: 'top left'
       },
       canvasWidth: originalElement.offsetWidth,
-      canvasHeight: originalElement.offsetHeight
+      canvasHeight: calculatedHeight // Use calculated height
     });
     
-    // Clean up - restore original styles
+    // Clean up - restore original styles (including original padding)
     originalElement.style.position = originalStyles.position;
     originalElement.style.background = originalStyles.background;
-    originalElement.style.padding = originalStyles.padding;
+    originalElement.style.padding = originalStyles.padding; // Restore original padding
     originalElement.style.borderRadius = originalStyles.borderRadius;
     originalElement.style.overflow = originalStyles.overflow;
     
-    // Restore button visibility
-    buttons.forEach((button, index) => {
-      button.style.display = buttonDisplayStyles[index];
-    });
+    // Restore button container visibility
+    if (buttonsContainer) {
+       (buttonsContainer as HTMLElement).style.display = originalButtonContainerDisplay; // Restore original display
+    }
     
     // Remove branding
     if (originalElement.contains(brandingDiv)) {
@@ -185,3 +187,4 @@ export async function exportChartAsImage(
     }
   }
 }
+
