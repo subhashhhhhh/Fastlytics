@@ -116,34 +116,64 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
   const combinedSpeedData = useMemo(() => {
     if (!speedData1 || !speedData2) return [];
     
-    // Create a map of distances to make lookup easier
-    const distanceMap = new Map();
-    
-    // Add driver1 data to the map
-    speedData1.forEach(point => {
-      distanceMap.set(point.Distance, {
-        Distance: point.Distance,
-        [`Speed_${driver1}`]: point.Speed,
-        [`Speed_${driver2}`]: null
-      });
-    });
-    
-    // Add or update with driver2 data
-    speedData2.forEach(point => {
-      if (distanceMap.has(point.Distance)) {
-        const existingPoint = distanceMap.get(point.Distance);
-        existingPoint[`Speed_${driver2}`] = point.Speed;
-      } else {
-        distanceMap.set(point.Distance, {
-          Distance: point.Distance,
-          [`Speed_${driver1}`]: null,
-          [`Speed_${driver2}`]: point.Speed
-        });
+    // Helper function to find nearest data points for interpolation
+    const findInterpolationPoints = (distance: number, data: SpeedDataPoint[]) => {
+      // Find the closest points before and after the target distance
+      let beforePoint: SpeedDataPoint | null = null;
+      let afterPoint: SpeedDataPoint | null = null;
+      
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].Distance <= distance) {
+          beforePoint = data[i];
+        } else {
+          afterPoint = data[i];
+          break;
+        }
       }
-    });
+      
+      return { beforePoint, afterPoint };
+    };
     
-    // Convert map to array and sort by distance
-    return Array.from(distanceMap.values()).sort((a, b) => a.Distance - b.Distance);
+    // Linear interpolation function
+    const interpolateSpeed = (distance: number, data: SpeedDataPoint[]) => {
+      // If no data, return null
+      if (!data.length) return null;
+      
+      // If exact match found, return that value
+      const exactMatch = data.find(point => point.Distance === distance);
+      if (exactMatch) return exactMatch.Speed;
+      
+      // Find before and after points
+      const { beforePoint, afterPoint } = findInterpolationPoints(distance, data);
+      
+      // If only one point found, return that point's speed
+      if (!beforePoint) return afterPoint?.Speed || null;
+      if (!afterPoint) return beforePoint?.Speed || null;
+      
+      // Calculate interpolated speed
+      const distRatio = (distance - beforePoint.Distance) / (afterPoint.Distance - beforePoint.Distance);
+      return beforePoint.Speed + distRatio * (afterPoint.Speed - beforePoint.Speed);
+    };
+    
+    // Get all unique distances from both datasets
+    const allDistances = new Set<number>();
+    speedData1.forEach(point => allDistances.add(point.Distance));
+    speedData2.forEach(point => allDistances.add(point.Distance));
+    
+    // Convert to array and sort
+    const distances = Array.from(allDistances).sort((a, b) => a - b);
+    
+    // Sort speed data by distance
+    const sortedSpeedData1 = [...speedData1].sort((a, b) => a.Distance - b.Distance);
+    const sortedSpeedData2 = [...speedData2].sort((a, b) => a.Distance - b.Distance);
+    
+    // Create interpolated data points
+    return distances.map(distance => ({
+      Distance: distance,
+      [`Speed_${driver1}`]: interpolateSpeed(distance, sortedSpeedData1),
+      [`Speed_${driver2}`]: interpolateSpeed(distance, sortedSpeedData2)
+    }));
+    
   }, [speedData1, speedData2, driver1, driver2]);
 
   // Combined loading state including speed data
@@ -311,7 +341,51 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
                       boxShadow: '0 2px 10px rgba(0,0,0,0.5)' 
                     }} 
                     labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }} 
-                    labelFormatter={(label: number) => `Distance: ${label.toFixed(2)}m`} 
+                    labelFormatter={(label: number) => `Distance: ${label.toFixed(2)}m`}
+                    isAnimationActive={false}
+                    animationDuration={0}
+                    animationEasing="linear"
+                    allowEscapeViewBox={{ x: false, y: true }}
+                    position={{ y: 100 }}
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length > 0) {
+                        // Find the actual data point
+                        const dataPoint = payload[0].payload;
+                        
+                        // Get both speeds regardless of which line is hovered
+                        const speed1 = dataPoint[`Speed_${driver1}`];
+                        const speed2 = dataPoint[`Speed_${driver2}`];
+                        
+                        return (
+                          <div className="custom-tooltip p-2" style={{ 
+                            backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                            border: '1px solid rgba(100, 116, 139, 0.5)',
+                            borderRadius: '6px',
+                            padding: '8px 12px',
+                            boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
+                          }}>
+                            <p className="font-bold text-white border-b border-gray-600 pb-1 mb-2">
+                              Distance: {label.toFixed(2)}m
+                            </p>
+                            <div className="grid grid-cols-2 gap-x-3 text-sm">
+                              <span>Driver</span>
+                              <span>Speed</span>
+                              
+                              <span style={{ color: driver1Color }}>{driver1}</span>
+                              <span style={{ color: driver1Color }}>
+                                {speed1 !== null && speed1 !== undefined ? `${speed1.toFixed(1)} km/h` : '-'}
+                              </span>
+                              
+                              <span style={{ color: driver2Color }}>{driver2}</span>
+                              <span style={{ color: driver2Color }}>
+                                {speed2 !== null && speed2 !== undefined ? `${speed2.toFixed(1)} km/h` : '-'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
                   <Line 
                     type="monotone" 
