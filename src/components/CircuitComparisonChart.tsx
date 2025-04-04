@@ -163,16 +163,20 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
               let advantageText = "Neutral or negligible difference";
 
               // Define a threshold for significant advantage
-              const advantageThreshold = 0.02; // e.g., 20 milliseconds
+              // const advantageThreshold = 0.02; // e.g., 20 milliseconds 
 
-              if (section.driver1Advantage && section.driver1Advantage > advantageThreshold) {
+              // Check advantage without threshold
+              if (section.driver1Advantage && section.driver1Advantage > 0) {
                 // Driver 1 advantage
                 strokeColor = driver1Color;
                 advantageText = `${driver1} faster by ${Math.abs(section.driver1Advantage).toFixed(3)}s`;
-              } else if (section.driver1Advantage && section.driver1Advantage < -advantageThreshold) {
+              } else if (section.driver1Advantage && section.driver1Advantage < 0) {
                 // Driver 2 advantage
                 strokeColor = driver2Color; // Will be white if sameTeam is true due to override above
                 advantageText = `${driver2} faster by ${Math.abs(section.driver1Advantage).toFixed(3)}s`;
+              } else if (section.driver1Advantage === 0) {
+                // Explicitly handle exact zero difference as neutral
+                advantageText = "Identical time";
               }
 
               return (

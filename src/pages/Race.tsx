@@ -9,7 +9,7 @@ import SpeedTraceChart from '@/components/SpeedTraceChart';
 import GearMapChart from '@/components/GearMapChart';
 import PositionChart from '@/components/PositionChart';
 // Import TrackEvolutionChart for merging with Lap Times
-import TrackEvolutionChart from '@/components/TrackEvolutionChart';
+// import TrackEvolutionChart from '@/components/TrackEvolutionChart';
 // Import the new CircuitComparisonChart component
 import CircuitComparisonChart from '@/components/CircuitComparisonChart';
 import F1Card from '@/components/F1Card';
@@ -285,6 +285,31 @@ const Race = () => {
     return sessionResults.find(r => r.isFastestLap === true);
   }, [sessionResults, selectedSession]);
 
+  // NEW: Derive top 3 performers for non-Race/Sprint sessions
+  const topPerformers = useMemo(() => {
+    if (!sessionResults || !selectedSession) return [];
+
+    const isPractice = selectedSession.startsWith('FP');
+    const isQualifying = selectedSession.startsWith('Q') || selectedSession.startsWith('SQ');
+
+    // Only calculate for Practice or Qualifying sessions
+    if (!(isPractice || isQualifying)) {
+      return [];
+    }
+
+    // Sort by fastest lap time (ascending) using the existing helper
+    const sorted = [...sessionResults]
+      .filter(r => r.fastestLapTime) // Ensure they have a lap time set
+      .sort((a, b) => {
+        const timeA = parseLapTime(a.fastestLapTime);
+        const timeB = parseLapTime(b.fastestLapTime);
+        return timeA - timeB;
+      });
+
+    return sorted.slice(0, 3); // Get top 3
+
+  }, [sessionResults, selectedSession]);
+
   // --- Loading and Error States ---
   const isLoading = isLoadingSessions || isLoadingResults;
 
@@ -346,31 +371,70 @@ const Race = () => {
           </div>
         </header>
 
-        {/* Key Info Cards (Only show for Race session 'R') */}
-        {selectedSession === 'R' && (
+        {/* Key Info Cards - Conditional Rendering */}
+        {!isLoadingResults && sessionResults && sessionResults.length > 0 && ( // Only render if results are loaded and not empty
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 animate-fade-in">
-            {raceWinner && (
-                <F1Card title="Race Winner" value={raceWinner.fullName} team={getTeamColorClass(raceWinner.team) as any} icon={<Trophy />} />
+            {/* Case 1: Race or Sprint */}
+            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
+              <>
+                {raceWinner && (
+                    <F1Card title="Race Winner" value={raceWinner.fullName} team={getTeamColorClass(raceWinner.team) as any} icon={<Trophy />} />
+                )}
+                {poleSitter && (
+                     <F1Card
+                        title="Pole Position"
+                        value={poleSitter.fullName}
+                        subValue={poleSitter.poleLapTimeValue} // Pass the pole lap time
+                        team={getTeamColorClass(poleSitter.team) as any}
+                        icon={<Zap />}
+                     />
+                 )}
+                {fastestLapHolder && (
+                     <F1Card
+                        title="Fastest Lap"
+                        value={fastestLapHolder.fullName}
+                        subValue={fastestLapHolder.fastestLapTimeValue} // Pass the fastest lap time
+                        team={getTeamColorClass(fastestLapHolder.team) as any}
+                        icon={<Clock />}
+                     />
+                 )}
+              </>
             )}
-            {poleSitter && (
-                 <F1Card
-                    title="Pole Position"
-                    value={poleSitter.fullName}
-                    subValue={poleSitter.poleLapTimeValue} // Pass the pole lap time
-                    team={getTeamColorClass(poleSitter.team) as any}
-                    icon={<Zap />}
-                 />
-             )}
-            {fastestLapHolder && (
-                 <F1Card
-                    title="Fastest Lap"
-                    value={fastestLapHolder.fullName}
-                    subValue={fastestLapHolder.fastestLapTimeValue} // Pass the fastest lap time
-                    team={getTeamColorClass(fastestLapHolder.team) as any}
-                    icon={<Clock />}
-                 />
-             )}
-         </div>
+
+            {/* Case 2: Practice or Qualifying */}
+            {(selectedSession?.startsWith('FP') || selectedSession?.startsWith('Q') || selectedSession?.startsWith('SQ')) && topPerformers.length > 0 && (
+              <>
+                {topPerformers[0] && (
+                  <F1Card
+                    title="P1"
+                    value={topPerformers[0].fullName}
+                    // Prefer formatted value, fallback to raw time string
+                    subValue={topPerformers[0].fastestLapTimeValue ?? topPerformers[0].fastestLapTime ?? ''}
+                    team={getTeamColorClass(topPerformers[0].team) as any}
+                    icon={<Trophy />}
+                  />
+                )}
+                {topPerformers[1] && (
+                  <F1Card
+                    title="P2"
+                    value={topPerformers[1].fullName}
+                    subValue={topPerformers[1].fastestLapTimeValue ?? topPerformers[1].fastestLapTime ?? ''}
+                    team={getTeamColorClass(topPerformers[1].team) as any}
+                    icon={<TrendingUp />} // Use TrendingUp for P2
+                  />
+                )}
+                {topPerformers[2] && (
+                  <F1Card
+                    title="P3"
+                    value={topPerformers[2].fullName}
+                    subValue={topPerformers[2].fastestLapTimeValue ?? topPerformers[2].fastestLapTime ?? ''}
+                    team={getTeamColorClass(topPerformers[2].team) as any}
+                    icon={<TrendingUp />} // Use TrendingUp for P3
+                  />
+                )}
+              </>
+            )}
+          </div>
         )}
 
         {/* Main Content Area */}
@@ -445,13 +509,6 @@ const Race = () => {
                     initialDrivers={["VER", "LEC"]} 
                     title="Lap Time Comparison" 
                   />
-                  <div className="mt-8">
-                    <TrackEvolutionChart 
-                      year={year} 
-                      event={eventName} 
-                      session={selectedSession} 
-                    />
-                  </div>
                 </>
               )}
             </TabsContent>
