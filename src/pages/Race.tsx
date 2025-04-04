@@ -58,10 +58,27 @@ const rookiesByYear: { [year: string]: string[] } = {
   '2019': ['NOR', 'RUS', 'ALB'] // Norris, Russell, Albon
 };
 
+// Define F2 drivers who participated in F1 practice sessions by season year
+const f2DriversByYear: { [year: string]: string[] } = {
+  '2025': ['HIR'], 
+  '2024': ['HAD', 'COL', 'BEA', 'BRO', 'DRU', 'LEC', 'IWA', 'CRA', 'ARO', 'BOR'], // Hadjar, Colapinto, Bearman, Browning, Drugovich, Leclerc, Iwasa, Crawford, Aron, Bortoleto
+  '2023': ['POU', 'VES', 'DOO', 'SHW', 'DRU', 'MAR', 'HAD', 'BEA'], // Pourchaire, Vesti, Doohan, Shwartzman, Drugovich, Martins, Hadjar, Bearman
+  '2022': ['POU', 'DOO', 'SAR', 'LAW', 'VIP', 'SHW'], // Pourchaire, Doohan, Sargeant, Lawson, Vips, Shwartzman
+  '2021': ['SHW', 'ZHO', 'ILO'], // Shwartzman, Zhou, Ilott
+  '2020': ['SHW', 'ILO', 'ZHO'], // Shwartzman, Ilott, Zhou
+  '2019': ['LAT', 'GHI', 'MAZ'] // Latifi, Ghiotto, Mazepin
+};
+
 // Helper function to check if a driver is a rookie in a given year
 const isRookie = (driverCode: string, year: number): boolean => {
   const yearStr = year.toString();
   return rookiesByYear[yearStr]?.includes(driverCode) || false;
+};
+
+// Helper function to check if a driver is an F2 driver participating in F1 session
+const isF2Driver = (driverCode: string, year: number): boolean => {
+  const yearStr = year.toString();
+  return f2DriversByYear[yearStr]?.includes(driverCode) || false;
 };
 
 // Helper function to parse lap time string (e.g., "1:30.123") to seconds
@@ -159,6 +176,11 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
                       {isRookie(res.driverCode, year) && (
                         <span className="text-xs px-1.5 py-0.5 bg-blue-600/40 text-blue-200 rounded font-medium">
                           Rookie
+                        </span>
+                      )}
+                      {isPractice && isF2Driver(res.driverCode, year) && (
+                        <span className="text-xs px-1.5 py-0.5 bg-purple-600/40 text-purple-200 rounded font-medium">
+                          Formula 2
                         </span>
                       )}
                     </div>
