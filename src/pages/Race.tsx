@@ -335,7 +335,10 @@ const Race = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">{eventName}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                {eventName}{selectedSession && availableSessions.find(s => s.type === selectedSession) ? 
+                  ` - ${availableSessions.find(s => s.type === selectedSession)?.name}` : ''}
+              </h1>
               <p className="text-lg text-gray-400">{year} Season</p>
             </div>
           </div>
