@@ -44,8 +44,8 @@ export async function exportChartAsImage(
     originalElement.style.borderRadius = '8px';
     originalElement.style.overflow = 'visible';
     
-    // Set padding to create space between title and chart elements
-    originalElement.style.padding = '8px 8px 16px 8px';
+    // Reduce padding to create less space between elements
+    originalElement.style.padding = '8px 8px 12px 8px';
     
     // Fix title display for export
     const cardHeader = originalElement.querySelector('div[class*="CardHeader"]');
@@ -61,7 +61,7 @@ export async function exportChartAsImage(
         exportTitle.style.fontWeight = 'bold';
         exportTitle.style.fontSize = '18px';
         exportTitle.style.color = 'white';
-        exportTitle.style.marginBottom = '20px';
+        exportTitle.style.marginBottom = '5px'; // Minimal margin
         exportTitle.style.textAlign = 'center';
         exportTitle.style.width = '100%';
         exportTitle.style.paddingTop = '8px';
@@ -79,16 +79,16 @@ export async function exportChartAsImage(
       }
     }
     
-    // Find the chart container and add top padding
+    // Find the chart container and reduce top margin
     const chartContainer = originalElement.querySelector('.recharts-responsive-container');
     if (chartContainer) {
-      (chartContainer as HTMLElement).style.marginTop = '30px';
+      (chartContainer as HTMLElement).style.marginTop = '0px'; // No additional margin
     }
     
     // Find any title element and ensure it doesn't overlap
     const title = originalElement.querySelector('.text-lg.font-semibold');
     if (title) {
-      (title as HTMLElement).style.marginBottom = '15px';
+      (title as HTMLElement).style.marginBottom = '5px'; // Minimal margin
       (title as HTMLElement).style.whiteSpace = 'nowrap';
     }
     
@@ -103,7 +103,7 @@ export async function exportChartAsImage(
     // Create and add branding container
     const brandingDiv = document.createElement('div');
     brandingDiv.style.position = 'absolute';
-    brandingDiv.style.top = '15px';
+    brandingDiv.style.bottom = '15px'; // Position at bottom instead of top
     brandingDiv.style.right = '20px';
     brandingDiv.style.display = 'flex';
     brandingDiv.style.alignItems = 'center';

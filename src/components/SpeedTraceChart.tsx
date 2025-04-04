@@ -101,14 +101,14 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="w-full h-[300px] flex items-center justify-center bg-gray-900/50 rounded-lg">
+        <div className="w-full h-[280px] flex items-center justify-center bg-gray-900/50 rounded-lg">
           <LoadingSpinnerF1 />
         </div>
       );
     }
     if (error || !speedData) {
       return (
-        <div className="w-full h-[300px] bg-gray-900/80 border border-red-500/30 rounded-lg flex flex-col items-center justify-center text-red-400">
+        <div className="w-full h-[280px] bg-gray-900/80 border border-red-500/30 rounded-lg flex flex-col items-center justify-center text-red-400">
           <AlertCircle className="w-10 h-10 mb-2" />
           <p className="font-semibold">Error loading speed trace</p>
           <p className="text-xs text-gray-500 mt-1">{(error as Error)?.message || 'Could not fetch data.'}</p>
@@ -117,15 +117,15 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
     }
     if (speedData.length === 0) {
       return (
-        <div className="w-full h-[300px] bg-gray-900/80 border border-gray-700/50 rounded-lg flex items-center justify-center text-gray-500">
+        <div className="w-full h-[260px] bg-gray-900/80 border border-gray-700/50 rounded-lg flex items-center justify-center text-gray-500">
           No speed telemetry data found for {selectedDriver} lap {selectedLap}.
         </div>
       );
     }
 
     return (
-      <ResponsiveContainer width="100%" height={300} className="export-chart-container">
-        <LineChart data={speedData} margin={{ top: 15, right: 10, left: -15, bottom: 5 }} className="chart-main-container">
+      <ResponsiveContainer width="100%" height={280} className="export-chart-container">
+        <LineChart data={speedData} margin={{ top: 0, right: 10, left: -15, bottom: 5 }} className="chart-main-container">
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
           <XAxis 
             type="number" 
@@ -177,7 +177,7 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
       className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} 
       style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}
     >
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div className="flex items-center gap-2">
             <CardTitle className="text-lg font-semibold text-white">{chartTitle}</CardTitle>

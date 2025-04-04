@@ -48,7 +48,7 @@ const DonationThankYouBanner = () => {
   return (
     <div className="bg-red-500 text-white py-2 text-center relative">
       <p className="text-sm md:text-base">
-        Special thanks to <span className="font-bold">sf1club</span> for the €50 donation! Your support helps keep Fastlytics running for the F1 community. ❤️
+        Special thanks to <a href="https://instagram.com/sf1club" target="_blank" rel="noopener noreferrer" className="font-bold hover:underline">sf1club</a> for the €50 donation! Your support helps keep Fastlytics running for the F1 community. ❤️
       </p>
       <button 
         onClick={() => setIsVisible(false)} 

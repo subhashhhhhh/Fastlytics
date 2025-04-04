@@ -37,7 +37,7 @@ const Footer = () => {
                 <span className="text-red-500 font-semibold flex items-center gap-1">
                   <Heart className="h-4 w-4 fill-current" /> Supporters
                 </span>
-                <span>Special thanks to <span className="font-semibold text-white">sf1club</span> for their generous €50 donation!</span>
+                <span>Special thanks to <a href="https://instagram.com/sf1club" target="_blank" rel="noopener noreferrer" className="font-semibold text-white hover:underline">sf1club</a> for their generous €50 donation!</span>
                 <a 
                   href="https://buymeacoffee.com/subhashh" 
                   target="_blank" 
