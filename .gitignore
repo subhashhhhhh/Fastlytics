@@ -65,3 +65,7 @@ Thumbs.db
 /backend-api/cache/
 /backend-api/__pycache__/
 /backend-api/*.pyc
+
+# Wiki documentation (not tracked in Git)
+WIKI.md
+SECURITY.md

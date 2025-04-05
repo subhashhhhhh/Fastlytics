@@ -450,7 +450,7 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg font-semibold text-white">Circuit & Speed Comparison by Lap</CardTitle>
+            <CardTitle className="text-lg font-semibold text-white">Track Dominance by Lap with Speed Trace</CardTitle>
           </div>
 
           {/* Driver and Lap selectors */}
