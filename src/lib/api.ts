@@ -24,6 +24,10 @@ export interface LapTimeDataPoint {
 }
 export interface SpeedDataPoint { Distance: number; Speed: number; }
 export interface GearMapDataPoint { X: number; Y: number; nGear: number; }
+export interface ThrottleDataPoint { Distance: number; Throttle: number; }
+export interface BrakeDataPoint { Distance: number; Brake: number; }
+export interface RPMDataPoint { Distance: number; RPM: number; }
+export interface DRSDataPoint { Distance: number; DRS: number; }
 export interface TireStint { compound: string; startLap: number; endLap: number; lapCount: number; }
 export interface DriverStrategy { driver: string; stints: TireStint[]; }
 export interface SessionDriver { code: string; name: string; team: string; }
@@ -236,7 +240,7 @@ export const fetchTelemetrySpeed = async (year: number, event: string, session: 
     } catch (error) { console.error("Error fetching speed telemetry:", error); throw error; }
 };
 
-/** Fetches gear shift telemetry data (X, Y, nGear) for a specific lap. */
+/** Fetches gear map telemetry data for a specific lap. */
 export const fetchTelemetryGear = async (year: number, event: string, session: string, driver: string, lap: string | number): Promise<GearMapDataPoint[]> => {
     const params = new URLSearchParams({ year: year.toString(), event, session, driver, lap: String(lap) });
     const url = `${API_BASE_URL}/api/telemetry/gear?${params.toString()}`;
@@ -253,6 +257,82 @@ export const fetchTelemetryGear = async (year: number, event: string, session: s
         console.log(`Successfully fetched ${data.length} gear telemetry records.`);
         return data;
     } catch (error) { console.error("Error fetching gear telemetry:", error); throw error; }
+};
+
+/** Fetches throttle telemetry data for a specific lap. */
+export const fetchTelemetryThrottle = async (year: number, event: string, session: string, driver: string, lap: string | number): Promise<ThrottleDataPoint[]> => {
+    const params = new URLSearchParams({ year: year.toString(), event, session, driver, lap: String(lap) });
+    const url = `${API_BASE_URL}/api/telemetry/throttle?${params.toString()}`;
+    console.log(`Fetching throttle telemetry from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: ThrottleDataPoint[] = await response.json();
+        console.log(`Successfully fetched ${data.length} throttle telemetry records.`);
+        return data;
+    } catch (error) { console.error("Error fetching throttle telemetry:", error); throw error; }
+};
+
+/** Fetches brake telemetry data for a specific lap. */
+export const fetchTelemetryBrake = async (year: number, event: string, session: string, driver: string, lap: string | number): Promise<BrakeDataPoint[]> => {
+    const params = new URLSearchParams({ year: year.toString(), event, session, driver, lap: String(lap) });
+    const url = `${API_BASE_URL}/api/telemetry/brake?${params.toString()}`;
+    console.log(`Fetching brake telemetry from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: BrakeDataPoint[] = await response.json();
+        console.log(`Successfully fetched ${data.length} brake telemetry records.`);
+        return data;
+    } catch (error) { console.error("Error fetching brake telemetry:", error); throw error; }
+};
+
+/** Fetches RPM telemetry data for a specific lap. */
+export const fetchTelemetryRPM = async (year: number, event: string, session: string, driver: string, lap: string | number): Promise<RPMDataPoint[]> => {
+    const params = new URLSearchParams({ year: year.toString(), event, session, driver, lap: String(lap) });
+    const url = `${API_BASE_URL}/api/telemetry/rpm?${params.toString()}`;
+    console.log(`Fetching RPM telemetry from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: RPMDataPoint[] = await response.json();
+        console.log(`Successfully fetched ${data.length} RPM telemetry records.`);
+        return data;
+    } catch (error) { console.error("Error fetching RPM telemetry:", error); throw error; }
+};
+
+/** Fetches DRS telemetry data for a specific lap. */
+export const fetchTelemetryDRS = async (year: number, event: string, session: string, driver: string, lap: string | number): Promise<DRSDataPoint[]> => {
+    const params = new URLSearchParams({ year: year.toString(), event, session, driver, lap: String(lap) });
+    const url = `${API_BASE_URL}/api/telemetry/drs?${params.toString()}`;
+    console.log(`Fetching DRS telemetry from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: DRSDataPoint[] = await response.json();
+        console.log(`Successfully fetched ${data.length} DRS telemetry records.`);
+        return data;
+    } catch (error) { console.error("Error fetching DRS telemetry:", error); throw error; }
 };
 
 /** Fetches tire strategy data for a given race session. */

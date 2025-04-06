@@ -6,7 +6,7 @@ import { cn, exportChartAsImage } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
 import { fetchTelemetryGear, fetchSessionDrivers, fetchLapTimes, SessionDriver, GearMapDataPoint } from '@/lib/api'; // Added fetchLapTimes
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1";
-import { AlertCircle, User, Clock, Download } from 'lucide-react'; // Added Download icon
+import { AlertCircle, User, Clock, Download, BarChart2 } from 'lucide-react'; // Added Download icon and BarChart2
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,27 +34,30 @@ const getGearColor = (gear: number): string => {
 interface GearMapChartProps {
   className?: string;
   delay?: number;
+  title?: string;
   year: number;
   event: string;
   session: string;
-  initialDriver: string;
-  lap?: string | number; // Make lap optional, default to 'fastest'
+  initialDriver?: string;
+  lap?: string | number;
 }
 
 const GearMapChart: React.FC<GearMapChartProps> = ({
   className,
   delay = 0,
+  title,
   year,
   event,
   session,
-  initialDriver,
-  lap = 'fastest' // Default lap prop to 'fastest'
+  initialDriver = '',
+  lap = 'fastest'
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
-  const [selectedDriver, setSelectedDriver] = useState<string>(initialDriver);
+  const [selectedDriver, setSelectedDriver] = useState<string>(initialDriver || '');
   const [selectedLap, setSelectedLap] = useState<string | number>(lap); // Initialize state with prop
   const [lapOptions, setLapOptions] = useState<Array<string | number>>(['fastest']);
   const [isExporting, setIsExporting] = useState(false);
+  const [shouldLoadChart, setShouldLoadChart] = useState(false);
 
   const { data: availableDrivers, isLoading: isLoadingDrivers } = useQuery<SessionDriver[]>({
     queryKey: ['sessionDrivers', year, event, session], // Keep this query
@@ -64,7 +67,7 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
 
   // Fetch lap times for the selected driver to populate lap options
   const { data: lapTimes } = useQuery({
-    queryKey: ['lapTimes', year, event, session, selectedDriver], // Use selectedDriver
+    queryKey: ['lapTimes', year, event, session, selectedDriver],
     queryFn: () => fetchLapTimes(year, event, session, [selectedDriver]),
     enabled: !!year && !!event && !!session && !!selectedDriver,
   });
@@ -89,14 +92,18 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
 
   // Fetch gear data based on selected driver and lap
   const { data: gearData, isLoading: isLoadingGear, error, isError } = useQuery<GearMapDataPoint[]>({
-    queryKey: ['gearMap', year, event, session, selectedDriver, selectedLap], // Use selectedLap state
-    queryFn: () => fetchTelemetryGear(year, event, session, selectedDriver, selectedLap), // Use selectedLap state
-    staleTime: 1000 * 60 * 10, gcTime: 1000 * 60 * 30, retry: 1,
-    enabled: !!year && !!event && !!session && !!selectedDriver && !!selectedLap, // Use selectedLap state
+    queryKey: ['gearTrace', year, event, session, selectedDriver, selectedLap],
+    queryFn: () => fetchTelemetryGear(year, event, session, selectedDriver, selectedLap),
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    retry: 1,
+    enabled: !!year && !!event && !!session && !!selectedDriver && !!selectedLap && shouldLoadChart,
   });
 
   const isLoading = isLoadingDrivers || isLoadingGear;
-  const chartTitle = `${selectedDriver}'s ${selectedLap === 'fastest' ? 'Fastest Lap' : `Lap ${selectedLap}`} Gear Shifts`;
+  const chartTitle = title || (selectedDriver 
+    ? `${selectedDriver}'s ${selectedLap === 'fastest' ? 'Fastest Lap' : `Lap ${selectedLap}`} Gear Shifts`
+    : "Gear Shifts");
 
   // Handle chart download
   const handleDownload = async () => {
@@ -120,6 +127,24 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
   };
 
   const renderContent = () => {
+    // If chart shouldn't be loaded yet, show load button
+    if (!shouldLoadChart) {
+      return (
+        <div className="w-full h-[280px] flex flex-col items-center justify-center bg-gray-900/50 rounded-lg gap-4">
+          <p className="text-gray-400">Select a driver and click load to view gear data</p>
+          <Button 
+            onClick={() => setShouldLoadChart(true)}
+            variant="secondary"
+            className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-700"
+            disabled={!selectedDriver}
+          >
+            <BarChart2 className="w-4 h-4 mr-2" />
+            Load Chart
+          </Button>
+        </div>
+      );
+    }
+
     // Use LoadingSpinnerF1 instead of Skeleton
     if (isLoading) {
       return (
@@ -185,7 +210,7 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
   return (
      <Card 
        ref={chartRef}
-       className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in", className)} 
+       className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm animate-fade-in overflow-hidden", className)} 
        style={{ animationDelay: `${delay * 100}ms` } as React.CSSProperties}
      >
       <CardHeader>
@@ -194,20 +219,23 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
              <CardTitle className="text-lg font-semibold text-white">{chartTitle}</CardTitle>
            </div>
            {/* Driver and Lap Selectors */}
-           <div className="flex gap-2">
+           <div className="flex flex-wrap gap-2">
              <Select
                value={selectedDriver}
                onValueChange={(value) => {
                  setSelectedDriver(value);
-                 // Reset lap selection when driver changes
                  setSelectedLap('fastest');
+                 // Reset chart loading state when driver changes
+                 if (shouldLoadChart) {
+                   setShouldLoadChart(false);
+                 }
                }}
                disabled={isLoadingDrivers || !availableDrivers}
              >
                {/* Increased width and added min-w */}
                <SelectTrigger className="w-full sm:w-[150px] min-w-[100px] bg-gray-800/80 border-gray-700 text-gray-200 text-sm h-9">
                  <User className="w-4 h-4 mr-2 opacity-70"/>
-                 <SelectValue placeholder="Driver" />
+                 <SelectValue placeholder="Select Driver" />
                </SelectTrigger>
                <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
                  <SelectGroup>
@@ -221,21 +249,20 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
                </SelectContent>
              </Select>
              <Select
-               value={selectedLap.toString()} // Value must be string
+               value={selectedLap.toString()}
                onValueChange={(value) => setSelectedLap(value === 'fastest' ? 'fastest' : parseInt(value))}
-               disabled={isLoading || lapOptions.length <= 1}
+               disabled={lapOptions.length <= 1}
              >
-               {/* Increased width */}
                <SelectTrigger className="w-full sm:w-[120px] bg-gray-800/80 border-gray-700 text-gray-200 text-sm h-9">
                  <Clock className="w-4 h-4 mr-2 opacity-70"/>
                  <SelectValue placeholder="Lap" />
                </SelectTrigger>
-               <SelectContent className="bg-gray-900 border-gray-700 text-gray-200 max-h-[200px]"> {/* Added max-height */}
+               <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
                  <SelectGroup>
                    <SelectLabel className="text-xs text-gray-500">Lap</SelectLabel>
-                   {lapOptions.map((lapOpt) => (
-                     <SelectItem key={lapOpt.toString()} value={lapOpt.toString()} className="text-sm">
-                       {lapOpt === 'fastest' ? 'Fastest' : lapOpt}
+                   {lapOptions.map((lap) => (
+                     <SelectItem key={lap.toString()} value={lap.toString()} className="text-sm">
+                       {lap === 'fastest' ? 'Fastest' : lap}
                      </SelectItem>
                    ))}
                  </SelectGroup>
@@ -246,8 +273,8 @@ const GearMapChart: React.FC<GearMapChartProps> = ({
       </CardHeader>
       <CardContent className="pt-0">
         {renderContent()}
-        {!isLoading && gearData && gearData.length > 0 && (
-          <div className="flex justify-end mt-4">
+        {shouldLoadChart && !isLoading && gearData && gearData.length > 0 && (
+          <div className="mt-4 flex justify-end">
             <Button 
               variant="secondary" 
               size="sm" 

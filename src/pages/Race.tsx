@@ -12,6 +12,7 @@ import PositionChart from '@/components/PositionChart';
 // import TrackEvolutionChart from '@/components/TrackEvolutionChart';
 // Import the new CircuitComparisonChart component
 import CircuitComparisonChart from '@/components/CircuitComparisonChart';
+import DriverComparisonTelemetry from '@/components/DriverComparisonTelemetry';
 import F1Card from '@/components/F1Card';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,6 +30,10 @@ import {
 } from "@/components/ui/table";
 import { cn } from '@/lib/utils';
 import LoadingSpinnerF1 from '@/components/ui/LoadingSpinnerF1'; // Import spinner
+import ThrottleChart from '@/components/ThrottleChart';
+import BrakeChart from '@/components/BrakeChart';
+import RPMChart from '@/components/RPMChart';
+import DRSChart from '@/components/DRSChart';
 
 // Helper to get team color class
 const getTeamColorClass = (teamName: string | undefined): string => {
@@ -210,6 +215,21 @@ const Race = () => {
   const [availableSessions, setAvailableSessions] = useState<AvailableSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<string>('R'); // Default to Race
   const [selectedLap, setSelectedLap] = useState<string | number>('fastest'); // For telemetry
+  
+  // State for circuit comparison drivers
+  const [circuitDrivers, setCircuitDrivers] = useState<{
+    driver1: string;
+    driver2: string;
+    lap1: string | number;
+    lap2: string | number;
+    shouldLoadChart: boolean;
+  }>({
+    driver1: '',
+    driver2: '',
+    lap1: 'fastest',
+    lap2: 'fastest',
+    shouldLoadChart: false
+  });
 
   // Parse year and event slug from raceId
   const { year, eventSlug, eventName } = useMemo(() => {
@@ -515,11 +535,73 @@ const Race = () => {
             {/* Circuit Comparison Tab (Show for all sessions now) */}
             <TabsContent value="circuit" className="pt-2">
               {year && eventName && (
-                <CircuitComparisonChart
-                  year={year}
-                  event={eventName}
-                  session={selectedSession}
-                />
+                <>
+                  <CircuitComparisonChart
+                    year={year}
+                    event={eventName}
+                    session={selectedSession}
+                    onDriversSelected={setCircuitDrivers}
+                  />
+                  
+                  <h2 className="text-xl font-semibold mt-8 mb-4 text-white">Additional Telemetry Comparison</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Throttle Comparison */}
+                    <DriverComparisonTelemetry
+                      year={year}
+                      event={eventName}
+                      session={selectedSession}
+                      driver1={circuitDrivers.driver1}
+                      driver2={circuitDrivers.driver2}
+                      lap1={circuitDrivers.lap1}
+                      lap2={circuitDrivers.lap2}
+                      shouldLoadChart={circuitDrivers.shouldLoadChart}
+                      telemetryType="throttle"
+                      title="Throttle Comparison"
+                    />
+                    
+                    {/* Brake Comparison */}
+                    <DriverComparisonTelemetry
+                      year={year}
+                      event={eventName}
+                      session={selectedSession}
+                      driver1={circuitDrivers.driver1}
+                      driver2={circuitDrivers.driver2}
+                      lap1={circuitDrivers.lap1}
+                      lap2={circuitDrivers.lap2}
+                      shouldLoadChart={circuitDrivers.shouldLoadChart}
+                      telemetryType="brake"
+                      title="Brake Input Comparison"
+                    />
+                    
+                    {/* RPM Comparison */}
+                    <DriverComparisonTelemetry
+                      year={year}
+                      event={eventName}
+                      session={selectedSession}
+                      driver1={circuitDrivers.driver1}
+                      driver2={circuitDrivers.driver2}
+                      lap1={circuitDrivers.lap1}
+                      lap2={circuitDrivers.lap2}
+                      shouldLoadChart={circuitDrivers.shouldLoadChart}
+                      telemetryType="rpm"
+                      title="RPM Comparison"
+                    />
+                    
+                    {/* DRS Comparison */}
+                    <DriverComparisonTelemetry
+                      year={year}
+                      event={eventName}
+                      session={selectedSession}
+                      driver1={circuitDrivers.driver1}
+                      driver2={circuitDrivers.driver2}
+                      lap1={circuitDrivers.lap1}
+                      lap2={circuitDrivers.lap2}
+                      shouldLoadChart={circuitDrivers.shouldLoadChart}
+                      telemetryType="drs"
+                      title="DRS Usage Comparison"
+                    />
+                  </div>
+                </>
               )}
             </TabsContent>
 
@@ -533,13 +615,12 @@ const Race = () => {
             {/* Telemetry Tab (Show for all sessions now) */}
             <TabsContent value="telemetry" className="pt-2">
                {year && eventName && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                       {/* Speed Trace */}
                       <SpeedTraceChart
                           year={year}
                           event={eventName}
                           session={selectedSession}
-                          initialDriver={sessionResults[0]?.driverCode || "VER"} // Use first driver or default
                           lap={selectedLap} // Pass selected lap state
                           title="" // Title is handled internally now
                       />
@@ -548,8 +629,35 @@ const Race = () => {
                           year={year}
                           event={eventName}
                           session={selectedSession}
-                          initialDriver={sessionResults[0]?.driverCode || "VER"}
                           lap={selectedLap} // Pass selected lap state
+                      />
+                      {/* Throttle */}
+                      <ThrottleChart
+                          year={year}
+                          event={eventName}
+                          session={selectedSession}
+                          lap={selectedLap}
+                      />
+                      {/* Brake */}
+                      <BrakeChart
+                          year={year}
+                          event={eventName}
+                          session={selectedSession}
+                          lap={selectedLap}
+                      />
+                      {/* RPM */}
+                      <RPMChart
+                          year={year}
+                          event={eventName}
+                          session={selectedSession}
+                          lap={selectedLap}
+                      />
+                      {/* DRS */}
+                      <DRSChart
+                          year={year}
+                          event={eventName}
+                          session={selectedSession}
+                          lap={selectedLap}
                       />
                   </div>
                )}

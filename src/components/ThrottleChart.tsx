@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine
 } from 'recharts';
 import { cn, exportChartAsImage } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
-import { fetchTelemetrySpeed, fetchSessionDrivers, fetchLapTimes, SessionDriver, SpeedDataPoint } from '@/lib/api';
+import { fetchTelemetryThrottle, fetchSessionDrivers, fetchLapTimes, SessionDriver, ThrottleDataPoint } from '@/lib/api';
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1";
 import { AlertCircle, User, Clock, Download, BarChart2 } from 'lucide-react';
 import { driverColor } from '@/lib/driverColor';
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-interface SpeedTraceChartProps {
+interface ThrottleChartProps {
   className?: string;
   delay?: number;
   title?: string;
@@ -23,10 +23,10 @@ interface SpeedTraceChartProps {
   lap?: string | number;
 }
 
-const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
+const ThrottleChart: React.FC<ThrottleChartProps> = ({
   className,
   delay = 0,
-  title = "",
+  title,
   year,
   event,
   session,
@@ -34,7 +34,7 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
   lap = 'fastest'
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
-  const [selectedDriver, setSelectedDriver] = useState<string>(initialDriver);
+  const [selectedDriver, setSelectedDriver] = useState<string>(initialDriver || '');
   const [selectedLap, setSelectedLap] = useState<string | number>(lap);
   const [lapOptions, setLapOptions] = useState<Array<string | number>>(['fastest']);
   const [isExporting, setIsExporting] = useState(false);
@@ -73,25 +73,25 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
     }
   }, [lapTimes, selectedDriver, initialDriver, lap]);
 
-  // Fetch speed data
-  const { data: speedData, isLoading: isLoadingSpeed, error } = useQuery<SpeedDataPoint[]>({
-    queryKey: ['speedTrace', year, event, session, selectedDriver, selectedLap],
-    queryFn: () => fetchTelemetrySpeed(year, event, session, selectedDriver, selectedLap),
+  // Fetch throttle data
+  const { data: throttleData, isLoading: isLoadingThrottle, error } = useQuery<ThrottleDataPoint[]>({
+    queryKey: ['throttleTrace', year, event, session, selectedDriver, selectedLap],
+    queryFn: () => fetchTelemetryThrottle(year, event, session, selectedDriver, selectedLap),
     staleTime: 1000 * 60 * 10,
     gcTime: 1000 * 60 * 30,
     retry: 1,
     enabled: !!year && !!event && !!session && !!selectedDriver && !!selectedLap && shouldLoadChart,
   });
 
-  const color = driverColor(selectedDriver, year); // Pass year to driverColor
-  const isLoading = isLoadingSpeed;
+  const color = driverColor(selectedDriver, year);
+  const isLoading = isLoadingThrottle;
   const chartTitle = title || (selectedDriver 
-    ? `${selectedDriver}'s ${selectedLap === 'fastest' ? 'Fastest Lap' : `Lap ${selectedLap}`} Speed Trace`
-    : "Speed Trace");
+    ? `${selectedDriver}'s ${selectedLap === 'fastest' ? 'Fastest Lap' : `Lap ${selectedLap}`} Throttle Input`
+    : "Throttle Input");
 
   // Handle chart download
   const handleDownload = async () => {
-    if (!chartRef.current || isLoading || !speedData || speedData.length === 0) {
+    if (!chartRef.current || isLoading || !throttleData || throttleData.length === 0) {
       return;
     }
 
@@ -101,7 +101,7 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
       await new Promise(resolve => setTimeout(resolve, 200));
       
       // Use event name, driver, and lap for the filename
-      const filename = `${event.toLowerCase().replace(/\s+/g, '-')}_${selectedDriver}_${selectedLap === 'fastest' ? 'fastest' : `lap${selectedLap}`}_speed`;
+      const filename = `${event.toLowerCase().replace(/\s+/g, '-')}_${selectedDriver}_${selectedLap === 'fastest' ? 'fastest' : `lap${selectedLap}`}_throttle`;
       await exportChartAsImage(chartRef, filename);
     } catch (error) {
       console.error('Failed to export chart:', error);
@@ -111,10 +111,11 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
   };
 
   const renderContent = () => {
+    // If chart shouldn't be loaded yet, show load button
     if (!shouldLoadChart) {
       return (
         <div className="w-full h-[280px] flex flex-col items-center justify-center bg-gray-900/50 rounded-lg gap-4">
-          <p className="text-gray-400">Select a driver and click load to view speed data</p>
+          <p className="text-gray-400">Select a driver and click load to view throttle data</p>
           <Button 
             onClick={() => setShouldLoadChart(true)}
             variant="secondary"
@@ -127,6 +128,7 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
         </div>
       );
     }
+
     if (isLoading) {
       return (
         <div className="w-full h-[280px] flex items-center justify-center bg-gray-900/50 rounded-lg">
@@ -134,30 +136,26 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
         </div>
       );
     }
-    if (error || !speedData) {
+    if (error || !throttleData) {
       return (
         <div className="w-full h-[280px] bg-gray-900/80 border border-red-500/30 rounded-lg flex flex-col items-center justify-center text-red-400">
           <AlertCircle className="w-10 h-10 mb-2" />
-          <p className="font-semibold">Error loading speed trace</p>
+          <p className="font-semibold">Error loading throttle data</p>
           <p className="text-xs text-gray-500 mt-1">{(error as Error)?.message || 'Could not fetch data.'}</p>
         </div>
       );
     }
-    if (speedData.length === 0) {
+    if (throttleData.length === 0) {
       return (
         <div className="w-full h-[260px] bg-gray-900/80 border border-gray-700/50 rounded-lg flex items-center justify-center text-gray-500">
-          No speed telemetry data found for {selectedDriver} lap {selectedLap}.
+          No throttle telemetry data found for {selectedDriver} lap {selectedLap}.
         </div>
       );
     }
 
     return (
       <ResponsiveContainer width="100%" height={280} className="export-chart-container">
-        <LineChart 
-          data={speedData} 
-          margin={{ top: 0, right: 10, left: -15, bottom: 5 }} 
-          className="chart-main-container"
-        >
+        <LineChart data={throttleData} margin={{ top: 0, right: 10, left: -15, bottom: 5 }} className="chart-main-container">
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100, 116, 139, 0.3)" />
           <XAxis 
             type="number" 
@@ -171,12 +169,12 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
             domain={['dataMin', 'dataMax']} 
           />
           <YAxis 
-            dataKey="Speed" 
+            dataKey="Throttle" 
             stroke="rgba(156, 163, 175, 0.7)" 
-            tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }} 
-            domain={['auto', 'dataMax + 10']} 
-            tickFormatter={(value) => `${value} kph`} 
-            width={50}
+            tick={{ fill: 'rgba(156, 163, 175, 0.9)', fontSize: 12 }}  
+            tickFormatter={(value) => `${value}%`} 
+            domain={[0, 100]}
+            width={50} 
           />
           <Tooltip 
             contentStyle={{ 
@@ -188,16 +186,16 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
             }} 
             labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '5px' }} 
             itemStyle={{ color: color }} 
-            formatter={(value: number) => [`${value} kph`, 'Speed']} 
+            formatter={(value: number) => [`${value}%`, 'Throttle']} 
             labelFormatter={(label: number) => `Distance: ${label.toFixed(2)}m`} 
           />
           <Line 
             type="monotone" 
-            dataKey="Speed" 
-            stroke={color} 
+            dataKey="Throttle" 
+            stroke="#4ade80" 
             strokeWidth={2} 
             dot={false} 
-            activeDot={{ r: 4, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: color }} 
+            activeDot={{ r: 4, strokeWidth: 1, stroke: 'rgba(255,255,255,0.5)', fill: "#4ade80" }} 
             name={selectedDriver} 
             connectNulls={true} 
           />
@@ -223,15 +221,16 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
               onValueChange={(value) => {
                 setSelectedDriver(value);
                 setSelectedLap('fastest');
+                // Reset chart loading state when driver changes
                 if (shouldLoadChart) {
                   setShouldLoadChart(false);
                 }
               }}
-              disabled={isLoadingDrivers || !availableDrivers}
-            >
-              <SelectTrigger className="w-full sm:w-[150px] min-w-[100px] bg-gray-800/80 border-gray-700 text-gray-200 text-sm h-9">
-                <User className="w-4 h-4 mr-2 opacity-70"/>
-                <SelectValue placeholder="Select Driver" />
+               disabled={isLoadingDrivers || !availableDrivers}
+             >
+               <SelectTrigger className="w-full sm:w-[150px] min-w-[100px] bg-gray-800/80 border-gray-700 text-gray-200 text-sm h-9">
+                 <User className="w-4 h-4 mr-2 opacity-70"/>
+                 <SelectValue placeholder="Select Driver" />
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
                 <SelectGroup>
@@ -269,7 +268,7 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
       </CardHeader>
       <CardContent className="pt-0">
         {renderContent()}
-        {shouldLoadChart && !isLoading && speedData && speedData.length > 0 && (
+        {shouldLoadChart && !isLoading && throttleData && throttleData.length > 0 && (
           <div className="mt-4 flex justify-end">
             <Button 
               variant="secondary" 
@@ -289,4 +288,4 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
   );
 };
 
-export default SpeedTraceChart;
+export default ThrottleChart; 
