@@ -69,3 +69,6 @@ Thumbs.db
 # Wiki documentation (not tracked in Git)
 WIKI.md
 SECURITY.md
+
+# Blog post about building Fastlytics
+building-fastlytics.md

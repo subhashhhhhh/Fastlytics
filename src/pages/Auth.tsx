@@ -33,8 +33,8 @@ import { generateRacingUsername } from '@/lib/usernameGenerator';
 
 // Feature flags - Change these values to enable/disable authentication features
 const AUTH_CONFIG = {
-  ENABLE_EMAIL_SIGNUP: true, // Set to true to enable email-based signup
-  ENABLE_MAGIC_LINK: true,   // Set to true to enable magic link login
+  ENABLE_EMAIL_SIGNUP: false, // Set to true to enable email-based signup
+  ENABLE_MAGIC_LINK: false,   // Set to true to enable magic link login
   SIGNUP_DISABLED_MESSAGE: "Due to overwhelming response, email registration is temporarily unavailable. Please use Google or GitHub to sign up.",
   MAGIC_LINK_DISABLED_MESSAGE: "Due to overwhelming response, magic link login is temporarily unavailable. Please use password or social login options."
 };
