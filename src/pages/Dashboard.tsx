@@ -310,7 +310,12 @@ const Dashboard = () => {
           {/* Right Column - Replaced with "Explore Analytics by Race" */}
           <aside className="lg:col-span-1 space-y-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
              {/* Responsive section title size */}
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">Explore Analytics by Race</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold">Explore Analytics by Race</h2>
+              <Button variant="link" className="text-red-400 hover:text-red-300 px-0 text-sm" onClick={() => navigate('/races')}>
+                View all races <ArrowRight className="w-4 h-4 ml-1"/>
+              </Button>
+            </div>
             {isLoadingRaceResults || isLoadingSchedule ? (
               <div className="space-y-4">
                 {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] bg-gray-800/50 rounded-lg"/>)}

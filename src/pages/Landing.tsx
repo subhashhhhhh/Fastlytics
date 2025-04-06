@@ -225,10 +225,11 @@ const Landing: React.FC = () => {
                  session="R" // Dummy session
                  initialDrivers={["VER", "LEC"]}
                  staticData={sampleLapData} // Pass the static data
-                 className="h-[350px]" // Ensure chart has height
+                 className="h-[400px]" // Increase chart height to accommodate legend and text
+                 hideDownloadButton={true} // Hide the download button in showcase
                />
+               <p className="text-gray-400 mt-6 pt-2 border-t border-gray-800/50">Interactive lap time comparison chart showing two drivers' performance across laps.</p>
             </div>
-            <p className="text-gray-400 mt-4">Example: Interactive lap time comparison chart.</p>
          </section>
 
         {/* Final CTA Section */}

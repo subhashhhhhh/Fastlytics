@@ -37,6 +37,7 @@ interface RacingChartProps {
   initialDrivers?: string[];
   staticData?: LapTimeDataPoint[];
   title?: string;
+  hideDownloadButton?: boolean; // Add this prop to control download button visibility
 }
 
 // Constants for driver limits
@@ -51,7 +52,8 @@ const RacingChart: React.FC<RacingChartProps> = ({
   event,
   session,
   initialDrivers, // Should be length 2 to 5
-  staticData // Destructure the new prop
+  staticData, // Destructure the new prop
+  hideDownloadButton = false // Default to showing the download button
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -224,7 +226,7 @@ const RacingChart: React.FC<RacingChartProps> = ({
             // cursor={{ stroke: 'rgba(156, 163, 175, 0.5)', strokeWidth: 1 }} // Optional: customize cursor line
           />
           <Legend 
-            wrapperStyle={{ paddingTop: '20px' }} 
+            wrapperStyle={{ paddingTop: '20px', paddingBottom: '10px' }} 
             formatter={(value, entry) => {
               // Find the team this driver belongs to
               let team = "";
@@ -380,7 +382,7 @@ const RacingChart: React.FC<RacingChartProps> = ({
       </CardHeader>
       <CardContent className="pt-0">
         {renderContent()}
-        {!isLoading && lapData && lapData.length > 0 && (
+        {!hideDownloadButton && !isLoading && lapData && lapData.length > 0 && (
           <div className="mt-4 flex justify-end">
             <Button 
               variant="secondary" 
