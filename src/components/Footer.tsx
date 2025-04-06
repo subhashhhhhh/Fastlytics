@@ -96,13 +96,25 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-8 pt-6 border-t border-gray-700/50 flex flex-col sm:flex-row justify-between items-center text-xs">
           <p className="text-gray-500 mb-2 sm:mb-0">
-            &copy; {currentYear} Fastlytics. All rights reserved. Not affiliated with Formula 1 companies.
+            &copy; {currentYear} Fastlytics. All rights reserved.
           </p>
           <div className="flex items-center text-gray-500">
             <span>Made with</span>
             <Heart className="h-3 w-3 mx-1.5 text-red-500 fill-current" />
             <span>for F1 fans by Subhash Gottumukkala</span>
           </div>
+        </div>
+        
+        {/* F1 Disclaimer */}
+        <div className="mt-4 pt-4 border-t border-gray-700/50 text-xs text-center">
+          <p className="text-gray-500">
+            Fastlytics is not affiliated, associated, authorized, endorsed by, or in any way officially connected with 
+            Formula 1, Formula One, F1, or any of its subsidiaries or affiliates. The official Formula 1 website is available at <a href="https://www.formula1.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">formula1.com</a>.
+          </p>
+          <p className="text-gray-500 mt-2">
+            F1, FORMULA ONE, FORMULA 1, FIA FORMULA ONE WORLD CHAMPIONSHIP, and related marks are trademarks of Formula One Licensing BV.
+            All content, data visualization, and analysis on this site are unofficial and not licensed by Formula 1.
+          </p>
         </div>
       </div>
     </footer>

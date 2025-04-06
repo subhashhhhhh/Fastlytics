@@ -349,7 +349,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white flex flex-col items-center p-4">
       <div className="absolute top-4 left-4">
         <Button
           variant="ghost"
@@ -361,7 +361,7 @@ const Auth = () => {
         </Button>
       </div>
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md mt-20">
         <div className="mb-8 text-center">
           <Link to="/" className="inline-flex items-center gap-2 text-white hover:text-red-500 transition-colors mb-4">
             <Gauge className="h-8 w-8 text-red-500" />
@@ -554,7 +554,6 @@ const Auth = () => {
                             className={`${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed" : "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"}`}
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
-                            required
                             disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP}
                           />
                         </div>
@@ -568,7 +567,6 @@ const Auth = () => {
                             className={`${!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP ? "bg-gray-800/50 border-gray-700 text-gray-500 placeholder-gray-600 cursor-not-allowed" : "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:ring-red-500"}`}
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
-                            required
                             disabled={!AUTH_CONFIG.ENABLE_EMAIL_SIGNUP}
                           />
                         </div>
