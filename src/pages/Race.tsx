@@ -351,7 +351,13 @@ const Race = () => {
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
           <div className="flex items-center">
-            <Button variant="ghost" size="icon" className="mr-3 text-gray-400 hover:bg-gray-800 hover:text-white" onClick={() => navigate(-1)}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="mr-3 text-gray-400 hover:bg-gray-800 hover:text-white" 
+              onClick={() => navigate(-1)}
+              data-umami-event="Race Page Back Button"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -367,7 +373,20 @@ const Race = () => {
              {isLoadingSessions ? (
                  <Skeleton className="h-10 w-[200px] bg-gray-800/60" />
              ) : availableSessions.length > 0 ? (
-                 <Select value={selectedSession} onValueChange={setSelectedSession}>
+                 <Select 
+                   value={selectedSession} 
+                   onValueChange={(value) => {
+                     setSelectedSession(value);
+                     // Track session change event
+                     const session = availableSessions.find(s => s.type === value);
+                     if (session) {
+                       const event = document.createElement('div');
+                       event.setAttribute('data-umami-event', `Race Session Change - ${session.name}`);
+                       document.body.appendChild(event);
+                       event.remove();
+                     }
+                   }}
+                 >
                      <SelectTrigger className="w-full md:w-[220px] bg-gray-800/70 border-gray-700 text-white backdrop-blur-sm h-10">
                          <Calendar className="w-4 h-4 mr-2 opacity-70" />
                          <SelectValue placeholder="Select Session" />
@@ -380,6 +399,7 @@ const Race = () => {
                                     key={session.type}
                                     value={session.type}
                                     className="hover:bg-gray-800 focus:bg-gray-700"
+                                    data-umami-event={`Race Session Select - ${session.name}`}
                                 >
                                     {session.name}
                                 </SelectItem>

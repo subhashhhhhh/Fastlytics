@@ -64,12 +64,28 @@ const TeamStandings = () => {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 md:mb-10">
            <div className="flex items-center">
-             <Button variant="ghost" size="icon" className="mr-3 text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => navigate('/dashboard')}>
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="mr-3 text-gray-300 hover:bg-gray-800 hover:text-white" 
+               onClick={() => navigate('/dashboard')}
+               data-umami-event="TeamStandings Back Button"
+             >
                <ArrowLeft className="h-5 w-5" />
              </Button>
              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Constructor Standings</h1>
            </div>
-           <Select value={String(selectedYear)} onValueChange={(value) => setSelectedYear(Number(value))}>
+           <Select 
+             value={String(selectedYear)} 
+             onValueChange={(value) => {
+               setSelectedYear(Number(value));
+               // Track year change event
+               const event = document.createElement('div');
+               event.setAttribute('data-umami-event', `TeamStandings Year Change - ${value}`);
+               document.body.appendChild(event);
+               event.remove();
+             }}
+           >
              <SelectTrigger className="w-full md:w-[180px] bg-gray-800/80 border-gray-700 text-gray-200 hover:bg-gray-700/70 hover:border-gray-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:ring-offset-0 transition-colors duration-150 py-2.5">
                <Calendar className="w-4 h-4 mr-2 opacity-60"/>
                <SelectValue placeholder="Select Season" />
@@ -82,6 +98,7 @@ const TeamStandings = () => {
                       key={year}
                       value={String(year)}
                       className="focus:bg-red-600/30 focus:text-white data-[state=checked]:bg-red-600/20"
+                      data-umami-event={`TeamStandings Year Select - ${year}`}
                     >
                       {year}
                     </SelectItem>

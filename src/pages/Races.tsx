@@ -94,12 +94,28 @@ const Races = () => {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 md:mb-10">
            <div className="flex items-center">
-             <Button variant="ghost" size="icon" className="mr-3 text-gray-300 hover:bg-gray-800 hover:text-white" onClick={() => navigate('/dashboard')}>
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="mr-3 text-gray-300 hover:bg-gray-800 hover:text-white" 
+               onClick={() => navigate('/dashboard')}
+               data-umami-event="Races Page Back Button"
+             >
                <ArrowLeft className="h-5 w-5" />
              </Button>
              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Race Calendar & Results</h1>
            </div>
-           <Select value={String(selectedYear)} onValueChange={(value) => setSelectedYear(Number(value))}>
+           <Select 
+             value={String(selectedYear)} 
+             onValueChange={(value) => {
+               setSelectedYear(Number(value));
+               // Track year change event
+               const event = document.createElement('div');
+               event.setAttribute('data-umami-event', `Races Year Change - ${value}`);
+               document.body.appendChild(event);
+               event.remove();
+             }}
+           >
              <SelectTrigger className="w-full md:w-[180px] bg-gray-800/80 border-gray-700 text-gray-200 hover:bg-gray-700/70 hover:border-gray-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:ring-offset-0 transition-colors duration-150 py-2.5">
                <Calendar className="w-4 h-4 mr-2 opacity-60"/>
                <SelectValue placeholder="Select Season" />
@@ -112,6 +128,7 @@ const Races = () => {
                       key={year}
                       value={String(year)}
                       className="focus:bg-red-600/30 focus:text-white data-[state=checked]:bg-red-600/20"
+                      data-umami-event={`Races Year Select - ${year}`}
                     >
                       {year}
                     </SelectItem>
@@ -143,7 +160,14 @@ const Races = () => {
               return (
                 <Card
                   key={`${selectedYear}-${race.EventName}`}
-                  onClick={isClickable ? () => handleRaceClick(race.EventName, selectedYear) : undefined}
+                  onClick={isClickable ? () => {
+                    handleRaceClick(race.EventName, selectedYear);
+                    // Track race click event
+                    const event = document.createElement('div');
+                    event.setAttribute('data-umami-event', `Race Click - ${race.EventName} ${selectedYear}`);
+                    document.body.appendChild(event);
+                    event.remove();
+                  } : undefined}
                   className={cn(
                     "bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm",
                     "p-4 md:p-5 flex items-center gap-4 md:gap-6",

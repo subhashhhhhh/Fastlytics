@@ -358,6 +358,7 @@ const RacingChart: React.FC<RacingChartProps> = ({
                     className="h-8 w-8 text-gray-500 hover:text-red-400 hover:bg-gray-700/50"
                     onClick={() => removeDriver(index)}
                     aria-label={`Remove Driver ${index + 1}`}
+                    data-umami-event={`RacingChart Remove Driver - ${driverCode}`}
                   >
                     <XCircle className="h-4 w-4" />
                   </Button>
@@ -372,6 +373,7 @@ const RacingChart: React.FC<RacingChartProps> = ({
                 className="h-8 text-xs border-gray-700 text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
                 onClick={addDriver}
                 disabled={isLoadingDrivers || !availableDrivers}
+                data-umami-event="RacingChart Add Driver Button"
               >
                 <PlusCircle className="h-4 w-4 mr-1.5" />
                 Add Driver
@@ -391,6 +393,7 @@ const RacingChart: React.FC<RacingChartProps> = ({
               onClick={handleDownload}
               disabled={isExporting}
               title="Download chart"
+              data-umami-event="RacingChart Download Button"
             >
               <Download className="h-3.5 w-3.5" />
               {isExporting ? "Exporting..." : "Download Chart"}
