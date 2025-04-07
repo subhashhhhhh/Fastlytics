@@ -1,11 +1,7 @@
 # 🏎️ Fastlytics 
 
 *A lightning-fast platform for Formula 1 fans to explore historical data, compare drivers, and simulate race strategies – no engineering degree required.*  
-## Demo Video
 
-https://github.com/user-attachments/assets/7070a62a-6b06-4011-a378-13fcea220023
-
----
 
 ## 🚀 Features  
 
@@ -31,35 +27,43 @@ https://github.com/user-attachments/assets/7070a62a-6b06-4011-a378-13fcea220023
 
 ## ⚡ Quick Start  
 
-### Prerequisites  
-- Node.js v18+  
-- Python 3.10+  
-- Docker (for local Supabase/PostgreSQL)  
+### Prerequisites
 
-### Installation  
-1. Clone the repo:  
-   ```bash  
-   git clone https://github.com/subhashhhhhh/Fastlytics.git  
-   ```  
+- Node.js v18+
+- Python 3.10+
+- Docker (for local Supabase/PostgreSQL)
 
-2. Install dependencies:  
-   ```bash    
-   npm install  
-   pip install -r requirements.txt  
-   ```  
+### Installation
 
-3. Configure environment variables:  
-   ```bash  
-   cp .env.example .env.local  
-   ```  
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/subhashhhhhh/Fastlytics.git
+   ```
 
-4. Start the dev server:  
-   ```bash  
-   npm run dev  
-   ```  
+2. Install frontend dependencies:
+   ```bash
+   npm install
+   ```
 
----
+3. Install backend dependencies:
+   ```bash
+   git clone https://github.com/subhashhhhhh/Fastlytics-Backend.git
+   pip install -r requirements.txt
+   ```
 
+### Environment Setup
+
+1. Configure environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Configure backend environment variables:
+   ```bash
+   cd backend-api
+   cp .env.example .env
+   ```
+   
 ## 🤝 Contributing  
 **We welcome pit crew members!**  
 1. Fork the repository.  
