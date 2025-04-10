@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 // Import new API function and update existing one
-import { fetchSessionDrivers, fetchSectorComparison, fetchDriverLapNumbers, fetchTelemetrySpeed, SessionDriver, SectorComparisonData, SpeedDataPoint } from '@/lib/api';
+import { fetchSessionDrivers, fetchSectorComparison, fetchDriverLapNumbers, fetchTelemetrySpeed, fetchLapTimes, SessionDriver, SectorComparisonData, SpeedDataPoint, LapTimeDataPoint } from '@/lib/api';
 import { driverColor } from '@/lib/driverColor';
 import { cn, exportChartAsImage } from "@/lib/utils";
 import { User, Clock, Download, BarChart2 } from 'lucide-react'; // Import icons including Download and BarChart2
@@ -24,6 +24,13 @@ interface CircuitComparisonChartProps {
   initialDriver1?: string;
   initialDriver2?: string;
   onDriversSelected?: (data: {driver1: string, driver2: string, lap1: string | number, lap2: string | number, shouldLoadChart: boolean}) => void;
+}
+
+// Define a new interface for lap time information
+interface LapTimeInfo {
+  lapNumber: number;
+  lapTime: string; // formatted as "1:23.456"
+  lapTimeRaw: number; // raw time in seconds
 }
 
 // Note: TrackSection and SectorComparisonData interfaces remain the same as before
@@ -47,6 +54,10 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
   const [selectedDriver2, setSelectedDriver2] = useState<string>(initialDriver2);
   const [selectedLap1, setSelectedLap1] = useState<string | number>('fastest');
   const [selectedLap2, setSelectedLap2] = useState<string | number>('fastest');
+
+  // Add state for tracking fastest lap information
+  const [fastestLapInfo1, setFastestLapInfo1] = useState<LapTimeInfo | null>(null);
+  const [fastestLapInfo2, setFastestLapInfo2] = useState<LapTimeInfo | null>(null);
 
   // Add shouldLoadChart state
   const [shouldLoadChart, setShouldLoadChart] = useState(false);
@@ -169,6 +180,117 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
     retry: 1,
     enabled: !!year && !!event && !!session && !!selectedDriver2 && !!selectedLap2 && shouldLoadChart,
   });
+
+  // Fetch lap times data for driver 1
+  const { data: lapTimesData1 } = useQuery<LapTimeDataPoint[]>({
+    queryKey: ['lapTimes', year, event, session, [selectedDriver1]],
+    queryFn: () => fetchLapTimes(year, event, session, [selectedDriver1]),
+    staleTime: 1000 * 60 * 15, // Cache for 15 mins
+    gcTime: 1000 * 60 * 30,
+    enabled: !!year && !!event && !!session && !!selectedDriver1 && shouldLoadChart,
+  });
+
+  // Fetch lap times data for driver 2
+  const { data: lapTimesData2 } = useQuery<LapTimeDataPoint[]>({
+    queryKey: ['lapTimes', year, event, session, [selectedDriver2]],
+    queryFn: () => fetchLapTimes(year, event, session, [selectedDriver2]),
+    staleTime: 1000 * 60 * 15, // Cache for 15 mins
+    gcTime: 1000 * 60 * 30,
+    enabled: !!year && !!event && !!session && !!selectedDriver2 && shouldLoadChart,
+  });
+
+  // Format lap time from seconds to min:sec.ms format
+  const formatLapTime = (timeInSeconds: number | null): string => {
+    if (timeInSeconds === null || isNaN(timeInSeconds)) return "--:--.---";
+    
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    const milliseconds = Math.round((timeInSeconds % 1) * 1000);
+    
+    return `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+  };
+
+  // Process fastest lap information for driver 1
+  useEffect(() => {
+    if (lapTimesData1 && selectedLap1 === 'fastest' && selectedDriver1) {
+      // Find the fastest lap
+      let fastestLapNumber = 0;
+      let fastestTime = Infinity;
+      
+      lapTimesData1.forEach(lap => {
+        const lapTime = lap[selectedDriver1] as number;
+        if (lapTime && lapTime > 0 && lapTime < fastestTime) {
+          fastestTime = lapTime;
+          fastestLapNumber = lap.LapNumber;
+        }
+      });
+      
+      if (fastestLapNumber > 0) {
+        setFastestLapInfo1({
+          lapNumber: fastestLapNumber,
+          lapTime: formatLapTime(fastestTime),
+          lapTimeRaw: fastestTime
+        });
+      } else {
+        setFastestLapInfo1(null);
+      }
+    } else if (selectedLap1 !== 'fastest' && lapTimesData1 && typeof selectedLap1 === 'number') {
+      // Get info for the specific selected lap
+      const lapData = lapTimesData1.find(lap => lap.LapNumber === selectedLap1);
+      const lapTime = lapData ? lapData[selectedDriver1] as number : null;
+      
+      if (lapTime && lapTime > 0) {
+        setFastestLapInfo1({
+          lapNumber: selectedLap1,
+          lapTime: formatLapTime(lapTime),
+          lapTimeRaw: lapTime
+        });
+      } else {
+        setFastestLapInfo1(null);
+      }
+    }
+  }, [lapTimesData1, selectedDriver1, selectedLap1]);
+
+  // Process fastest lap information for driver 2
+  useEffect(() => {
+    if (lapTimesData2 && selectedLap2 === 'fastest' && selectedDriver2) {
+      // Find the fastest lap
+      let fastestLapNumber = 0;
+      let fastestTime = Infinity;
+      
+      lapTimesData2.forEach(lap => {
+        const lapTime = lap[selectedDriver2] as number;
+        if (lapTime && lapTime > 0 && lapTime < fastestTime) {
+          fastestTime = lapTime;
+          fastestLapNumber = lap.LapNumber;
+        }
+      });
+      
+      if (fastestLapNumber > 0) {
+        setFastestLapInfo2({
+          lapNumber: fastestLapNumber,
+          lapTime: formatLapTime(fastestTime),
+          lapTimeRaw: fastestTime
+        });
+      } else {
+        setFastestLapInfo2(null);
+      }
+    } else if (selectedLap2 !== 'fastest' && lapTimesData2 && typeof selectedLap2 === 'number') {
+      // Get info for the specific selected lap
+      const lapData = lapTimesData2.find(lap => lap.LapNumber === selectedLap2);
+      const lapTime = lapData ? lapData[selectedDriver2] as number : null;
+      
+      if (lapTime && lapTime > 0) {
+        setFastestLapInfo2({
+          lapNumber: selectedLap2,
+          lapTime: formatLapTime(lapTime),
+          lapTimeRaw: lapTime
+        });
+      } else {
+        setFastestLapInfo2(null);
+      }
+    }
+  }, [lapTimesData2, selectedDriver2, selectedLap2]);
 
   // Combine speed data for both drivers
   const combinedSpeedData = useMemo(() => {
@@ -322,12 +444,30 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full" style={{ backgroundColor: driver1Color }}></div>
             <span className="font-semibold">{selectedDriver1}</span>
-             <span className="text-xs text-gray-400">(Lap {selectedLap1 === 'fastest' ? 'Fastest' : selectedLap1})</span>
+            {selectedLap1 === 'fastest' && fastestLapInfo1 ? (
+              <span className="text-xs text-gray-400">
+                (Lap {fastestLapInfo1.lapNumber} - {fastestLapInfo1.lapTime})
+              </span>
+            ) : (
+              <span className="text-xs text-gray-400">
+                (Lap {selectedLap1 === 'fastest' ? 'Fastest' : selectedLap1}
+                {selectedLap1 !== 'fastest' && fastestLapInfo1 ? ` - ${fastestLapInfo1.lapTime}` : ''})
+              </span>
+            )}
           </div>
           <div className="text-gray-500">vs</div>
           <div className="flex items-center gap-2">
             <span className="font-semibold">{selectedDriver2}</span>
-             <span className="text-xs text-gray-400">(Lap {selectedLap2 === 'fastest' ? 'Fastest' : selectedLap2})</span>
+            {selectedLap2 === 'fastest' && fastestLapInfo2 ? (
+              <span className="text-xs text-gray-400">
+                (Lap {fastestLapInfo2.lapNumber} - {fastestLapInfo2.lapTime})
+              </span>
+            ) : (
+              <span className="text-xs text-gray-400">
+                (Lap {selectedLap2 === 'fastest' ? 'Fastest' : selectedLap2}
+                {selectedLap2 !== 'fastest' && fastestLapInfo2 ? ` - ${fastestLapInfo2.lapTime}` : ''})
+              </span>
+            )}
             <div className="w-4 h-4 rounded-full" style={{ backgroundColor: driver2Color }}></div>
           </div>
         </div>
@@ -502,13 +642,23 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
             <svg width="16" height="16" viewBox="0 0 16 16" className="inline-block">
               <line x1="0" y1="8" x2="16" y2="8" stroke={driver1Color} strokeWidth="3" />
             </svg>
-            <span>{selectedDriver1} Advantage (Lap {selectedLap1 === 'fastest' ? 'F' : selectedLap1})</span>
+            <span>
+              {selectedDriver1} Advantage 
+              {selectedLap1 === 'fastest' && fastestLapInfo1 ? 
+                ` (Lap ${fastestLapInfo1.lapNumber} - ${fastestLapInfo1.lapTime})` : 
+                ` (Lap ${selectedLap1 === 'fastest' ? 'F' : selectedLap1}${selectedLap1 !== 'fastest' && fastestLapInfo1 ? ` - ${fastestLapInfo1.lapTime}` : ''})`}
+            </span>
           </div>
           <div className="flex items-center gap-2">
              <svg width="16" height="16" viewBox="0 0 16 16" className="inline-block">
               <line x1="0" y1="8" x2="16" y2="8" stroke={driver2Color} strokeWidth="3" />
             </svg>
-            <span>{selectedDriver2} Advantage (Lap {selectedLap2 === 'fastest' ? 'F' : selectedLap2})</span>
+            <span>
+              {selectedDriver2} Advantage
+              {selectedLap2 === 'fastest' && fastestLapInfo2 ? 
+                ` (Lap ${fastestLapInfo2.lapNumber} - ${fastestLapInfo2.lapTime})` : 
+                ` (Lap ${selectedLap2 === 'fastest' ? 'F' : selectedLap2}${selectedLap2 !== 'fastest' && fastestLapInfo2 ? ` - ${fastestLapInfo2.lapTime}` : ''})`}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 16 16" className="inline-block">
