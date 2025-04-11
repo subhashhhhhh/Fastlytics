@@ -21,7 +21,7 @@ import { driverColor } from '@/lib/driverColor'; // Assuming this exists for col
 import { CompoundColors, getCompoundColor } from '@/lib/utils'; // Corrected import path
 import LoadingSpinnerF1 from './ui/LoadingSpinnerF1';
 import { AlertCircle, ArrowUpDown, LineChart, TrendingDown, TrendingUp } from 'lucide-react';
-import { SparkAreaChart } from '@tremor/react';
+import { SparkLineChart } from '@tremor/react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'; // Use Card for layout
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -209,40 +209,6 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
           sortingFn: 'basic',
           enableSorting: true,
         },
-        // Lap Trend is generally useful
-        {
-            id: 'lapTrend',
-            header: "Lap Trend",
-            cell: ({ row }) => {
-                const lapTimes = row.original.lapTimes;
-                if (!lapTimes || lapTimes.length < 2) return <div className="h-[30px] w-[100px]"></div>;
-                const chartData = lapTimes.map((time, index) => ({
-                    lap: row.original.startLap + index,
-                    time: time,
-                }));
-                const minTime = Math.min(...lapTimes);
-                const maxTime = Math.max(...lapTimes);
-                const color = row.original.compoundColor;
-
-                return (
-                    <div className="h-[30px] w-[100px] my-1">
-                        <SparkAreaChart
-                            data={chartData}
-                            index="lap"
-                            categories={['time']}
-                            colors={[color]}
-                            className="h-full w-full"
-                            minValue={minTime * 0.995}
-                            maxValue={maxTime * 1.005}
-                            autoMinValue={false}
-                            curveType="monotone"
-                            showGradient={false}
-                        />
-                    </div>
-                );
-            },
-            enableSorting: false,
-        }
     ];
 
     const raceSpecificColumns: ColumnDef<ProcessedStint>[] = [
@@ -293,18 +259,7 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
 
     // Conditionally add race-specific columns
     if (session === 'R' || session === 'Sprint') {
-      // Insert Consistency and Degradation before Lap Trend
-      const lapTrendIndex = baseColumns.findIndex(col => col.id === 'lapTrend');
-      if (lapTrendIndex !== -1) {
-        return [
-            ...baseColumns.slice(0, lapTrendIndex),
-            ...raceSpecificColumns,
-            ...baseColumns.slice(lapTrendIndex)
-        ];
-      } else {
-        // Fallback if lapTrend column wasn't found (shouldn't happen)
-        return [...baseColumns, ...raceSpecificColumns];
-      }
+      return [...baseColumns, ...raceSpecificColumns];
     } else {
       return baseColumns;
     }
@@ -420,9 +375,6 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
                     <li className={cn((session !== 'R' && session !== 'Sprint') && 'text-gray-500 italic')}> 
                         <strong>Degr. (Δ):</strong> Estimated lap time difference (in seconds) between the end and start of the stint (avg. last 3 laps vs avg. first 3, excluding outlap). Positive means degradation (slower). 
                         {(session !== 'R' && session !== 'Sprint') && <em>(Race/Sprint only)</em>}
-                    </li>
-                    <li>
-                        <strong>Lap Trend:</strong> Mini-chart showing lap time evolution during the stint (lower is faster).
                     </li>
                 </ul>
             </div>
