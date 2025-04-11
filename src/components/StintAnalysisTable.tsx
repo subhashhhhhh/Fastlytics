@@ -385,6 +385,21 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
                 </TableBody>
                 </Table>
             </div>
+            {/* Add Explanation Section Below Table */}
+            <div className="px-4 py-3 mt-2 border-t border-gray-700/60">
+                <h4 className="text-sm font-semibold text-gray-200 mb-2">Column Explanations:</h4>
+                <ul className="space-y-1.5 text-xs text-gray-400 list-disc pl-4">
+                    <li>
+                        <strong>Consist. (σ):</strong> Standard Deviation of lap times within the stint. Lower is more consistent.
+                    </li>
+                    <li>
+                        <strong>Degr. (Δ):</strong> Estimated lap time difference (in seconds) between the end and start of the stint (avg. last 3 laps vs avg. first 3, excluding outlap). Positive means degradation (slower).
+                    </li>
+                    <li>
+                        <strong>Lap Trend:</strong> Mini-chart showing lap time evolution during the stint (lower is faster).
+                    </li>
+                </ul>
+            </div>
         </CardContent>
     </Card>
   );
