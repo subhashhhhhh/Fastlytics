@@ -65,6 +65,16 @@ export interface AvailableSession {
     startTime: string; // Note: This might not be directly available from the schedule endpoint
 }
 
+// --- Stint Analysis Interfaces ---
+export interface StintAnalysisData {
+    driverCode: string;
+    stintNumber: number;
+    compound: string;
+    startLap: number;
+    endLap: number;
+    lapTimes: number[]; // Array of lap times in seconds
+}
+
 // --- Schedule Interface ---
 export interface ScheduleEvent {
     RoundNumber: number;
@@ -335,9 +345,9 @@ export const fetchTelemetryDRS = async (year: number, event: string, session: st
     } catch (error) { console.error("Error fetching DRS telemetry:", error); throw error; }
 };
 
-/** Fetches tire strategy data for a given race session. */
+/** Fetches tire strategy data for all drivers in a session. */
 export const fetchTireStrategy = async (year: number, event: string, session: string): Promise<DriverStrategy[]> => {
-    const params = new URLSearchParams({ year: year.toString(), event, session: session });
+    const params = new URLSearchParams({ year: year.toString(), event, session });
     const url = `${API_BASE_URL}/api/strategy?${params.toString()}`;
     console.log(`Fetching tire strategy from: ${url}`);
     try {
@@ -349,7 +359,7 @@ export const fetchTireStrategy = async (year: number, event: string, session: st
             throw new Error(errorDetail);
         }
         const data: DriverStrategy[] = await response.json();
-        console.log(`Successfully fetched tire strategy for ${data.length} drivers.`);
+        console.log(`Successfully fetched strategy for ${data.length} drivers.`);
         return data;
     } catch (error) { console.error("Error fetching tire strategy:", error); throw error; }
 };
@@ -434,26 +444,23 @@ export const fetchSpecificRaceResults = async (year: number, eventSlug: string, 
     }
 };
 
-/** Fetches track evolution analysis data for a given session. */
+/** Fetches track evolution data */
 export const fetchTrackEvolution = async (year: number, event: string, session: string): Promise<TrackEvolutionResponse> => {
     const params = new URLSearchParams({ year: year.toString(), event, session });
-    const url = `${API_BASE_URL}/api/analysis/track-evolution?${params.toString()}`;
-    console.log(`Fetching track evolution data from: ${url}`);
+    const url = `${API_BASE_URL}/api/track-evolution?${params.toString()}`;
+    console.log(`Fetching track evolution from: ${url}`);
     try {
         const response = await fetch(url, { headers: getHeaders() });
         if (!response.ok) {
             let errorDetail = `HTTP error! status: ${response.status}`;
             try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
-            console.error(`API Error fetching track evolution for ${year} ${event} ${session}: ${errorDetail}`);
+            console.error(`API Error: ${errorDetail}`);
             throw new Error(errorDetail);
         }
         const data: TrackEvolutionResponse = await response.json();
-        console.log(`Successfully fetched track evolution data for ${year} ${event} ${session}.`);
+        console.log(`Successfully fetched track evolution data.`);
         return data;
-    } catch (error) {
-        console.error(`Error fetching track evolution data for ${year} ${event} ${session}:`, error);
-        throw error;
-    }
+    } catch (error) { console.error("Error fetching track evolution data:", error); throw error; }
 };
 
 /** Fetches the event schedule for a given year. */
@@ -673,4 +680,23 @@ export const fetchSectorComparison = async (
     
     throw error;
   }
+};
+
+/** Fetches detailed stint analysis data including lap times. */
+export const fetchStintAnalysis = async (year: number, event: string, session: string): Promise<StintAnalysisData[]> => {
+    const params = new URLSearchParams({ year: year.toString(), event, session });
+    const url = `${API_BASE_URL}/api/stint-analysis?${params.toString()}`;
+    console.log(`Fetching stint analysis from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+        const data: StintAnalysisData[] = await response.json();
+        console.log(`Successfully fetched ${data.length} stint records for analysis.`);
+        return data;
+    } catch (error) { console.error("Error fetching stint analysis:", error); throw error; }
 };

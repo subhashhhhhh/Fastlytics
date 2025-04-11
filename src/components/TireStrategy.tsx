@@ -5,6 +5,7 @@ import { fetchTireStrategy, DriverStrategy, fetchSpecificRaceResults, DetailedRa
 import { Skeleton } from "@/components/ui/skeleton"; // Corrected path
 import { AlertCircle } from 'lucide-react'; // Removed ChevronDown import
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Corrected path
+import StintAnalysisTable from './StintAnalysisTable'; // Import the new component
 
 // Define props for the dynamic component
 interface TireStrategyProps {
@@ -109,6 +110,8 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
             <Skeleton key={i} className="w-full h-[28px] bg-gray-800/50" /> // Adjusted height
           ))}
         </div>
+        {/* Skeleton for Stint Analysis Table */}
+        <Skeleton className="w-full h-[300px] mt-6 bg-gray-800/50" />
       </div>
     );
   }
@@ -122,6 +125,8 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
            <p className="font-semibold">Error loading tire strategy</p>
            <p className="text-xs text-gray-500 mt-1">{(error as Error)?.message || 'Could not fetch data.'}</p>
         </div>
+         {/* Still show StintAnalysisTable even if base strategy fails, it has its own error handling */}
+        <StintAnalysisTable year={year} event={event} session={session} />
       </div>
     );
   }
@@ -133,6 +138,8 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
         <div className="w-full h-[300px] bg-gray-900/80 border border-gray-700/50 rounded-lg flex items-center justify-center text-gray-500">
            No tire strategy data found for this session.
         </div>
+        {/* Show StintAnalysisTable even if no base strategy data */}
+        <StintAnalysisTable year={year} event={event} session={session} />
       </div>
     );
   }
@@ -214,6 +221,10 @@ const TireStrategy: React.FC<TireStrategyProps> = ({
             );
           })}
         </div>
+        
+        {/* Render the Stint Analysis Table below the strategy bars */}
+        <StintAnalysisTable year={year} event={event} session={session} />
+        
       </div>
     </TooltipProvider>
   );

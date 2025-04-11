@@ -188,3 +188,23 @@ export async function exportChartAsImage(
   }
 }
 
+// --- Tire Compound Colors ---
+
+export const CompoundColors: Record<string, string> = {
+    SOFT: '#EF4444', // Red
+    MEDIUM: '#FCD34D', // Yellow
+    HARD: '#FFFFFF', // White
+    INTERMEDIATE: '#22C55E', // Green
+    WET: '#3B82F6', // Blue
+    UNKNOWN: '#9CA3AF', // Gray
+    TEST: '#A78BFA', // Purple (for test compounds if ever needed)
+  };
+  
+  export const getCompoundColor = (compound: string | undefined | null): string => {
+    if (!compound) return CompoundColors.UNKNOWN;
+    const upperCompound = compound.toUpperCase();
+    return CompoundColors[upperCompound] || CompoundColors.UNKNOWN;
+  };
+
+  // Add other utility functions if needed
+
