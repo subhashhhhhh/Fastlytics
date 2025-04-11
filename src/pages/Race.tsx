@@ -34,6 +34,7 @@ import ThrottleChart from '@/components/ThrottleChart';
 import BrakeChart from '@/components/BrakeChart';
 import RPMChart from '@/components/RPMChart';
 import DRSChart from '@/components/DRSChart';
+import PositionsTabContent from '@/components/PositionsTabContent';
 
 // Helper to get team color class
 const getTeamColorClass = (teamName: string | undefined): string => {
@@ -528,11 +529,11 @@ const Race = () => {
                <SessionResultsTable results={sessionResults} sessionType={selectedSession} year={year} />
             </TabsContent>
 
-            {/* Position Changes Tab (Only for Race 'R') */}
-            {(selectedSession === 'R') && (
+            {/* Position Changes Tab (Only for Race 'R' or Sprint) */}
+            {(selectedSession === 'R' || selectedSession === 'Sprint') && (
               <TabsContent value="positions" className="pt-2">
                 {year && eventName && (
-                  <PositionChart year={year} event={eventName} session="R" />
+                   <PositionsTabContent year={year} event={eventName} session={selectedSession} />
                 )}
               </TabsContent>
             )}

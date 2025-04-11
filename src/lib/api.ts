@@ -170,6 +170,12 @@ export interface SectorComparisonData {
   circuitLayout: string; // SVG path data for the main track outline
 }
 
+export interface SessionIncident {
+  type: 'SC/VSC' | 'RedFlag'; // Grouped SC/VSC for simplicity
+  startLap: number;
+  endLap: number;
+}
+
 // --- API Fetch Functions ---
 
 /** Fetches available sessions for a given event */
@@ -699,4 +705,30 @@ export const fetchStintAnalysis = async (year: number, event: string, session: s
         console.log(`Successfully fetched ${data.length} stint records for analysis.`);
         return data;
     } catch (error) { console.error("Error fetching stint analysis:", error); throw error; }
+};
+
+/** Fetches incident periods (SC/VSC, Red Flag) for a session. */
+export const fetchSessionIncidents = async (year: number, event: string, session: string): Promise<SessionIncident[]> => {
+    const params = new URLSearchParams({ year: year.toString(), event, session });
+    const url = `${API_BASE_URL}/api/incidents?${params.toString()}`;
+    console.log(`Fetching session incidents from: ${url}`);
+    try {
+        const response = await fetch(url, { headers: getHeaders() });
+        if (!response.ok) {
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+            console.error(`API Error fetching incidents: ${errorDetail}`);
+            // Return empty array on error to prevent breaking UI that expects an array
+            return [];
+            // Alternatively, throw new Error(errorDetail); if you want query hook to handle error state
+        }
+        const data: SessionIncident[] = await response.json();
+        console.log(`Successfully fetched ${data.length} incident periods.`);
+        return data;
+    } catch (error) {
+        console.error("Error fetching session incidents:", error);
+        // Return empty array on network/other errors
+        return [];
+        // Alternatively, throw error;
+    }
 };
