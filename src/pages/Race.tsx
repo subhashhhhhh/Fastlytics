@@ -65,7 +65,7 @@ const rookiesByYear: { [year: string]: string[] } = {
 
 // Define F2 drivers who participated in F1 practice sessions by season year
 const f2DriversByYear: { [year: string]: string[] } = {
-  '2025': ['HIR'], 
+  '2025': ['HIR', 'DRU', 'BEG', 'IWA', 'VES', 'BRO'], 
   '2024': ['HAD', 'BRO', 'DRU', 'IWA', 'CRA', 'ARO', 'BOR', 'LEL'], // Hadjar, Colapinto, Bearman, Browning, Drugovich, Leclerc, Iwasa, Crawford, Aron, Bortoleto
   '2023': ['POU', 'VES', 'DOO', 'SHW', 'DRU', 'MAR', 'HAD', 'BEA'], // Pourchaire, Vesti, Doohan, Shwartzman, Drugovich, Martins, Hadjar, Bearman
   '2022': ['POU', 'DOO', 'SAR', 'LAW', 'VIP', 'SHW'], // Pourchaire, Doohan, Sargeant, Lawson, Vips, Shwartzman
