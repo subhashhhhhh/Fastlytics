@@ -176,6 +176,15 @@ export interface SessionIncident {
   endLap: number;
 }
 
+// Type definition for the Team Pace data returned by the new endpoint
+export interface TeamPaceData {
+    rank: number;
+    teamName: string;
+    medianTime: number; // seconds
+    averageTime: number; // seconds
+    stdDev: number;
+}
+
 // --- API Fetch Functions ---
 
 /** Fetches available sessions for a given event */
@@ -730,5 +739,28 @@ export const fetchSessionIncidents = async (year: number, event: string, session
         // Return empty array on network/other errors
         return [];
         // Alternatively, throw error;
+    }
+};
+
+// Function to fetch team pace analysis data
+export const fetchTeamPace = async (
+    year: number,
+    event: string,
+    session: string
+): Promise<TeamPaceData[]> => {
+    const url = `/api/pace/teams?year=${year}&event=${encodeURIComponent(event)}&session=${session}`;
+    console.log("Fetching team pace data from:", url);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+            throw new Error(`Failed to fetch team pace data: ${response.status} ${errorData.detail || response.statusText}`);
+        }
+        const data: TeamPaceData[] = await response.json();
+        console.log("Successfully fetched team pace data:", data.length);
+        return data;
+    } catch (error) {
+        console.error("Error fetching team pace data:", error);
+        throw error; // Re-throw to be caught by React Query
     }
 };
