@@ -24,6 +24,7 @@ import { AlertCircle, ArrowUpDown, LineChart, TrendingDown, TrendingUp } from 'l
 import { SparkAreaChart } from '@tremor/react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'; // Use Card for layout
 import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
 
 // Helper function to format seconds into MM:SS.mmm
 const formatLapTime = (totalSeconds: number | null | undefined): string => {
@@ -121,170 +122,193 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
   }, [rawStintData, year]);
 
   // Define table columns
-  const columns = useMemo<ColumnDef<ProcessedStint>[]>(() => [
-    {
-      accessorKey: "driverCode",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-gray-700/50"
-        >
-          Driver
-          <ArrowUpDown className="ml-1.5 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => <span style={{ color: row.original.driverColor }}>{row.original.driverCode}</span>,
-      sortingFn: 'alphanumeric',
-      enableSorting: true,
-    },
-    {
-      accessorKey: "stintNumber",
-      header: "Stint",
-      cell: ({ row }) => <span className="text-center block">{row.original.stintNumber}</span>,
-      enableSorting: false,
-    },
-    {
-      accessorKey: "compound",
-      header: "Compound",
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center">
-          <span
-            className="w-4 h-4 rounded-full inline-block mr-1.5 border border-black/20"
-            style={{ backgroundColor: row.original.compoundColor }}
-            title={row.original.compound}
-          ></span>
-          <span className="hidden md:inline">{row.original.compound}</span>
-        </div>
-      ),
-      enableSorting: false,
-    },
-    {
-      accessorKey: "stintLength",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-gray-700/50"
-        >
-          Length
-          <ArrowUpDown className="ml-1.5 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => `${row.original.stintLength} Laps (${row.original.startLap}-${row.original.endLap})`,
-      sortingFn: 'basic',
-      enableSorting: true,
-    },
-    {
-      accessorKey: "fastestLap",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-gray-700/50"
-        >
-          Fastest
-          <ArrowUpDown className="ml-1.5 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => formatLapTime(row.original.fastestLap),
-      sortingFn: 'basic',
-      enableSorting: true,
-    },
-    {
-      accessorKey: "avgLapTime",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-gray-700/50"
-        >
-          Average
-          <ArrowUpDown className="ml-1.5 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => formatLapTime(row.original.avgLapTime),
-      sortingFn: 'basic',
-      enableSorting: true,
-    },
-    {
-      accessorKey: "consistency",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-gray-700/50"
-        >
-          Consist. (σ)
-          <ArrowUpDown className="ml-1.5 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => row.original.consistency?.toFixed(3) ?? 'N/A',
-      sortingFn: 'basic',
-      enableSorting: true,
-    },
-    {
-      accessorKey: "degradation",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-gray-700/50"
-        >
-          Degr. (Δ)
-          <ArrowUpDown className="ml-1.5 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const deg = row.original.degradation;
-        if (deg === null || deg === undefined) return 'N/A';
-        const color = deg > 0.1 ? 'text-red-400' : deg < -0.1 ? 'text-green-400' : 'text-gray-400';
-        const Icon = deg > 0.1 ? TrendingUp : deg < -0.1 ? TrendingDown : TrendingUp;
-        return (
-          <span className={`flex items-center ${color}`}>
-             <Icon className={`mr-1 h-3 w-3 ${deg === 0 ? 'opacity-50' : ''}`} />
-            {deg.toFixed(2)}s
-          </span>
-        );
-      },
-      sortingFn: 'basic',
-      enableSorting: true,
-    },
-    {
-        id: 'lapTrend',
-        header: "Lap Trend",
-        cell: ({ row }) => {
-            const lapTimes = row.original.lapTimes;
-            if (!lapTimes || lapTimes.length < 2) return <div className="h-[30px] w-[100px]"></div>; // Placeholder for height
-            const chartData = lapTimes.map((time, index) => ({
-                lap: row.original.startLap + index,
-                time: time,
-            }));
-            // Find min/max for y-axis scaling
-            const minTime = Math.min(...lapTimes);
-            const maxTime = Math.max(...lapTimes);
-            const color = row.original.compoundColor;
-
-            return (
-                 <div className="h-[30px] w-[100px] my-1"> {/* Fixed height container */}
-                    <SparkAreaChart
-                        data={chartData}
-                        index="lap"
-                        categories={['time']}
-                        colors={[color]} // Use a fixed color or dynamic based on compound
-                        className="h-full w-full"
-                        minValue={minTime * 0.995} // Slightly adjust min/max for visibility
-                        maxValue={maxTime * 1.005}
-                        autoMinValue={false}
-                        curveType="monotone"
-                        showGradient={false}
-                    />
-                 </div>
-            );
+  const columns = useMemo<ColumnDef<ProcessedStint>[]>(() => {
+    const baseColumns: ColumnDef<ProcessedStint>[] = [
+        {
+          accessorKey: "driverCode",
+          header: ({ column }) => (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              className="p-0 hover:bg-gray-700/50"
+            >
+              Driver
+              <ArrowUpDown className="ml-1.5 h-3 w-3" />
+            </Button>
+          ),
+          cell: ({ row }) => <span style={{ color: row.original.driverColor }}>{row.original.driverCode}</span>,
+          sortingFn: 'alphanumeric',
+          enableSorting: true,
         },
-        enableSorting: false,
+        {
+          accessorKey: "stintNumber",
+          header: "Stint",
+          cell: ({ row }) => <span className="text-center block">{row.original.stintNumber}</span>,
+          enableSorting: false,
+        },
+        {
+          accessorKey: "compound",
+          header: "Compound",
+          cell: ({ row }) => (
+            <div className="flex items-center justify-center">
+              <span
+                className="w-4 h-4 rounded-full inline-block mr-1.5 border border-black/20"
+                style={{ backgroundColor: row.original.compoundColor }}
+                title={row.original.compound}
+              ></span>
+              <span className="hidden md:inline">{row.original.compound}</span>
+            </div>
+          ),
+          enableSorting: false,
+        },
+        {
+          accessorKey: "stintLength",
+          header: ({ column }) => (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              className="p-0 hover:bg-gray-700/50"
+            >
+              Length
+              <ArrowUpDown className="ml-1.5 h-3 w-3" />
+            </Button>
+          ),
+          cell: ({ row }) => `${row.original.stintLength} Laps (${row.original.startLap}-${row.original.endLap})`,
+          sortingFn: 'basic',
+          enableSorting: true,
+        },
+        {
+          accessorKey: "fastestLap",
+          header: ({ column }) => (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              className="p-0 hover:bg-gray-700/50"
+            >
+              Fastest
+              <ArrowUpDown className="ml-1.5 h-3 w-3" />
+            </Button>
+          ),
+          cell: ({ row }) => formatLapTime(row.original.fastestLap),
+          sortingFn: 'basic',
+          enableSorting: true,
+        },
+        {
+          accessorKey: "avgLapTime",
+          header: ({ column }) => (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              className="p-0 hover:bg-gray-700/50"
+            >
+              Average
+              <ArrowUpDown className="ml-1.5 h-3 w-3" />
+            </Button>
+          ),
+          cell: ({ row }) => formatLapTime(row.original.avgLapTime),
+          sortingFn: 'basic',
+          enableSorting: true,
+        },
+        // Lap Trend is generally useful
+        {
+            id: 'lapTrend',
+            header: "Lap Trend",
+            cell: ({ row }) => {
+                const lapTimes = row.original.lapTimes;
+                if (!lapTimes || lapTimes.length < 2) return <div className="h-[30px] w-[100px]"></div>;
+                const chartData = lapTimes.map((time, index) => ({
+                    lap: row.original.startLap + index,
+                    time: time,
+                }));
+                const minTime = Math.min(...lapTimes);
+                const maxTime = Math.max(...lapTimes);
+                const color = row.original.compoundColor;
+
+                return (
+                    <div className="h-[30px] w-[100px] my-1">
+                        <SparkAreaChart
+                            data={chartData}
+                            index="lap"
+                            categories={['time']}
+                            colors={[color]}
+                            className="h-full w-full"
+                            minValue={minTime * 0.995}
+                            maxValue={maxTime * 1.005}
+                            autoMinValue={false}
+                            curveType="monotone"
+                            showGradient={false}
+                        />
+                    </div>
+                );
+            },
+            enableSorting: false,
+        }
+    ];
+
+    const raceSpecificColumns: ColumnDef<ProcessedStint>[] = [
+        {
+            accessorKey: "consistency",
+            header: ({ column }) => (
+                <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                className="p-0 hover:bg-gray-700/50"
+                >
+                Consist. (σ)
+                <ArrowUpDown className="ml-1.5 h-3 w-3" />
+                </Button>
+            ),
+            cell: ({ row }) => row.original.consistency?.toFixed(3) ?? 'N/A',
+            sortingFn: 'basic',
+            enableSorting: true,
+        },
+        {
+            accessorKey: "degradation",
+            header: ({ column }) => (
+                <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                className="p-0 hover:bg-gray-700/50"
+                >
+                Degr. (Δ)
+                <ArrowUpDown className="ml-1.5 h-3 w-3" />
+                </Button>
+            ),
+            cell: ({ row }) => {
+                const deg = row.original.degradation;
+                if (deg === null || deg === undefined) return 'N/A';
+                const color = deg > 0.1 ? 'text-red-400' : deg < -0.1 ? 'text-green-400' : 'text-gray-400';
+                const Icon = deg > 0.1 ? TrendingUp : deg < -0.1 ? TrendingDown : TrendingUp;
+                return (
+                <span className={`flex items-center ${color}`}>
+                    <Icon className={`mr-1 h-3 w-3 ${deg === 0 ? 'opacity-50' : ''}`} />
+                    {deg.toFixed(2)}s
+                </span>
+                );
+            },
+            sortingFn: 'basic',
+            enableSorting: true,
+        },
+    ];
+
+    // Conditionally add race-specific columns
+    if (session === 'R' || session === 'Sprint') {
+      // Insert Consistency and Degradation before Lap Trend
+      const lapTrendIndex = baseColumns.findIndex(col => col.id === 'lapTrend');
+      if (lapTrendIndex !== -1) {
+        return [
+            ...baseColumns.slice(0, lapTrendIndex),
+            ...raceSpecificColumns,
+            ...baseColumns.slice(lapTrendIndex)
+        ];
+      } else {
+        // Fallback if lapTrend column wasn't found (shouldn't happen)
+        return [...baseColumns, ...raceSpecificColumns];
+      }
+    } else {
+      return baseColumns;
     }
-  ], [year]); // Include year if driverColor depends on it
+  }, [year, session]); // Dependency array includes session now
 
   const table = useReactTable({
     data: processedData,
@@ -389,11 +413,13 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
             <div className="px-4 py-3 mt-2 border-t border-gray-700/60">
                 <h4 className="text-sm font-semibold text-gray-200 mb-2">Column Explanations:</h4>
                 <ul className="space-y-1.5 text-xs text-gray-400 list-disc pl-4">
-                    <li>
-                        <strong>Consist. (σ):</strong> Standard Deviation of lap times within the stint. Lower is more consistent.
+                    <li className={cn((session !== 'R' && session !== 'Sprint') && 'text-gray-500 italic')}> 
+                        <strong>Consist. (σ):</strong> Standard Deviation of lap times within the stint. Lower is more consistent. 
+                        {(session !== 'R' && session !== 'Sprint') && <em>(Race/Sprint only)</em>}
                     </li>
-                    <li>
-                        <strong>Degr. (Δ):</strong> Estimated lap time difference (in seconds) between the end and start of the stint (avg. last 3 laps vs avg. first 3, excluding outlap). Positive means degradation (slower).
+                    <li className={cn((session !== 'R' && session !== 'Sprint') && 'text-gray-500 italic')}> 
+                        <strong>Degr. (Δ):</strong> Estimated lap time difference (in seconds) between the end and start of the stint (avg. last 3 laps vs avg. first 3, excluding outlap). Positive means degradation (slower). 
+                        {(session !== 'R' && session !== 'Sprint') && <em>(Race/Sprint only)</em>}
                     </li>
                     <li>
                         <strong>Lap Trend:</strong> Mini-chart showing lap time evolution during the stint (lower is faster).
