@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 // Import API functions and types
 import { fetchLapTimes, fetchSessionDrivers, SessionDriver, LapTimeDataPoint } from '@/lib/api';
 import LoadingSpinnerF1 from "@/components/ui/LoadingSpinnerF1"; // Import the spinner
-import { AlertCircle, Users, PlusCircle, XCircle, Download } from 'lucide-react'; // Added Download icon
+import { AlertCircle, Users, PlusCircle, XCircle, Download, BarChart2 } from 'lucide-react'; // Added BarChart2 icon
 import { driverColor } from '@/lib/driverColor';
 import { areTeammates, getLineStylesForDriver, groupDriversByTeam } from '@/lib/teamUtils';
 // Import Select components
@@ -57,13 +57,13 @@ const RacingChart: React.FC<RacingChartProps> = ({
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [shouldLoadChart, setShouldLoadChart] = useState(false);
 
   // Validate initialDrivers prop length and clamp if necessary
   let validatedInitialDrivers = initialDrivers || [];
   if (!staticData) {
       if (validatedInitialDrivers.length < MIN_DRIVERS) {
-          console.warn(`RacingChart received fewer than ${MIN_DRIVERS} initialDrivers. Falling back to defaults.`);
-          validatedInitialDrivers = ["VER", "LEC"]; // Default fallback
+          validatedInitialDrivers = []; // Don't set default drivers, let user choose
       } else if (validatedInitialDrivers.length > MAX_DRIVERS) {
           console.warn(`RacingChart received more than ${MAX_DRIVERS} initialDrivers. Clamping to ${MAX_DRIVERS}.`);
           validatedInitialDrivers = validatedInitialDrivers.slice(0, MAX_DRIVERS);
@@ -96,7 +96,7 @@ const RacingChart: React.FC<RacingChartProps> = ({
      gcTime: 1000 * 60 * 15,
     retry: 1,
     // Ensure we have the minimum number of drivers selected before enabling fetch
-    enabled: !staticData && !!year && !!event && !!session && selectedDrivers.length >= MIN_DRIVERS,
+    enabled: !staticData && !!year && !!event && !!session && selectedDrivers.length >= MIN_DRIVERS && shouldLoadChart,
   });
 
   // Use staticData if provided, otherwise use fetched data
@@ -114,6 +114,11 @@ const RacingChart: React.FC<RacingChartProps> = ({
       const newSelection = [...selectedDrivers];
       newSelection[index] = value;
       setSelectedDrivers(newSelection);
+      
+      // Reset chart loading state when driver changes
+      if (shouldLoadChart) {
+        setShouldLoadChart(false);
+      }
     }
   };
 
@@ -123,6 +128,10 @@ const RacingChart: React.FC<RacingChartProps> = ({
       const nextDriver = availableDrivers.find(d => !selectedDrivers.includes(d.code));
       if (nextDriver) {
         setSelectedDrivers([...selectedDrivers, nextDriver.code]);
+        // Reset chart loading state when adding a driver
+        if (shouldLoadChart) {
+          setShouldLoadChart(false);
+        }
       } else {
         console.warn("No more available drivers to add.");
         // Optionally show a message to the user
@@ -133,11 +142,28 @@ const RacingChart: React.FC<RacingChartProps> = ({
   const removeDriver = (indexToRemove: number) => {
     if (selectedDrivers.length > MIN_DRIVERS) {
       setSelectedDrivers(selectedDrivers.filter((_, index) => index !== indexToRemove));
+      // Reset chart loading state when removing a driver
+      if (shouldLoadChart) {
+        setShouldLoadChart(false);
+      }
     }
   };
 
+  // Initialize with top drivers from session if available and no initialDrivers provided
+  useEffect(() => {
+    if (
+      availableDrivers && 
+      availableDrivers.length >= MIN_DRIVERS && 
+      selectedDrivers.length === 0 && 
+      !staticData
+    ) {
+      // Take the first 2 drivers by default
+      setSelectedDrivers(availableDrivers.slice(0, MIN_DRIVERS).map(d => d.code));
+    }
+  }, [availableDrivers, selectedDrivers.length, staticData]);
+
   // Adjust isLoading check for static data
-  const isLoading = !staticData && (isLoadingDrivers || isLoadingLapTimes);
+  const isLoading = !staticData && (isLoadingLapTimes);
 
   // Handle chart download
   const handleDownload = async () => {
@@ -162,6 +188,24 @@ const RacingChart: React.FC<RacingChartProps> = ({
 
   // --- Render States ---
   const renderContent = () => {
+    // If chart shouldn't be loaded yet, show load button
+    if (!shouldLoadChart && !staticData) {
+      return (
+        <div className="w-full h-[300px] flex flex-col items-center justify-center bg-gray-900/50 rounded-lg gap-4">
+          <p className="text-gray-400">Select drivers and click load to view lap time comparison</p>
+          <Button 
+            onClick={() => setShouldLoadChart(true)}
+            variant="secondary"
+            className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-700"
+            disabled={selectedDrivers.length < MIN_DRIVERS || isLoadingDrivers}
+          >
+            <BarChart2 className="w-4 h-4 mr-2" />
+            Load Chart
+          </Button>
+        </div>
+      );
+    }
+
     if (isLoading) {
       // Use LoadingSpinnerF1 instead of Skeleton
       return (
@@ -176,13 +220,33 @@ const RacingChart: React.FC<RacingChartProps> = ({
           <AlertCircle className="w-10 h-10 mb-2" />
           <p className="font-semibold">Error loading lap times</p>
           <p className="text-xs text-gray-500 mt-1">{(error as Error)?.message || 'Could not fetch data.'}</p>
+          {!staticData && (
+            <Button 
+              onClick={() => setShouldLoadChart(false)}
+              variant="outline"
+              size="sm"
+              className="mt-4 border-gray-700 hover:bg-gray-800"
+            >
+              Back to Selection
+            </Button>
+          )}
         </div>
       );
     }
     if (lapData.length === 0) {
       return (
-        <div className="w-full h-[300px] bg-gray-900/80 border border-gray-700/50 rounded-lg flex items-center justify-center text-gray-500">
-          No common lap data found for comparison.
+        <div className="w-full h-[300px] bg-gray-900/80 border border-gray-700/50 rounded-lg flex flex-col items-center justify-center text-gray-500">
+          <p>No common lap data found for comparison.</p>
+          {!staticData && (
+            <Button 
+              onClick={() => setShouldLoadChart(false)}
+              variant="outline"
+              size="sm"
+              className="mt-4 border-gray-700 hover:bg-gray-800"
+            >
+              Back to Selection
+            </Button>
+          )}
         </div>
       );
     }

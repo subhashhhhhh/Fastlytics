@@ -545,7 +545,6 @@ const Race = () => {
                     year={year} 
                     event={eventName} 
                     session={selectedSession} 
-                    initialDrivers={["VER", "LEC"]} 
                     title="Lap Time Comparison" 
                   />
                 </>
