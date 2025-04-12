@@ -37,7 +37,13 @@ const Footer = () => {
                 <span className="text-red-500 font-semibold flex items-center gap-1">
                   <Heart className="h-4 w-4 fill-current" /> Supporters
                 </span>
-                <span>Special thanks to <a href="https://instagram.com/sf1club" target="_blank" rel="noopener noreferrer" className="font-semibold text-white hover:underline">sf1club</a> for their generous €50 donation!</span>
+                <span>
+                  Thanks to our generous donors:
+                  <ul className="mt-1 space-y-1">
+                    <li>• <a href="https://instagram.com/sf1club" target="_blank" rel="noopener noreferrer" className="font-semibold text-white hover:underline">sf1club</a> - €50</li>
+                    <li>• <a href="https://x.com/@jrychter" target="_blank" rel="noopener noreferrer" className="font-semibold text-white hover:underline">jrychter</a> - $25</li>
+                  </ul>
+                </span>
                 <a 
                   href="https://buymeacoffee.com/subhashh" 
                   target="_blank" 
