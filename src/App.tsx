@@ -21,6 +21,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { SeasonProvider } from "./contexts/SeasonContext"; // Import SeasonProvider
 import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
 import { useState, useEffect } from "react"; // Import useState and useEffect
+import ScrollToTop from "@/components/ScrollToTop"; // Import the new component
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ const App = () => (
         <Sonner />
         <SeasonProvider> {/* Wrap with SeasonProvider */}
           <BrowserRouter>
+            <ScrollToTop /> {/* Add ScrollToTop here */}
             <Routes>
               {/* Auth routes without footer */}
               <Route path="/auth" element={<AuthLayout><Auth /></AuthLayout>} />

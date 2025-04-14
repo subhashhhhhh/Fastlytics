@@ -48,8 +48,11 @@ const calculateStdDev = (arr: number[]): number | null => {
 // Helper function to calculate degradation (simple first 3 vs last 3 laps)
 const calculateDegradation = (lapTimes: number[]): number | null => {
   // Exclude first lap (outlap) and potentially last lap (inlap) for cleaner analysis
-  const validLaps = lapTimes.length > 2 ? lapTimes.slice(1) : lapTimes;
-  if (validLaps.length < 6) return null; // Need at least 6 laps for first 3 / last 3 comparison
+  // Filter out null/NaN first
+  const cleanLapTimes = lapTimes.filter(t => t !== null && !isNaN(t));
+  // Now exclude first and last laps
+  const validLaps = cleanLapTimes.length > 2 ? cleanLapTimes.slice(1, -1) : []; // Exclude first and last
+  if (validLaps.length < 6) return null; // Need at least 6 valid laps (excluding first/last) for first 3 / last 3 comparison
 
   const firstThree = validLaps.slice(0, 3);
   const lastThree = validLaps.slice(-3);
@@ -94,11 +97,14 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
   const processedData = useMemo((): ProcessedStint[] => {
     if (!rawStintData) return [];
     return rawStintData.map((stint) => {
-      const validLapTimes = stint.lapTimes.filter(t => t !== null && !isNaN(t));
-      const avgLapTime = validLapTimes.length > 0 ? validLapTimes.reduce((a, b) => a + b, 0) / validLapTimes.length : null;
-      const fastestLap = validLapTimes.length > 0 ? Math.min(...validLapTimes) : null;
-      const consistency = calculateStdDev(validLapTimes);
-      const degradation = calculateDegradation(validLapTimes);
+      const allValidLapTimes = stint.lapTimes.filter(t => t !== null && !isNaN(t));
+      // Filter out first (outlap) and last (inlap) laps for avg and consistency
+      const fastLapTimes = allValidLapTimes.length > 2 ? allValidLapTimes.slice(1, -1) : [];
+
+      const avgLapTime = fastLapTimes.length > 0 ? fastLapTimes.reduce((a, b) => a + b, 0) / fastLapTimes.length : null;
+      const fastestLap = allValidLapTimes.length > 0 ? Math.min(...allValidLapTimes) : null; // Fastest based on all valid laps
+      const consistency = calculateStdDev(fastLapTimes); // Consistency based on fast laps
+      const degradation = calculateDegradation(allValidLapTimes); // Degradation uses all valid laps (internal filtering)
       const dColor = driverColor(stint.driverCode, year); // Assuming driverColor exists
       const cColor = getCompoundColor(stint.compound); // Assuming getCompoundColor exists
 
