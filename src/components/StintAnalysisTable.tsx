@@ -16,7 +16,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { StintAnalysisData, fetchStintAnalysis } from '@/lib/api';
+import { StintAnalysisData, LapDetail, fetchStintAnalysis } from '@/lib/api';
 import { driverColor } from '@/lib/driverColor'; // Assuming this exists for colors
 import { CompoundColors, getCompoundColor } from '@/lib/utils'; // Corrected import path
 import LoadingSpinnerF1 from './ui/LoadingSpinnerF1';
@@ -45,22 +45,42 @@ const calculateStdDev = (arr: number[]): number | null => {
   return Math.sqrt(variance);
 };
 
-// Helper function to calculate degradation (simple first 3 vs last 3 laps)
-const calculateDegradation = (lapTimes: number[]): number | null => {
-  // Exclude first lap (outlap) and potentially last lap (inlap) for cleaner analysis
-  // Filter out null/NaN first
-  const cleanLapTimes = lapTimes.filter(t => t !== null && !isNaN(t));
-  // Now exclude first and last laps
-  const validLaps = cleanLapTimes.length > 2 ? cleanLapTimes.slice(1, -1) : []; // Exclude first and last
-  if (validLaps.length < 6) return null; // Need at least 6 valid laps (excluding first/last) for first 3 / last 3 comparison
+// Helper function to calculate degradation using linear regression
+const calculateDegradation = (lapDetails: LapDetail[]): number | null => {
+  // Filter out first (outlap) and last (inlap) laps from the *already filtered* green flag lap list
+  const validLaps = lapDetails.length > 2 ? lapDetails.slice(1, -1) : [];
 
-  const firstThree = validLaps.slice(0, 3);
-  const lastThree = validLaps.slice(-3);
+  // Need at least 2 points for linear regression
+  if (validLaps.length < 2) {
+    return null;
+  }
 
-  const avgFirstThree = firstThree.reduce((a, b) => a + b, 0) / 3;
-  const avgLastThree = lastThree.reduce((a, b) => a + b, 0) / 3;
+  const n = validLaps.length;
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumX2 = 0;
 
-  return avgLastThree - avgFirstThree; // Positive value indicates degradation (slower times)
+  validLaps.forEach(lap => {
+    const x = lap.lapNumber; // Use absolute lap number
+    const y = lap.lapTime;   // Lap time
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumX2 += x * x;
+  });
+
+  const denominator = n * sumX2 - sumX * sumX;
+
+  // Avoid division by zero if all lap numbers are the same (highly unlikely but possible)
+  if (denominator === 0) {
+    return 0; // No change in lap number, slope is effectively zero
+  }
+
+  const slope = (n * sumXY - sumX * sumY) / denominator;
+
+  // Return the slope, which represents the change in lap time per lap
+  return slope;
 };
 
 // Define the structure for processed stint data used in the table
@@ -97,14 +117,17 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
   const processedData = useMemo((): ProcessedStint[] => {
     if (!rawStintData) return [];
     return rawStintData.map((stint) => {
-      const allValidLapTimes = stint.lapTimes.filter(t => t !== null && !isNaN(t));
+      const allValidLapDetails = stint.lapDetails; // Already filtered for green flags by backend
+      const allValidLapTimes = allValidLapDetails.map(detail => detail.lapTime);
+
       // Filter out first (outlap) and last (inlap) laps for avg and consistency
-      const fastLapTimes = allValidLapTimes.length > 2 ? allValidLapTimes.slice(1, -1) : [];
+      const fastLapDetails = allValidLapDetails.length > 2 ? allValidLapDetails.slice(1, -1) : [];
+      const fastLapTimes = fastLapDetails.map(detail => detail.lapTime);
 
       const avgLapTime = fastLapTimes.length > 0 ? fastLapTimes.reduce((a, b) => a + b, 0) / fastLapTimes.length : null;
       const fastestLap = allValidLapTimes.length > 0 ? Math.min(...allValidLapTimes) : null; // Fastest based on all valid laps
-      const consistency = calculateStdDev(fastLapTimes); // Consistency based on fast laps
-      const degradation = calculateDegradation(allValidLapTimes); // Degradation uses all valid laps (internal filtering)
+      const consistency = calculateStdDev(fastLapTimes); // Consistency based on fast laps (excluding out/in)
+      const degradation = calculateDegradation(allValidLapDetails); // Degradation uses linear regression on green flag laps (excluding out/in internally)
       const dColor = driverColor(stint.driverCode, year); // Assuming driverColor exists
       const cColor = getCompoundColor(stint.compound); // Assuming getCompoundColor exists
 
@@ -242,7 +265,7 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 className="p-0 hover:bg-gray-700/50"
                 >
-                Degr. (Δ)
+                Degr. (Δ/lap)
                 <ArrowUpDown className="ml-1.5 h-3 w-3" />
                 </Button>
             ),
@@ -254,7 +277,7 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
                 return (
                 <span className={`flex items-center ${color}`}>
                     <Icon className={`mr-1 h-3 w-3 ${deg === 0 ? 'opacity-50' : ''}`} />
-                    {deg.toFixed(2)}s
+                    {deg.toFixed(2)}s/lap
                 </span>
                 );
             },
@@ -375,11 +398,11 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
                 <h4 className="text-sm font-semibold text-gray-200 mb-2">Column Explanations:</h4>
                 <ul className="space-y-1.5 text-xs text-gray-400 list-disc pl-4">
                     <li className={cn((session !== 'R' && session !== 'Sprint') && 'text-gray-500 italic')}> 
-                        <strong>Consist. (σ):</strong> Standard Deviation of lap times within the stint. Lower is more consistent. 
+                        <strong>Consist. (σ):</strong> Standard Deviation of lap times within the stint (excluding first/last green lap). Lower is more consistent. 
                         {(session !== 'R' && session !== 'Sprint') && <em>(Race/Sprint only)</em>}
                     </li>
                     <li className={cn((session !== 'R' && session !== 'Sprint') && 'text-gray-500 italic')}> 
-                        <strong>Degr. (Δ):</strong> Estimated lap time difference (in seconds) between the end and start of the stint (avg. last 3 laps vs avg. first 3, excluding outlap). Positive means degradation (slower). 
+                        <strong>Degr. (Δ/lap):</strong> Estimated change in lap time per lap (slope of linear regression) across green-flag laps (excluding first/last green lap). Positive means degradation (getting slower). 
                         {(session !== 'R' && session !== 'Sprint') && <em>(Race/Sprint only)</em>}
                     </li>
                 </ul>

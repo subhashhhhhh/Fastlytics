@@ -66,13 +66,18 @@ export interface AvailableSession {
 }
 
 // --- Stint Analysis Interfaces ---
+export interface LapDetail {
+    lapNumber: number;
+    lapTime: number; // Lap time in seconds
+}
+
 export interface StintAnalysisData {
     driverCode: string;
     stintNumber: number;
     compound: string;
     startLap: number;
     endLap: number;
-    lapTimes: number[]; // Array of lap times in seconds
+    lapDetails: LapDetail[]; // Array of {lapNumber, lapTime} objects
 }
 
 // --- Schedule Interface ---
