@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'; // Import Link
 import { Award, Flag, Lock, Cpu, Timer, User, Gauge, ArrowRight, CreditCard, Calendar, Clock } from 'lucide-react'; // Added Clock icon
 import Navbar from '@/components/Navbar';
 import F1Card from '@/components/F1Card';
-import FeatureAnnouncementBanner from '@/components/FeatureAnnouncementBanner'; // Import the new component
+import DiscordCommunityBanner from '@/components/DiscordCommunityBanner'; // Import the new Discord banner
 import MobileWarningBanner from '@/components/MobileWarningBanner'; // Import mobile warning banner
 // Removed TrackProgress import as it's no longer used
 import { Button } from "@/components/ui/button";
@@ -211,17 +211,8 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* Feature Announcement Banner */}
-        <FeatureAnnouncementBanner
-          id="telemetry-comparison-2024-05"
-          title="New Telemetry Features are Live Now!"
-          message="We've added exciting new telemetry features in the new update. You can now access data for throttle input, brake input, RPM, and DRS usage for each driver in each race."
-          linkText="Check it out now"
-          linkHref={recentRaces.length > 0 
-            ? `/race/${selectedYear}-${recentRaces[0].EventName.toLowerCase().replace(/\s+/g, '-')}` 
-            : `/standings/teams`}
-          expiresInDays={14}
-        />
+        {/* Discord Community Banner (non-closeable) */}
+        <DiscordCommunityBanner />
 
         {/* Mobile Warning Banner */}
         <MobileWarningBanner 

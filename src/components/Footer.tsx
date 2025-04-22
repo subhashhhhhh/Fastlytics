@@ -7,7 +7,12 @@ const Footer = () => {
 
   const footerLinks = [
     { title: 'Legal', links: [ { name: 'Privacy Policy', href: '/privacy-policy'}, { name: 'Terms of Service', href: '/terms-of-service'} ] },
-    { title: 'Resources', links: [ { name: 'Blog', href: 'https://subhashh.tech'}, { name: 'Support the Project', href: 'https://buymeacoffee.com/subhashh', external: true }, { name: 'FAQ', href: '/faq'} ] },
+    { title: 'Resources', links: [ 
+      { name: 'Blog', href: 'https://subhashh.tech'}, 
+      { name: 'Support the Project', href: 'https://buymeacoffee.com/subhashh', external: true }, 
+      { name: 'Discord Community', href: 'https://discord.gg/bSEGSMwFDn', external: true }, 
+      { name: 'FAQ', href: '/faq'} 
+    ] },
     { title: 'Features', links: [ { name: 'Dashboard', href: '/dashboard'}, { name: 'Drivers', href: '/standings/drivers'}, { name: 'Races', href: '/races'}, { name: 'Teams', href: 'standings/teams'} ] }, // Simplified links
   ];
 
