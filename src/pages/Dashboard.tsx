@@ -22,7 +22,6 @@ import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useSeason } from '@/contexts/SeasonContext'; // Import useSeason
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -53,7 +52,6 @@ const isRookie = (driverCode: string, year: number): boolean => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { selectedYear, setSelectedYear, availableYears } = useSeason(); // Use context
 
   // Fetch Team Standings
