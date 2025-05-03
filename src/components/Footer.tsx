@@ -9,7 +9,7 @@ const Footer = () => {
     { title: 'Legal', links: [ { name: 'Privacy Policy', href: '/privacy-policy'}, { name: 'Terms of Service', href: '/terms-of-service'} ] },
     { title: 'Resources', links: [ 
       { name: 'Blog', href: 'https://subhashh.tech'}, 
-      { name: 'Support the Project', href: 'https://buymeacoffee.com/subhashh', external: true }, 
+      { name: 'Support the Project', href: 'https://ko-fi.com/fastlytics', external: true }, 
       { name: 'Discord Community', href: 'https://discord.gg/bSEGSMwFDn', external: true }, 
       { name: 'FAQ', href: '/faq'} 
     ] },
@@ -35,30 +35,6 @@ const Footer = () => {
             <p className="text-sm max-w-xs">
               The ultimate analytics platform for Formula 1 fans.
             </p>
-            
-            {/* Supporters Thank You */}
-            <div className="mt-3 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md p-3 border border-gray-700">
-              <p className="text-sm text-gray-300 flex flex-col gap-1">
-                <span className="text-red-500 font-semibold flex items-center gap-1">
-                  <Heart className="h-4 w-4 fill-current" /> Supporters
-                </span>
-                <span>
-                  Thanks to our generous donors:
-                  <ul className="mt-1 space-y-1">
-                    <li>• <a href="https://instagram.com/sf1club" target="_blank" rel="noopener noreferrer" className="font-semibold text-white hover:underline">sf1club</a> - €50</li>
-                    <li>• <a href="https://x.com/@jrychter" target="_blank" rel="noopener noreferrer" className="font-semibold text-white hover:underline">jrychter</a> - $25</li>
-                  </ul>
-                </span>
-                <a 
-                  href="https://buymeacoffee.com/subhashh" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-red-400 hover:text-red-300 font-medium mt-1 text-xs inline-flex items-center"
-                >
-                  Support this project <span className="ml-1 text-xs">→</span>
-                </a>
-              </p>
-            </div>
             
              <div className="flex space-x-4 pt-2">
               {socialLinks.map((link) => (

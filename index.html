@@ -27,6 +27,37 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
-    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="subhashh" data-description="Support me on Buy me a coffee!" data-message="Support the project!" data-color="#FF5F5F" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+    <!-- Ko-fi Widget -->
+    <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+    <script>
+      kofiWidgetOverlay.draw('fastlytics', {
+        'type': 'floating-chat',
+        'floating-chat.donateButton.background-color': '#ff5f5f',
+        'floating-chat.donateButton.text-color': '#fff'
+      });
+    </script>
+    <!-- CSS Override for Ko-fi Widget Position (from feedback) -->
+    <style>
+      /* Desktop positioning */
+      .floatingchat-container-wrap {
+        left: unset !important; /* Use !important just in case */
+        right: 16px !important;
+      }
+      .floating-chat-kofi-popup-iframe {
+        left: unset !important;
+        right: 16px !important;
+      }
+
+      /* Mobile positioning (optional but included) */
+      .floatingchat-container-wrap-mobi {
+        left: unset !important;
+        right: 16px !important;
+      }
+      .floating-chat-kofi-popup-iframe-mobi,
+      .floating-chat-kofi-popup-iframe-closer-mobi {
+        left: unset !important;
+        right: 16px !important;
+      }
+    </style>
   </body>
 </html>

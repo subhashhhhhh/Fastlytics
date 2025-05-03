@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; // Import Link
-import { Award, Flag, Lock, Cpu, Timer, User, Gauge, ArrowRight, CreditCard, Calendar, Clock } from 'lucide-react'; // Added Clock icon
+import { motion, useInView, useScroll, useTransform } from 'framer-motion'; // Added framer-motion imports
+import { Award, Flag, Lock, Cpu, Timer, User, Gauge, ArrowRight, CreditCard, Calendar, Clock, Users, Trophy, ChevronDown } from 'lucide-react'; // Added Trophy and ChevronDown icons
 import Navbar from '@/components/Navbar';
 import F1Card from '@/components/F1Card';
-import DiscordCommunityBanner from '@/components/DiscordCommunityBanner'; // Import the new Discord banner
+ // Import the new Discord banner
 import MobileWarningBanner from '@/components/MobileWarningBanner'; // Import mobile warning banner
 // Removed TrackProgress import as it's no longer used
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users } from 'lucide-react';
 import { useSeason } from '@/contexts/SeasonContext'; // Import useSeason
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -44,6 +44,23 @@ const rookiesByYear: { [year: string]: string[] } = {
   '2019': ['NOR', 'RUS', 'ALB'] // Norris, Russell, Albon
 };
 
+// Animation variants
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+};
+
+const staggerChildren = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1
+    }
+  }
+};
+
 // Helper function to check if a driver is a rookie in a given year
 const isRookie = (driverCode: string, year: number): boolean => {
   const yearStr = year.toString();
@@ -53,6 +70,20 @@ const isRookie = (driverCode: string, year: number): boolean => {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { selectedYear, setSelectedYear, availableYears } = useSeason(); // Use context
+  
+  // Refs for scroll-triggered animations
+  const teamsRef = useRef(null);
+  const driversRef = useRef(null);
+  const racesRef = useRef(null);
+  
+  // Check if sections are in view
+  const isTeamsInView = useInView(teamsRef, { once: false, amount: 0.2 });
+  const isDriversInView = useInView(driversRef, { once: false, amount: 0.2 });
+  const isRacesInView = useInView(racesRef, { once: false, amount: 0.2 });
+  
+  // Get scroll progress for parallax effects
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
 
   // Fetch Team Standings
   const { data: teamStandings, isLoading: isLoadingTeams } = useQuery<TeamStanding[]>({
@@ -165,207 +196,384 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-white overflow-hidden">
       <Navbar />
+      
+      {/* Background Elements - decorative circuit lines, similar to landing page */}
+      <div className="fixed inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
+        <motion.div 
+          className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-red-600/0 via-red-600/20 to-red-600/0" 
+          style={{ y }}
+        />
+        <motion.div 
+          className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-red-600/0 via-red-600/10 to-red-600/0" 
+          style={{ y: useTransform(scrollYProgress, [0, 1], [0, -30]) }} 
+        />
+        <div className="absolute -top-64 -left-64 w-[500px] h-[500px] rounded-full bg-red-900/10 blur-3xl" />
+        <div className="absolute top-1/4 -right-32 w-[300px] h-[300px] rounded-full bg-red-900/10 blur-3xl" />
+      </div>
 
-      <div className="px-4 md:px-8 py-8">
-
+      <div className="px-4 md:px-8 py-8 relative z-10">
         {/* --- Header Section --- */}
-        <header className="mb-8 md:mb-12"> {/* Reduced bottom margin */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="animate-slide-in-left">
-              {/* Responsive title size */}
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mb-1">Dashboard</h1>
-              {/* Responsive subtitle size */}
+        <motion.header 
+          className="mb-8 md:mb-12"
+          initial="hidden"
+          animate="visible"
+          variants={staggerChildren}
+        >
+          <motion.div 
+            className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+            variants={fadeInUp}
+          >
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mb-1 bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-white" style={{ backgroundSize: '200% 100%' }}>
+                Dashboard
+              </h1>
               <p className="text-sm sm:text-md md:text-lg text-gray-400">{selectedYear} Season Overview</p>
             </div>
             {/* Season Selector */}
-            <div className="flex items-center gap-4 animate-slide-in-right">
-               <Select
-                 value={String(selectedYear)}
-                 onValueChange={(value) => setSelectedYear(Number(value))}
-               >
-                 <SelectTrigger className="w-[160px] bg-gray-800/80 border-gray-700 text-gray-200 hover:bg-gray-700/70 hover:border-gray-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:ring-offset-0 transition-colors duration-150 py-2.5">
-                   <Calendar className="w-4 h-4 mr-2 opacity-60"/>
-                   <SelectValue placeholder="Select Season" />
-                 </SelectTrigger>
-                 <SelectContent className="bg-gray-900 border-gray-700 text-gray-200">
-                   <SelectGroup>
-                     <SelectLabel className="text-gray-500 px-2 py-1.5">Season</SelectLabel>
-                     {availableYears.map((year) => (
-                       <SelectItem
-                         key={year}
-                         value={String(year)}
-                         className="focus:bg-red-600/30 focus:text-white data-[state=checked]:bg-red-600/20"
-                       >
-                         {year}
-                       </SelectItem>
-                     ))}
-                   </SelectGroup>
-                 </SelectContent>
-               </Select>
-               {/* Removed Data Status Indicator */}
-            </div>
-          </div>
-        </header>
+            <motion.div 
+              className="flex items-center gap-4"
+              variants={fadeInUp}
+            >
+              <div className="relative group">
+                <Select
+                  value={String(selectedYear)}
+                  onValueChange={(value) => setSelectedYear(Number(value))}
+                >
+                  <SelectTrigger className="w-[180px] bg-gray-900/70 border border-red-500/20 text-white hover:bg-gray-800/80 hover:border-red-500/40 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:ring-offset-0 transition-all duration-200 py-2.5 backdrop-blur-md rounded-xl shadow-[0_4px_12px_rgba(153,27,27,0.15)] pr-8 pl-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-shrink-0 bg-red-500/20 rounded-full p-1.5 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+                        <Trophy className="w-4 h-4 text-red-400" />
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium">{selectedYear}</span>
+                        <div className="ml-2 text-xs bg-red-600/70 text-white px-1.5 py-0.5 rounded-full">
+                          F1
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 opacity-70 transition-transform duration-200 group-hover:opacity-100 group-data-[state=open]:rotate-180" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900/95 backdrop-blur-xl border-gray-700/50 border-red-500/20 text-white rounded-xl overflow-hidden shadow-[0_10px_25px_-5px_rgba(0,0,0,0.3)]">
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <SelectGroup>
+                        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800">
+                          <SelectLabel className="text-gray-400 text-xs uppercase tracking-wider">Season</SelectLabel>
+                          <span className="text-xs text-gray-500">{availableYears.length} seasons</span>
+                        </div>
+                        <div className="py-1 max-h-[300px] overflow-y-auto custom-scrollbar">
+                          {availableYears.map((year, index) => (
+                            <SelectItem
+                              key={year}
+                              value={String(year)}
+                              className="text-base py-2.5 pl-10 pr-3 focus:bg-red-600/20 data-[state=checked]:bg-red-600/30 data-[state=checked]:text-white relative"
+                            >
+                              <div className="flex items-center w-full">
+                                <span className="w-12 text-gray-400 font-mono text-sm">{year}</span>
+                                <span className="font-medium ml-2">Formula 1</span>
+                                {selectedYear === year && (
+                                  <div className="ml-auto h-2 w-2 rounded-full bg-red-500"></div>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </div>
+                      </SelectGroup>
+                    </motion.div>
+                  </SelectContent>
+                </Select>
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.header>
 
         {/* Discord Community Banner (non-closeable) */}
-        <DiscordCommunityBanner />
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+        >
+        </motion.div>
 
         {/* Mobile Warning Banner */}
-        <MobileWarningBanner 
-          id="mobile-view-warning"
-          expiresInDays={1}
-        />
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+        >
+          <MobileWarningBanner 
+            id="mobile-view-warning"
+            expiresInDays={1}
+          />
+        </motion.div>
 
         {/* --- Main Content Grid --- */}
-        {/* Adjusted main grid gap */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mt-6">
           {/* Left Column */}
-           {/* Adjusted spacing between sections */}
-          <div className="lg:col-span-2 space-y-8 md:space-y-10">
-
+          <div className="lg:col-span-2 space-y-10">
             {/* Team Standings Section */}
-            <section className="animate-fade-in" style={{ animationDelay: '100ms' }}>
-              <div className="flex justify-between items-center mb-4">
-                 {/* Responsive section title size */}
-                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold">Team Standings</h2>
-                 <Button variant="link" className="text-red-400 hover:text-red-300 px-0 text-sm" onClick={() => navigate('/standings/teams')}>
+            <section ref={teamsRef}>
+              <motion.div
+                initial="hidden"
+                animate={isTeamsInView ? "visible" : "hidden"}
+                variants={staggerChildren}
+              >
+                <motion.div variants={fadeInUp} className="flex justify-between items-center mb-5">
+                  <h2 className="text-xl md:text-2xl font-bold">
+                    Team <span className="text-red-500">Standings</span>
+                  </h2>
+                  <Button 
+                    variant="link" 
+                    className="text-red-400 hover:text-red-300 px-0 text-sm" 
+                    onClick={() => navigate('/standings/teams')}
+                  >
                     See full standings <ArrowRight className="w-4 h-4 ml-1"/>
                   </Button>
-                </div>
+                </motion.div>
+                
                 {isLoadingTeams ? (
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-                     {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] bg-gray-800/50 rounded-lg"/>)}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {[...Array(4)].map((_, i) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                      >
+                        <Skeleton className="h-[88px] bg-gray-800/50 rounded-lg"/>
+                      </motion.div>
+                    ))}
                   </div>
                 ) : (
-
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-                   {teamStandings?.slice(0, 4).map((team) => (
-                     // Remove the Link and replace with a simple div
-                     <div key={team.shortName || team.team} className="no-underline">
-                       <F1Card
-                         title={team.team}
-                         value={`${team.points} PTS`}
-                        team={getTeamColorClass(team.team) as any}
-                         icon={<Award className={`h-5 w-5 text-f1-${getTeamColorClass(team.team)}`} />}
-                         points_change={team.points_change} // Pass points_change
-                         className="bg-gray-900/80 border border-gray-700/80 hover:border-red-600/50 transition-colors duration-200 h-full" // Added h-full for consistent height
-                       />
-                     </div>
-                   ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {teamStandings?.slice(0, 4).map((team, index) => (
+                      <motion.div
+                        key={team.shortName || team.team}
+                        initial="hidden"
+                        animate={isTeamsInView ? "visible" : "hidden"}
+                        whileHover="hover"
+                        custom={{ delay: index * 0.1 }}
+                        variants={{
+                          hidden: { opacity: 0, y: 30 },
+                          visible: { 
+                            opacity: 1, 
+                            y: 0, 
+                            transition: { duration: 0.6, ease: "easeOut", delay: index * 0.1 }
+                          },
+                          hover: { 
+                            y: -10, 
+                            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+                            transition: { duration: 0.3, ease: "easeOut" }
+                          }
+                        }}
+                        className="h-full"
+                      >
+                        <F1Card
+                          title={team.team}
+                          value={`${team.points} PTS`}
+                          team={getTeamColorClass(team.team) as any}
+                          icon={<Award className={`h-5 w-5 text-f1-${getTeamColorClass(team.team)}`} />}
+                          points_change={team.points_change}
+                          className="bg-gray-900/60 backdrop-blur-lg border border-gray-800 hover:border-red-600/50 transition-colors duration-200 h-full"
+                        />
+                      </motion.div>
+                    ))}
                   </div>
                 )}
+              </motion.div>
             </section>
 
             {/* Driver Standings Section */}
-            <section className="animate-fade-in" style={{ animationDelay: '150ms' }}>
-               <div className="flex justify-between items-center mb-4">
-                 {/* Responsive section title size */}
-                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold">Driver Standings</h2>
-                  <Button variant="link" className="text-red-400 hover:text-red-300 px-0 text-sm" onClick={() => navigate('/standings/drivers')}>
-                   See full standings <ArrowRight className="w-4 h-4 ml-1"/>
-                 </Button>
-               </div>
-               {isLoadingDrivers ? (
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-                     {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] bg-gray-800/50 rounded-lg"/>)}
-                 </div>
-               ) : (
-
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-                   {driverStandings?.slice(0, 4).map((driver) => (
-                     // Remove the Link and replace with a simple div
-                     <div key={driver.code} className="no-underline">
-                       <F1Card
-                         title={driver.name}
-                         value={`${driver.points} PTS`}
-                        team={getTeamColorClass(driver.team) as any}
-                         icon={<Users className={`h-5 w-5 text-f1-${getTeamColorClass(driver.team)}`} />}
-                         points_change={driver.points_change} // Pass points_change
-                         isRookie={isRookie(driver.code, selectedYear)} // Add rookie status
-                         className="bg-gray-900/80 border border-gray-700/80 hover:border-red-600/50 transition-colors duration-200 h-full" // Added h-full for consistent height
-                       />
-                     </div>
-                   ))}
+            <section ref={driversRef}>
+              <motion.div
+                initial="hidden"
+                animate={isDriversInView ? "visible" : "hidden"}
+                variants={staggerChildren}
+              >
+                <motion.div variants={fadeInUp} className="flex justify-between items-center mb-5">
+                  <h2 className="text-xl md:text-2xl font-bold">
+                    Driver <span className="text-red-500">Standings</span>
+                  </h2>
+                  <Button 
+                    variant="link" 
+                    className="text-red-400 hover:text-red-300 px-0 text-sm" 
+                    onClick={() => navigate('/standings/drivers')}
+                  >
+                    See full standings <ArrowRight className="w-4 h-4 ml-1"/>
+                  </Button>
+                </motion.div>
+                
+                {isLoadingDrivers ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {[...Array(4)].map((_, i) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                      >
+                        <Skeleton className="h-[88px] bg-gray-800/50 rounded-lg"/>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {driverStandings?.slice(0, 4).map((driver, index) => (
+                      <motion.div
+                        key={driver.code}
+                        initial="hidden"
+                        animate={isDriversInView ? "visible" : "hidden"}
+                        whileHover="hover"
+                        custom={{ delay: index * 0.1 }}
+                        variants={{
+                          hidden: { opacity: 0, y: 30 },
+                          visible: { 
+                            opacity: 1, 
+                            y: 0, 
+                            transition: { duration: 0.6, ease: "easeOut", delay: index * 0.1 }
+                          },
+                          hover: { 
+                            y: -10, 
+                            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+                            transition: { duration: 0.3, ease: "easeOut" }
+                          }
+                        }}
+                        className="h-full"
+                      >
+                        <F1Card
+                          title={driver.name}
+                          value={`${driver.points} PTS`}
+                          team={getTeamColorClass(driver.team) as any}
+                          icon={<Users className={`h-5 w-5 text-f1-${getTeamColorClass(driver.team)}`} />}
+                          points_change={driver.points_change}
+                          isRookie={isRookie(driver.code, selectedYear)}
+                          className="bg-gray-900/60 backdrop-blur-lg border border-gray-800 hover:border-red-600/50 transition-colors duration-200 h-full"
+                        />
+                      </motion.div>
+                    ))}
                   </div>
                 )}
+              </motion.div>
             </section>
           </div>
 
-          {/* Right Column - Replaced with "Explore Analytics by Race" */}
-          <aside className="lg:col-span-1 space-y-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
-             {/* Responsive section title size */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold">Explore Analytics by Race</h2>
-              <Button variant="link" className="text-red-400 hover:text-red-300 px-0 text-sm" onClick={() => navigate('/races')}>
-                View all races <ArrowRight className="w-4 h-4 ml-1"/>
-              </Button>
-            </div>
-            {isLoadingRaceResults || isLoadingSchedule ? (
-              <div className="space-y-4">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[88px] bg-gray-800/50 rounded-lg"/>)}
-              </div>
-            ) : recentRaces.length > 0 ? (
-              <div className="space-y-4">
-                {recentRaces.slice(0, 4).map((race) => {
-                  const teamColor = race.result ? getTeamColorClass(race.result.team) : 'gray';
-                  
-                  return (
-                    <div
-                      key={`${selectedYear}-${race.EventName}`}
-                      onClick={() => handleRaceClick(race)}
-                      className="cursor-pointer group transition-transform duration-200 ease-in-out hover:scale-[1.03]"
+          {/* Right Column - Explore Analytics by Race */}
+          <aside className="lg:col-span-1 space-y-6" ref={racesRef}>
+            <motion.div
+              initial="hidden"
+              animate={isRacesInView ? "visible" : "hidden"}
+              variants={staggerChildren}
+            >
+              <motion.div variants={fadeInUp} className="flex justify-between items-center mb-5">
+                <h2 className="text-xl md:text-2xl font-bold">
+                  Race <span className="text-red-500">Analytics</span>
+                </h2>
+                <Button 
+                  variant="link" 
+                  className="text-red-400 hover:text-red-300 px-0 text-sm" 
+                  onClick={() => navigate('/races')}
+                >
+                  View all races <ArrowRight className="w-4 h-4 ml-1"/>
+                </Button>
+              </motion.div>
+              
+              {isLoadingRaceResults || isLoadingSchedule ? (
+                <div className="space-y-4">
+                  {[...Array(4)].map((_, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
                     >
-                      <Card 
-                        className="bg-gray-900/80 border border-gray-700/80 group-hover:border-red-500/50 transition-colors duration-200"
+                      <Skeleton className="h-[88px] bg-gray-800/50 rounded-lg"/>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : recentRaces.length > 0 ? (
+                <div className="space-y-4">
+                  {recentRaces.slice(0, 4).map((race, index) => {
+                    const teamColor = race.result ? getTeamColorClass(race.result.team) : 'gray';
+                    
+                    return (
+                      <motion.div
+                        key={`${selectedYear}-${race.EventName}`}
+                        initial="hidden"
+                        animate={isRacesInView ? "visible" : "hidden"}
+                        whileHover="hover"
+                        custom={{ delay: index * 0.1 }}
+                        variants={{
+                          hidden: { opacity: 0, y: 30 },
+                          visible: { 
+                            opacity: 1, 
+                            y: 0, 
+                            transition: { duration: 0.6, ease: "easeOut", delay: index * 0.1 }
+                          },
+                          hover: { 
+                            y: -10, 
+                            scale: 1.02,
+                            transition: { duration: 0.3, ease: "easeOut" }
+                          }
+                        }}
+                        onClick={() => handleRaceClick(race)}
+                        className="cursor-pointer"
                       >
-                        <CardHeader className="pb-2">
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-1">
-                              <CardTitle className="text-lg font-semibold text-white">{race.EventName}</CardTitle>
-                              <CardDescription className="text-gray-400 text-sm">
-                                {race.displayDate}{race.Location ? `, ${race.Location}` : ''}
-                              </CardDescription>
-                            </div>
-                            <div className={`p-2 bg-gray-800 rounded-lg border border-gray-700 text-f1-${teamColor}`}>
-                              <Flag className="h-5 w-5" />
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-2">
-                          <div className="flex justify-between items-center">
-                            {race.isOngoing ? (
-                              <div className="flex items-center gap-1.5 text-amber-400">
-                                <Clock className="w-4 h-4" />
-                                <span className="font-medium">ONGOING</span>
+                        <Card 
+                          className="bg-gray-900/60 backdrop-blur-lg border border-gray-800 hover:border-red-500/50 transition-colors duration-200"
+                        >
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <CardTitle className="text-lg font-semibold text-white">{race.EventName}</CardTitle>
+                                <CardDescription className="text-gray-400 text-sm">
+                                  {race.displayDate}{race.Location ? `, ${race.Location}` : ''}
+                                </CardDescription>
                               </div>
-                            ) : race.isUpcoming ? (
-                              <div className="flex items-center gap-1.5 text-blue-400">
-                                <Clock className="w-4 h-4" />
-                                <span className="font-medium">UPCOMING</span>
+                              <div className={`p-2 bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-700/80 text-f1-${teamColor}`}>
+                                <Flag className="h-5 w-5" />
                               </div>
-                            ) : race.result ? (
-                              <span className="text-sm text-gray-300">Winner: {race.result.driver}</span>
-                            ) : (
-                              <span className="text-sm text-gray-300 italic">Race in progress</span>
-                            )}
-                            <ArrowRight className="w-4 h-4 text-red-400"/>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-gray-500 italic py-10 text-center">No race results available for {selectedYear}.</p>
-            )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-2">
+                            <div className="flex justify-between items-center">
+                              {race.isOngoing ? (
+                                <div className="flex items-center gap-1.5 text-amber-400">
+                                  <Clock className="w-4 h-4" />
+                                  <span className="font-medium">ONGOING</span>
+                                </div>
+                              ) : race.isUpcoming ? (
+                                <div className="flex items-center gap-1.5 text-blue-400">
+                                  <Clock className="w-4 h-4" />
+                                  <span className="font-medium">UPCOMING</span>
+                                </div>
+                              ) : race.result ? (
+                                <span className="text-sm text-gray-300">Winner: {race.result.driver}</span>
+                              ) : (
+                                <span className="text-sm text-gray-300 italic">Race in progress</span>
+                              )}
+                              <ArrowRight className="w-4 h-4 text-red-400"/>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <motion.p
+                  variants={fadeInUp}
+                  className="text-gray-500 italic py-10 text-center"
+                >
+                  No race results available for {selectedYear}.
+                </motion.p>
+              )}
+            </motion.div>
           </aside>
-
         </div>
       </div>
     </div>
