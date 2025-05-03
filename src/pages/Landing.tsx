@@ -117,9 +117,6 @@ const Landing: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500/0 via-red-500 to-red-500/0"></div>
           
           <div className="flex flex-col items-center justify-center text-center">
-            <div className="bg-red-500/20 rounded-full p-2.5 mb-3 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
-              <Users className="h-6 w-6 text-red-400" />
-            </div>
             <div>
               <div className="flex items-center justify-center mb-1.5">
                 <span className="bg-red-600/70 text-white text-xs font-bold px-2 py-0.5 rounded mr-2">ANNOUNCEMENT</span>
