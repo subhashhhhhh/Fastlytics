@@ -14,6 +14,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import FAQ from "./pages/FAQ";
 import Footer from "./components/Footer";
+import LandingFooter from "./components/LandingFooter";
 import { SeasonProvider } from "./contexts/SeasonContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -28,11 +29,11 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-// Landing layout without footer
+// Landing layout with custom footer
 const LandingLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen flex flex-col">
     {children}
-    {/* No Footer here */}
+    <LandingFooter />
   </div>
 );
 
@@ -46,13 +47,13 @@ const App = () => (
           <BrowserRouter>
             <ScrollToTop />
             <Routes>
-              {/* Landing Page Route (No Footer) */}
+              {/* Landing Page Route (with LandingFooter) */}
               <Route path="/" element={<LandingLayout><Landing /></LandingLayout>} />
 
               {/* Public Info Pages */}
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/faq" element={<FAQ />} />
+              <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicy /></MainLayout>} />
+              <Route path="/terms-of-service" element={<MainLayout><TermsOfService /></MainLayout>} />
+              <Route path="/faq" element={<MainLayout><FAQ /></MainLayout>} />
 
               {/* All routes are now public */}
               <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
