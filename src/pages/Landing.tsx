@@ -109,26 +109,6 @@ const Landing: React.FC = () => {
         />
         
         {/* No Registration Notification - positioned above logo */}
-        <motion.div 
-          variants={fadeInUp} 
-          className="mb-10 bg-gradient-to-r from-red-900/40 via-red-800/30 to-red-900/40 backdrop-blur-md border border-red-500/40 rounded-xl px-5 py-4 max-w-xl mx-auto shadow-[0_4px_20px_rgba(185,28,28,0.15)] overflow-hidden relative"
-        >
-          {/* Decorative accent */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500/0 via-red-500 to-red-500/0"></div>
-          
-          <div className="flex flex-col items-center justify-center text-center">
-            <div>
-              <div className="flex items-center justify-center mb-1.5">
-                <span className="bg-red-600/70 text-white text-xs font-bold px-2 py-0.5 rounded mr-2">ANNOUNCEMENT</span>
-                <span className="text-red-300 text-xs">Now Live</span>
-              </div>
-              <h3 className="text-white font-bold text-base md:text-lg mb-1">No Registration Required!</h3>
-              <p className="text-red-200/90 text-sm md:text-base max-w-md mx-auto">
-                Fastlytics is now completely open to everyone - just dive in and explore.
-              </p>
-            </div>
-          </div>
-        </motion.div>
         
         <motion.div variants={fadeInUp} className="mb-6">
           <motion.div 
