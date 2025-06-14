@@ -79,7 +79,7 @@ const Navbar = () => {
           transition: 'all 0.3s ease-in-out'
         }}
       >
-        <div className="w-full max-w-screen-2xl mx-auto h-full px-4 sm:px-8 lg:px-12 flex justify-between items-center">
+        <div className="w-full mx-auto h-full px-4 sm:px-8 lg:px-12 flex justify-between items-center">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center space-x-3">
             <motion.div 

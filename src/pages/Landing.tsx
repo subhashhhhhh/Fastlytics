@@ -108,12 +108,18 @@ const Landing: React.FC = () => {
           }}
         />
         
-        {/* No Registration Notification - positioned above logo */}
+        <motion.div variants={fadeInUp} className="mb-6 flex items-center justify-center space-x-4 bg-gray-800/50 border border-gray-700 rounded-full px-6 py-2 text-sm text-gray-300 shadow-lg">
+          <span>We're open source!</span>
+          <a href="https://github.com/subhashhhhhh/Fastlytics" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-1">
+           
+            <img src="https://img.shields.io/github/stars/subhashhhhhh/Fastlytics?style=social" alt="GitHub stars" />
+          </a>
+        </motion.div>
         
         <motion.div variants={fadeInUp} className="mb-6">
-          <motion.div 
+          <motion.div
             className="inline-block mb-2"
-            animate={{ 
+            animate={{
               rotateZ: [0, 5, 0, -5, 0],
               transition: { repeat: Infinity, duration: 5, ease: "easeInOut" }
             }}
@@ -121,15 +127,15 @@ const Landing: React.FC = () => {
             <Gauge className="h-16 w-16 md:h-20 md:w-20 text-red-500 mx-auto" />
           </motion.div>
           
-          <motion.h1 
+          <motion.h1
             className="text-6xl md:text-8xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-white mb-4 mx-auto"
-            animate={{ 
+            animate={{
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
             }}
-            transition={{ 
-              duration: 10, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut"
             }}
             style={{ backgroundSize: '200% 100%' }}
           >
@@ -149,7 +155,7 @@ const Landing: React.FC = () => {
         <motion.div variants={fadeInUp}>
             <Link to="/dashboard">
             <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-6 rounded-xl shadow-[0_0_20px_rgba(225,29,72,0.3)] hover:shadow-[0_0_30px_rgba(225,29,72,0.5)] transition-all duration-300 text-lg">
-                Explore Dashboard
+                Try for Free!
               <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>

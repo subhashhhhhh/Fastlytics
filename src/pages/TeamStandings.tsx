@@ -101,7 +101,7 @@ const TeamStandings = () => {
         <div className="absolute top-1/4 -right-32 w-[300px] h-[300px] rounded-full bg-red-900/10 blur-3xl" />
       </div>
       
-      <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto relative z-10" ref={standingsRef}>
+      <div className="px-4 md:px-8 py-8 mx-auto relative z-10" ref={standingsRef}>
         {/* Header */}
         <motion.header 
           className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 md:mb-12"
