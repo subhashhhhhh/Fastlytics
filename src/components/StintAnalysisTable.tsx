@@ -272,8 +272,8 @@ const StintAnalysisTable: React.FC<StintAnalysisTableProps> = ({ year, event, se
             cell: ({ row }) => {
                 const deg = row.original.degradation;
                 if (deg === null || deg === undefined) return 'N/A';
-                const color = deg > 0.1 ? 'text-red-400' : deg < -0.1 ? 'text-green-400' : 'text-gray-400';
-                const Icon = deg > 0.1 ? TrendingUp : deg < -0.1 ? TrendingDown : TrendingUp;
+                const color = deg < 0 ? 'text-green-400' : 'text-gray-400';
+                const Icon = deg < 0 ? TrendingDown : TrendingUp;
                 return (
                 <span className={`flex items-center ${color}`}>
                     <Icon className={`mr-1 h-3 w-3 ${deg === 0 ? 'opacity-50' : ''}`} />
