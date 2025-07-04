@@ -35,6 +35,8 @@ import BrakeChart from '@/components/BrakeChart';
 import RPMChart from '@/components/RPMChart';
 import DRSChart from '@/components/DRSChart';
 import PositionsTabContent from '@/components/PositionsTabContent';
+import KofiDonationPopup from '@/components/KofiDonationPopup';
+import { useDonationPopup } from '@/hooks/useDonationPopup';
 
 // Helper to get team color class
 const getTeamColorClass = (teamName: string | undefined): string => {
@@ -216,6 +218,9 @@ const Race = () => {
   const [availableSessions, setAvailableSessions] = useState<AvailableSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<string>('R'); // Default to Race
   const [selectedLap, setSelectedLap] = useState<string | number>('fastest'); // For telemetry
+  
+  // Donation popup hook
+  const { shouldShowPopup, hidePopup } = useDonationPopup();
   
   // State for circuit comparison drivers
   const [circuitDrivers, setCircuitDrivers] = useState<{
@@ -686,6 +691,12 @@ const Race = () => {
           </Tabs>
         )}
       </div>
+      
+      {/* Ko-fi Donation Popup */}
+      <KofiDonationPopup 
+        isOpen={shouldShowPopup} 
+        onClose={hidePopup}
+      />
     </div>
   );
 };
