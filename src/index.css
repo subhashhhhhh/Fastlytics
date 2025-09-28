@@ -420,6 +420,7 @@
 .recharts-responsive-container {
   width: 100% !important;
   height: 100% !important;
+  overflow: visible !important;
 }
 
 /* Make sure SVG elements are visible during export */
@@ -430,4 +431,38 @@
 /* Fix title display in charts */
 .chart-container .recharts-wrapper {
   margin-top: 15px;
+}
+
+/* Ensure chart tooltips appear above footer and other elements */
+.recharts-tooltip-wrapper {
+  z-index: 9999 !important;
+}
+
+.recharts-default-tooltip {
+  z-index: 9999 !important;
+}
+
+/* Force any recharts wrapper to have higher z-index */
+.recharts-wrapper .recharts-tooltip-wrapper {
+  z-index: 9999 !important;
+}
+
+/* Ensure the tooltip portal appears above everything */
+.recharts-tooltip-cursor + .recharts-tooltip-wrapper {
+  z-index: 9999 !important;
+}
+
+/* Allow chart containers to overflow for tooltips */
+.export-chart-container {
+  overflow: visible !important;
+}
+
+/* Ensure chart tooltip containers can overflow their parent cards */
+[data-radix-collection-item] {
+  overflow: visible !important;
+}
+
+/* Specific override for cards containing charts */
+.chart-card {
+  overflow: visible !important;
 }

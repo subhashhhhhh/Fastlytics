@@ -674,7 +674,7 @@ const CircuitComparisonChart: React.FC<CircuitComparisonChartProps> = ({
   return (
     <Card 
       ref={chartRef}
-      className={cn("chart-container bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm overflow-hidden", className)}
+      className={cn("bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm overflow-hidden rounded-md p-4", className)}
     >
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">

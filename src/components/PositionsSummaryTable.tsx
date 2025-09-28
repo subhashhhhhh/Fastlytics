@@ -24,7 +24,7 @@ const getTeamColorClass = (teamName: string | undefined): string => {
 
 // Define rookies by season year (assuming it's defined elsewhere or copy it here)
 const rookiesByYear: { [year: string]: string[] } = {
-  '2025': ['ANT', 'BOR', 'DOO', 'BEA', 'HAD', 'LAW'],
+  '2025': ['ANT', 'BOR', 'DOO', 'BEA', 'HAD', 'LAW', 'COL'],
   '2024': ['BEA', 'COL'],
   '2023': ['PIA', 'SAR', 'DEV'],
   '2022': ['ZHO'],

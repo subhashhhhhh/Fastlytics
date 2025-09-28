@@ -18,7 +18,7 @@ import { useSeason } from '@/contexts/SeasonContext';
 
 // Define rookies by season year
 const rookiesByYear: { [year: string]: string[] } = {
-  '2025': ['ANT', 'BOR', 'DOO', 'BEA', 'HAD', 'LAW'], // Antonelli, Bortoleto, Doohan, Bearman, Hadjar, Lawson
+  '2025': ['ANT', 'BOR', 'DOO', 'BEA', 'HAD', 'LAW', 'COL'], // Antonelli, Bortoleto, Doohan, Bearman, Hadjar, Lawson, Colapinto
   '2024': ['BEA', 'COL'], // Bearman, Colapinto
   '2023': ['PIA', 'SAR', 'DEV'], // Piastri, Sargeant, De Vries
   '2022': ['ZHO'], // Zhou

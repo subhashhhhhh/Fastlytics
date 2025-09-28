@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Github, Twitter, Gauge, Heart, ArrowRight,
-  Trophy, MessageCircle, Shield, ExternalLink, 
-  Zap, Flag, Users, Calendar
+  ExternalLink, MessageCircle
 } from 'lucide-react';
 
 const LandingFooter = () => {
@@ -26,17 +25,31 @@ const LandingFooter = () => {
     }
   };
 
-  const footerLinks = [
-    { name: 'Dashboard', href: '/dashboard', category: 'app' },
-    { name: 'Race Calendar', href: '/races', category: 'app' },
-    { name: 'Driver Standings', href: '/standings/drivers', category: 'app' },
-    { name: 'Team Standings', href: '/standings/teams', category: 'app' },
-    { name: 'Discord', href: 'https://discord.gg/bSEGSMwFDn', external: true, category: 'community' },
-    { name: 'Twitter', href: 'https://x.com/fastlytics', external: true, category: 'community' },
-    { name: 'GitHub', href: 'https://github.com/subhashhhhhh/Fastlytics', external: true, category: 'community' },
-    { name: 'Privacy Policy', href: '/privacy-policy', category: 'legal' },
-    { name: 'Terms of Service', href: '/terms-of-service', category: 'legal' },
-    { name: 'FAQ', href: '/faq', category: 'legal' },
+  const featuresLinks = [
+    { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Race Calendar', href: '/races' },
+    { name: 'Driver Standings', href: '/standings/drivers' },
+    { name: 'Team Standings', href: '/standings/teams' },
+  ];
+
+  const resourcesLinks = [
+    { name: 'Discord', href: 'https://discord.gg/bSEGSMwFDn', external: true },
+    { name: 'Twitter', href: 'https://x.com/fastlytics', external: true },
+    { name: 'GitHub', href: 'https://github.com/subhashhhhhh/Fastlytics', external: true },
+    { name: 'Support us', href: 'https://ko-fi.com/fastlytics', external: true },
+  ];
+
+  const legalLinks = [
+    { name: 'Privacy Policy', href: '/privacy-policy' },
+    { name: 'Terms of Service', href: '/terms-of-service' },
+    { name: 'FAQ', href: '/faq' },
+  ];
+
+  const socialLinks = [
+    { name: 'Discord', href: 'https://discord.gg/bSEGSMwFDn', icon: <MessageCircle className="h-4 w-4" /> },
+    { name: 'GitHub', href: 'https://github.com/subhashhhhhh/Fastlytics', icon: <Github className="h-4 w-4" /> },
+    { name: 'Twitter', href: 'https://x.com/fastlytics', icon: <Twitter className="h-4 w-4" /> },
+    { name: 'Support', href: 'https://ko-fi.com/fastlytics', icon: <Heart className="h-4 w-4" /> },
   ];
 
   return (
@@ -54,7 +67,7 @@ const LandingFooter = () => {
         <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-red-600/0 via-red-600/10 to-red-600/0"></div>
       </div>
       
-      <div className="relative z-10">
+      <div className="relative z-0">
         {/* Main Footer Content */}
         <div className="container mx-auto px-4 md:px-8 py-12">
           <motion.div 
@@ -64,163 +77,132 @@ const LandingFooter = () => {
             viewport={{ once: true, amount: 0.2 }}
             variants={staggerChildren}
           >
-            {/* Left Column - Logo & CTA */}
+            {/* Left Column - Logo & Social */}
             <motion.div 
-              className="lg:col-span-4"
+              className="lg:col-span-5"
               variants={fadeInUp}
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <Link 
-                    to="/dashboard" 
-                    className="flex items-center gap-2 mb-3 w-fit"
-                  >
-                    <div className="relative">
-                      <Gauge className="h-6 w-6 text-red-500" />
-                      <motion.div 
-                        className="absolute inset-0 rounded-full bg-red-500/20" 
-                        animate={{ scale: [1, 1.4, 1] }} 
-                        transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
-                      />
-                    </div>
-                    <span className="font-bold text-2xl tracking-tight">Fast<span className="text-red-500">lytics</span></span>
-                  </Link>
-                  
-                  <p className="text-gray-400 text-sm max-w-sm mb-4">
-                    The ultimate analytics platform for Formula 1 fans, with in-depth race data and insights.
-                  </p>
+              <div className="flex flex-col">
+                <Link 
+                  to="/dashboard" 
+                  className="flex items-center gap-2 mb-4 w-fit"
+                >
+                  <div className="relative">
+                    <Gauge className="h-6 w-6 text-red-500" />
+                    <motion.div 
+                      className="absolute inset-0 rounded-full bg-red-500/20" 
+                      animate={{ scale: [1, 1.4, 1] }} 
+                      transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
+                    />
+                  </div>
+                  <span className="font-bold text-2xl tracking-tight">Fast<span className="text-red-500">lytics</span></span>
+                </Link>
+                
+                <p className="text-gray-400 text-sm max-w-sm mb-6">
+                  The ultimate analytics platform for Formula 1 fans, with in-depth race data and insights.
+                </p>
+                
+                <div className="flex gap-3 mb-6">
+                  {socialLinks.map((link) => (
+                    <a 
+                      key={link.name}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 py-2 px-3 bg-gray-800/50 hover:bg-gray-700 rounded-lg text-white text-sm transition-colors border border-gray-700/50 hover:border-red-500/30"
+                    >
+                      {link.icon}
+                      <span>{link.name}</span>
+                    </a>
+                  ))}
                 </div>
                 
-                <Link to="/dashboard" className="hidden md:flex lg:hidden">
+                <Link to="/dashboard" className="md:hidden">
                   <motion.div 
-                    className="flex items-center gap-1.5 text-sm bg-red-600 hover:bg-red-700 text-white font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 w-fit"
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    Dashboard
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    Explore Dashboard
+                    <ArrowRight className="h-4 w-4" />
                   </motion.div>
                 </Link>
               </div>
-              
-              <div className="mt-6 flex flex-wrap gap-3">
-                <a 
-                  href="https://discord.gg/bSEGSMwFDn"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 py-1.5 px-3 bg-gray-800 rounded-lg text-white text-sm hover:bg-gray-700 transition-colors"
-                >
-                  <MessageCircle className="h-4 w-4 text-red-400" />
-                  <span>Discord</span>
-                </a>
-                <a 
-                  href="https://github.com/subhashhhhhh/Fastlytics"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 py-1.5 px-3 bg-gray-800 rounded-lg text-white text-sm hover:bg-gray-700 transition-colors"
-                >
-                  <Github className="h-4 w-4 text-red-400" />
-                  <span>GitHub</span>
-                </a>
-                <a 
-                  href="https://x.com/fastlytics"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 py-1.5 px-3 bg-gray-800 rounded-lg text-white text-sm hover:bg-gray-700 transition-colors"
-                >
-                  <Twitter className="h-4 w-4 text-red-400" />
-                  <span>Twitter</span>
-                </a>
-                <a 
-                  href="https://ko-fi.com/fastlytics"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 py-1.5 px-3 bg-gray-800 rounded-lg text-white text-sm hover:bg-gray-700 transition-colors"
-                >
-                  <Heart className="h-4 w-4 text-red-400" />
-                  <span>Support</span>
-                </a>
-              </div>
             </motion.div>
             
-            {/* Middle Column - Navigation Links */}
+            {/* Features Column */}
             <motion.div 
-              className="lg:col-span-3 md:col-span-1"
+              className="lg:col-span-2"
               variants={fadeInUp}
             >
-              <h3 className="text-base font-semibold mb-4 flex items-center text-white">
-                <Flag className="h-4 w-4 text-red-500 mr-2" />
+              <h3 className="text-base font-semibold mb-4 text-white">
                 Features
               </h3>
               <ul className="space-y-3">
-                <li>
-                  <Link to="/dashboard" className="text-gray-400 hover:text-white text-sm flex items-center gap-2 group">
-                    <div className="w-8 h-8 rounded-md flex items-center justify-center bg-gray-900 group-hover:bg-red-500/20 transition-colors">
-                      <Gauge className="h-4 w-4 text-red-400" />
-                    </div>
-                    Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/races" className="text-gray-400 hover:text-white text-sm flex items-center gap-2 group">
-                    <div className="w-8 h-8 rounded-md flex items-center justify-center bg-gray-900 group-hover:bg-red-500/20 transition-colors">
-                      <Calendar className="h-4 w-4 text-red-400" />
-                    </div>
-                    Races
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/standings/drivers" className="text-gray-400 hover:text-white text-sm flex items-center gap-2 group">
-                    <div className="w-8 h-8 rounded-md flex items-center justify-center bg-gray-900 group-hover:bg-red-500/20 transition-colors">
-                      <Users className="h-4 w-4 text-red-400" />
-                    </div>
-                    Driver Standings
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/standings/teams" className="text-gray-400 hover:text-white text-sm flex items-center gap-2 group">
-                    <div className="w-8 h-8 rounded-md flex items-center justify-center bg-gray-900 group-hover:bg-red-500/20 transition-colors">
-                      <Flag className="h-4 w-4 text-red-400" />
-                    </div>
-                    Team Standings
-                  </Link>
-                </li>
+                {featuresLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link 
+                      to={link.href} 
+                      className="text-gray-400 hover:text-white text-sm transition-colors hover:translate-x-1 transform duration-200 inline-block"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </motion.div>
             
-            {/* Right Column - Legal & Call to Action */}
+            {/* Resources Column */}
             <motion.div 
-              className="lg:col-span-5 flex flex-col md:flex-row lg:justify-around lg:pl-8 gap-8" 
+              className="lg:col-span-2"
               variants={fadeInUp}
             >
-              <div>
-                <h3 className="text-base font-semibold mb-4 flex items-center text-white">
-                  <Shield className="h-4 w-4 text-red-500 mr-2" />
+              <h3 className="text-base font-semibold mb-4 text-white">
+                Community
+              </h3>
+              <ul className="space-y-3">
+                {resourcesLinks.map((link) => (
+                  <li key={link.name}>
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-white text-sm transition-colors inline-flex items-center gap-1"
+                    >
+                      <span className="hover:translate-x-1 transition-transform duration-200">{link.name}</span>
+                      <ExternalLink className="h-3 w-3 opacity-70" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+            
+            {/* Legal & CTA Column */}
+            <motion.div 
+              className="lg:col-span-3 flex flex-col" 
+              variants={fadeInUp}
+            >
+              <div className="mb-6">
+                <h3 className="text-base font-semibold mb-4 text-white">
                   Legal
                 </h3>
                 <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link to="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">
-                      Privacy Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/terms-of-service" className="text-gray-400 hover:text-white transition-colors">
-                      Terms of Service
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/faq" className="text-gray-400 hover:text-white transition-colors">
-                      FAQ
-                    </Link>
-                  </li>
+                  {legalLinks.map((link) => (
+                    <li key={link.name}>
+                      <Link 
+                        to={link.href} 
+                        className="text-gray-400 hover:text-white transition-colors hover:translate-x-1 transform duration-200 inline-block"
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
               
-              <div className="lg:block hidden">
-                <h3 className="text-base font-semibold mb-4 flex items-center text-white">
-                  <Zap className="h-4 w-4 text-red-500 mr-2" />
-                  Start Exploring
+              <div className="hidden lg:block">
+                <h3 className="text-base font-semibold mb-4 text-white">
+                  Get Started
                 </h3>
                 <Link to="/dashboard">
                   <motion.div 
@@ -242,7 +224,6 @@ const LandingFooter = () => {
           <div className="container mx-auto px-4 md:px-8 py-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-2">
               <div className="flex items-center">
-                <Trophy className="h-3.5 w-3.5 text-red-500 mr-2" />
                 <span className="text-gray-400 text-sm">&copy; {currentYear} Fastlytics. All rights reserved.</span>
               </div>
               

@@ -153,7 +153,7 @@ const seasonalDriverColorMap: { [year: string]: { [driverCode: string]: string }
         // Aston Martin
         'ALO': '#00594F', 'STR': '#00594F', // Using recent Aston green
         // Alpine
-        'GAS': '#0090FF', 'DOO': '#0090FF', // Doohan (Using recent Alpine blue)
+        'GAS': '#0090FF', 'DOO': '#0090FF', 'COL': '#0090FF',  // Doohan (Using recent Alpine blue)
         // Williams
         'ALB': '#00A3E0', 'SAI': '#00A3E0', // Sainz (Using recent Williams blue)
         // RB (Visa Cash App RB)

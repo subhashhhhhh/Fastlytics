@@ -38,11 +38,12 @@ interface RacingChartProps {
   staticData?: LapTimeDataPoint[];
   title?: string;
   hideDownloadButton?: boolean; // Add this prop to control download button visibility
+  autoLoad?: boolean; // Add this prop to auto-load the chart
 }
 
 // Constants for driver limits
 const MIN_DRIVERS = 2;
-const MAX_DRIVERS = 6;
+const MAX_DRIVERS = 5;
 
 const RacingChart: React.FC<RacingChartProps> = ({
   className,
@@ -53,11 +54,12 @@ const RacingChart: React.FC<RacingChartProps> = ({
   session,
   initialDrivers, // Should be length 2 to 5
   staticData, // Destructure the new prop
-  hideDownloadButton = false // Default to showing the download button
+  hideDownloadButton = false, // Default to showing the download button
+  autoLoad = false // Default to not auto-loading
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [shouldLoadChart, setShouldLoadChart] = useState(false);
+  const [shouldLoadChart, setShouldLoadChart] = useState(autoLoad || !!staticData);
 
   // Validate initialDrivers prop length and clamp if necessary
   let validatedInitialDrivers = initialDrivers || [];
@@ -148,6 +150,18 @@ const RacingChart: React.FC<RacingChartProps> = ({
       }
     }
   };
+
+  // Auto-load effect when autoLoad is true and we have enough drivers
+  useEffect(() => {
+    if (autoLoad && !staticData && availableDrivers && availableDrivers.length >= MIN_DRIVERS && selectedDrivers.length < MIN_DRIVERS) {
+      // Auto-select first few drivers if none selected
+      const firstDrivers = availableDrivers.slice(0, MIN_DRIVERS).map(d => d.code);
+      setSelectedDrivers(firstDrivers);
+      setShouldLoadChart(true);
+    } else if (autoLoad && selectedDrivers.length >= MIN_DRIVERS && !shouldLoadChart) {
+      setShouldLoadChart(true);
+    }
+  }, [autoLoad, availableDrivers, selectedDrivers.length, staticData, shouldLoadChart]);
 
   // Initialize with top drivers from session if available and no initialDrivers provided
   useEffect(() => {

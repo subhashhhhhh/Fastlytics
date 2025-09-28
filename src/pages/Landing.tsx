@@ -478,7 +478,7 @@ const Landing: React.FC = () => {
                 rel="noopener noreferrer"
                 className="bg-[#5865F2] hover:bg-[#4752c4] text-white py-3 px-6 rounded-lg flex items-center transition-colors"
               >
-                <MessageCircle className="mr-2 h-5 w-5" />
+                
                 Join our Discord
               </a>
             </motion.div>
@@ -524,16 +524,16 @@ const Landing: React.FC = () => {
                   rel="noopener noreferrer"
                   className="bg-gray-800 hover:bg-gray-700 text-white py-3 px-6 rounded-lg flex items-center transition-colors"
                 >
-                  <Github className="mr-2 h-5 w-5" />
+                  
                   GitHub
                 </a>
                 <a 
                   href="https://www.producthunt.com/posts/fastlytics" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-lg flex items-center transition-colors"
+                  className="bg-[#DA552F] hover:bg-[#C24A29] text-white py-3 px-6 rounded-lg flex items-center transition-colors"
                 >
-                  <Trophy className="mr-2 h-5 w-5" />
+                
                   Product Hunt
                 </a>
               </div>

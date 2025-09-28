@@ -65,6 +65,7 @@ Thumbs.db
 /backend-api/cache/
 /backend-api/__pycache__/
 /backend-api/*.pyc
+/.kilocode/
 
 # Wiki documentation (not tracked in Git)
 WIKI.md
