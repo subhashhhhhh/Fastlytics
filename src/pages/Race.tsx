@@ -35,8 +35,6 @@ import BrakeChart from '@/components/BrakeChart';
 import RPMChart from '@/components/RPMChart';
 import DRSChart from '@/components/DRSChart';
 import PositionsTabContent from '@/components/PositionsTabContent';
-import KofiDonationPopup from '@/components/KofiDonationPopup';
-import { useDonationPopup } from '@/hooks/useDonationPopup';
 
 // Helper to get team color class
 const getTeamColorClass = (teamName: string | undefined): string => {
@@ -215,6 +213,7 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
     columns.push({ key: 'time', label: 'Time', className: 'text-right text-sm' });
     columns.push({ key: 'laps', label: 'Laps', className: 'text-center' });
     columns.push({ key: 'gridPosition', label: 'Grid', className: 'text-center' });
+    columns.push({ key: 'driverFastestLapTime', label: 'Fastest Lap', className: 'text-right text-sm' });
     columns.push({ key: 'points', label: 'Points', className: 'text-right font-bold' });
   } else if (isQualifying) {
     // Remove Q1, Q2, Q3 columns
@@ -276,6 +275,20 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
                     formatRaceTime(res.time, res.position === 1) // Format race time with winner flag
                   ) : col.key === 'laps' ? (
                     res.laps ?? '-' // Show laps completed or dash if not available
+                  ) : col.key === 'driverFastestLapTime' ? (
+                    // Custom rendering for fastest lap column
+                    res.driverFastestLapTime ? (
+                      <span className={cn(
+                        res.isFastestLap ? 'text-purple-400 font-bold' : 'text-white'
+                      )}>
+                        {res.driverFastestLapTime}
+                        {res.driverFastestLapNumber && (
+                          <span className="text-gray-400 ml-1">
+                            (L{res.driverFastestLapNumber})
+                          </span>
+                        )}
+                      </span>
+                    ) : '-'
                   ) : (
                     res[col.key as keyof DetailedRaceResult] ?? '-' // Access other keys directly
                   )}
@@ -295,9 +308,6 @@ const Race = () => {
   const [availableSessions, setAvailableSessions] = useState<AvailableSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<string>('R'); // Default to Race
   const [selectedLap, setSelectedLap] = useState<string | number>('fastest'); // For telemetry
-  
-  // Donation popup hook
-  const { shouldShowPopup, hidePopup } = useDonationPopup();
   
   // State for circuit comparison drivers
   const [circuitDrivers, setCircuitDrivers] = useState<{
@@ -503,8 +513,7 @@ const Race = () => {
                  </Select>
              ) : sessionSchedule ? (
                  <div className="flex items-center gap-2 text-blue-400">
-                   <Clock className="w-4 h-4" />
-                   <span className="text-sm">Upcoming Race - See schedule below</span>
+                   
                  </div>
              ) : (
                  <p className="text-sm text-gray-500">No sessions available.</p>
@@ -715,7 +724,13 @@ const Race = () => {
             {(selectedSession === 'R' || selectedSession === 'Sprint') && (
               <>
                 {raceWinner && (
-                    <F1Card title="Race Winner" value={raceWinner.fullName} team={getTeamColorClass(raceWinner.team) as any} icon={<Trophy />} />
+                    <F1Card 
+                        title="Race Winner" 
+                        value={raceWinner.fullName} 
+                        subValue={formatRaceTime(raceWinner.time, true)} // Format race time as H:MM:SS.ms
+                        team={getTeamColorClass(raceWinner.team) as any} 
+                        icon={<Trophy />} 
+                    />
                 )}
                 {poleSitter && (
                      <F1Card
@@ -983,12 +998,6 @@ const Race = () => {
           </div>
         )}
       </div>
-      
-      {/* Ko-fi Donation Popup */}
-      <KofiDonationPopup 
-        isOpen={shouldShowPopup} 
-        onClose={hidePopup}
-      />
     </div>
   );
 };

@@ -55,6 +55,9 @@ export interface DetailedRaceResult {
     fastestLapTimeValue?: string | null; // Formatted fastest lap time (MM:SS.ms)
     time?: string | null; // Race finish time for winner, gap for others (e.g., "+5.123" or "1:32:15.456")
     laps?: number | null; // Number of laps completed (for race sessions)
+    // Individual driver fastest lap data for race sessions
+    driverFastestLapTime?: string | null; // Individual driver's fastest lap time in race
+    driverFastestLapNumber?: number | null; // Lap number when driver set their fastest lap
 }
 export interface LapPositionDataPoint {
     LapNumber: number;

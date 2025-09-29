@@ -148,26 +148,62 @@ const Dashboard = () => {
     });
   }, [scheduleData, raceResults]);
 
-  // Get 6 most recent races (either completed or ongoing)
+  // Get 6 most recent races (including upcoming race during race week)
   const recentRaces = useMemo<CombinedRaceData[]>(() => {
     if (!combinedRaceData.length) return [];
     
     const now = new Date();
-    // Current date + 3 days to consider only current race weekend as "ongoing"
-    const nearFuture = new Date();
-    nearFuture.setDate(now.getDate() + 3);
+    
+    // Helper function to check if we're in race week (Monday to Sunday of race week)
+    const isInRaceWeek = (raceDate: Date): boolean => {
+      // Get the Monday of the race week (6 days before race)
+      const raceWeekStart = new Date(raceDate);
+      raceWeekStart.setDate(raceDate.getDate() - 6); // Go back 6 days to Monday
+      raceWeekStart.setHours(0, 0, 0, 0);
+      
+      // Get the Sunday after race (race week end)
+      const raceWeekEnd = new Date(raceDate);
+      raceWeekEnd.setDate(raceDate.getDate() + 1); // Day after race
+      raceWeekEnd.setHours(23, 59, 59, 999);
+      
+      return now >= raceWeekStart && now <= raceWeekEnd;
+    };
     
     // Filter to include:
     // 1. Races that have already happened (not upcoming) - these have results
-    // 2. Current race weekend - date is within 3 days of now
+    // 2. Current race weekend - date is within 3 days of now (ongoing)
+    // 3. Upcoming races during race week (Monday to Sunday of race week)
     const filteredRaces = combinedRaceData.filter(race => {
       const eventDate = new Date(race.EventDate);
-      return !race.isUpcoming || (eventDate <= nearFuture);
+      
+      if (!race.isUpcoming) {
+        // Include all completed races
+        return true;
+      } else {
+        // For upcoming races, include if it's within 3 days (ongoing) OR if we're in race week
+        const nearFuture = new Date();
+        nearFuture.setDate(now.getDate() + 3);
+        
+        return (eventDate <= nearFuture) || isInRaceWeek(eventDate);
+      }
     });
     
-    // Sort by date (most recent first)
+    // Sort by date (most recent first, but put current/upcoming race week first)
     return filteredRaces
-      .sort((a, b) => new Date(b.EventDate).getTime() - new Date(a.EventDate).getTime())
+      .sort((a, b) => {
+        const dateA = new Date(a.EventDate);
+        const dateB = new Date(b.EventDate);
+        
+        // If one is in current race week and the other isn't, prioritize race week
+        const aIsRaceWeek = a.isUpcoming && isInRaceWeek(dateA);
+        const bIsRaceWeek = b.isUpcoming && isInRaceWeek(dateB);
+        
+        if (aIsRaceWeek && !bIsRaceWeek) return -1;
+        if (!aIsRaceWeek && bIsRaceWeek) return 1;
+        
+        // Otherwise sort by date (most recent first)
+        return dateB.getTime() - dateA.getTime();
+      })
       .slice(0, 6);
   }, [combinedRaceData]);
 
