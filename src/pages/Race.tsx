@@ -512,63 +512,199 @@ const Race = () => {
           </div>
         </header>
 
-        {/* Session Schedule for Upcoming Races */}
+                {/* Session Schedule for Upcoming Races - Bold Modern Design */}
         {sessionSchedule && (!fetchedAvailableSessions || fetchedAvailableSessions.length === 0) && (
-          <div className="mb-8">
-            <Card className="bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-blue-400" />
-                  Race Weekend Schedule
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  {sessionSchedule.location}, {sessionSchedule.country} • {sessionSchedule.eventFormat}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3">
+          <div className="mb-12">
+            {/* Hero Header */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-3xl border border-gray-800/50 shadow-2xl">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `radial-gradient(circle at 20px 20px, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+                  backgroundSize: '40px 40px'
+                }}></div>
+              </div>
+              
+              {/* Header Section */}
+              <div className="relative p-8 pb-6">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20">
+                        <Calendar className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-black tracking-tight text-white">
+                          RACE WEEKEND
+                        </h2>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="w-1 h-1 bg-white/60 rounded-full"></div>
+                          <p className="text-lg text-white/80 font-semibold">
+                            {sessionSchedule.eventFormat?.toUpperCase()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 mt-4">
+                      <MapPin className="w-5 h-5 text-white/60" />
+                      <p className="text-xl font-bold text-white/90">
+                        {sessionSchedule.location}
+                      </p>
+                      <div className="w-px h-6 bg-white/30"></div>
+                      <p className="text-lg text-white/70 font-medium">
+                        {sessionSchedule.country}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Status Badge */}
+                  <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-full px-4 py-2">
+                    <span className="text-green-300 font-bold text-sm tracking-wide">UPCOMING</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline Section */}
+              <div className="relative px-8 pb-8">
+                <div className="space-y-1">
                   {sessionSchedule.sessions.map((session, index) => {
                     const sessionDate = new Date(session.date);
                     const isToday = sessionDate.toDateString() === new Date().toDateString();
                     const isPast = sessionDate < new Date();
+                    const isNext = !isPast && !isToday && index === sessionSchedule.sessions.findIndex(s => new Date(s.date) > new Date());
                     
                     return (
-                      <div 
-                        key={index} 
-                        className={cn(
-                          "flex items-center justify-between p-3 rounded-lg border transition-colors",
-                          isToday ? "bg-blue-500/10 border-blue-500/30" : 
-                          isPast ? "bg-gray-800/30 border-gray-700/50 opacity-60" : "bg-gray-800/50 border-gray-700/50"
+                      <div key={index} className="relative">
+                        {/* Timeline connector */}
+                        {index < sessionSchedule.sessions.length - 1 && (
+                          <div className="absolute left-6 top-16 w-0.5 h-6 bg-gradient-to-b from-white/30 to-white/10"></div>
                         )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-2 h-2 rounded-full",
-                            isToday ? "bg-blue-400" : isPast ? "bg-gray-500" : "bg-green-400"
-                          )} />
-                          <div>
-                            <p className="font-medium text-white">{session.name}</p>
-                            <p className="text-sm text-gray-400">
-                              {sessionDate.toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                month: 'short', 
-                                day: 'numeric' 
-                              })}
-                            </p>
+                        
+                        <div className={cn(
+                          "relative group transition-all duration-300 rounded-2xl border backdrop-blur-sm",
+                          isToday 
+                            ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-400/40 shadow-lg shadow-blue-500/20" 
+                            : isNext 
+                            ? "bg-gradient-to-r from-white/10 to-white/5 border-white/20 hover:border-white/40 hover:bg-white/15" 
+                            : isPast 
+                            ? "bg-gradient-to-r from-gray-800/40 to-gray-900/40 border-gray-700/30 opacity-70" 
+                            : "bg-gradient-to-r from-white/8 to-white/3 border-white/15 hover:border-white/30 hover:bg-white/12"
+                        )}>
+                          <div className="flex items-center justify-between p-6">
+                            <div className="flex items-center gap-6">
+                              {/* Status Indicator */}
+                              <div className="relative">
+                                <div className={cn(
+                                  "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg tracking-wider shadow-lg",
+                                  isToday 
+                                    ? "bg-gradient-to-br from-blue-400 to-cyan-500 text-white shadow-blue-500/40" 
+                                    : isNext 
+                                    ? "bg-gradient-to-br from-white to-gray-200 text-black shadow-white/20" 
+                                    : isPast 
+                                    ? "bg-gradient-to-br from-gray-600 to-gray-700 text-gray-300" 
+                                    : "bg-gradient-to-br from-gray-700 to-gray-800 text-white border border-gray-600"
+                                )}>
+                                  {(() => {
+                                    const sessionName = session.name.toLowerCase();
+                                    if (sessionName.includes('practice 1') || sessionName.includes('fp1')) return 'FP1';
+                                    if (sessionName.includes('practice 2') || sessionName.includes('fp2')) return 'FP2';
+                                    if (sessionName.includes('practice 3') || sessionName.includes('fp3')) return 'FP3';
+                                    if (sessionName.includes('sprint shootout') || sessionName.includes('sq')) return 'SQ';
+                                    if (sessionName.includes('sprint qualifying')) return 'SQ';
+                                    if (sessionName.includes('sprint')) return 'S';
+                                    if (sessionName.includes('qualifying') || sessionName.includes('quali')) return 'Q';
+                                    if (sessionName.includes('race')) return 'R';
+                                    return session.name.substring(0, 2).toUpperCase();
+                                  })()}
+                                </div>
+                                {isNext && (
+                                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
+                                )}
+                              </div>
+                              
+                              {/* Session Info */}
+                              <div className="space-y-1">
+                                <h3 className={cn(
+                                  "text-xl font-black tracking-tight",
+                                  isToday ? "text-white" : isPast ? "text-gray-400" : "text-white"
+                                )}>
+                                  {session.name.toUpperCase()}
+                                </h3>
+                                <p className={cn(
+                                  "text-sm font-bold tracking-wide",
+                                  isToday ? "text-blue-200" : isPast ? "text-gray-500" : "text-white/70"
+                                )}>
+                                  {sessionDate.toLocaleDateString('en-US', { 
+                                    weekday: 'long', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  }).toUpperCase()}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {/* Time Display */}
+                            <div className="text-right space-y-1">
+                              {session.localTime && (() => {
+                                const sessionDate = new Date(session.date);
+                                const userLocalTime = sessionDate.toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: false
+                                });
+                                
+                                return (
+                                  <div className="space-y-1">
+                                    {/* Times side by side */}
+                                    <div className="flex items-center justify-end gap-3">
+                                      {/* Circuit Local Time */}
+                                      <div className="text-right">
+                                        <div className={cn(
+                                          "text-2xl font-black font-mono tracking-tighter",
+                                          isToday ? "text-white" : isPast ? "text-gray-400" : "text-white"
+                                        )}>
+                                          {session.localTime}
+                                        </div>
+                                        <div className={cn(
+                                          "text-xs font-bold tracking-widest uppercase",
+                                          isToday ? "text-blue-300" : isPast ? "text-gray-600" : "text-white/50"
+                                        )}>
+                                          CIRCUIT
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Separator */}
+                                      <div className="w-px h-12 bg-white/20"></div>
+                                      
+                                      {/* User Local Time */}
+                                      <div className="text-right">
+                                        <div className={cn(
+                                          "text-2xl font-black font-mono tracking-tighter",
+                                          isToday ? "text-blue-200" : isPast ? "text-gray-500" : "text-white/80"
+                                        )}>
+                                          {userLocalTime}
+                                        </div>
+                                        <div className={cn(
+                                          "text-xs font-bold tracking-widest uppercase",
+                                          isToday ? "text-blue-300/80" : isPast ? "text-gray-600" : "text-white/40"
+                                        )}>
+                                          YOUR TIME
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          {session.localTime && (
-                            <p className="text-white font-mono">{session.localTime}</p>
-                          )}
-                          <p className="text-xs text-gray-500">Local Time</p>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         )}
 

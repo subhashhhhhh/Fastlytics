@@ -173,8 +173,10 @@ const Dashboard = () => {
 
   const handleRaceClick = (race: CombinedRaceData) => {
     // Use the event name from either result or schedule
+    // For upcoming races, race.result will be undefined, so use EventName
     const eventName = race.result?.event || race.EventName;
     const raceId = `${selectedYear}-${eventName.toLowerCase().replace(/\s+/g, '-')}`;
+    console.log('Navigating to race:', { eventName, raceId, isUpcoming: race.isUpcoming });
     navigate(`/race/${raceId}`);
   };
 

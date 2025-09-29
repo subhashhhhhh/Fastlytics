@@ -336,14 +336,15 @@ const Races = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {combinedRaceData.map((race, index) => {
                 const teamColor = race.result ? getTeamColorClass(race.result.team) : 'gray';
-                const isClickable = !race.isUpcoming || race.isOngoing;
+                // Make all races clickable - upcoming races will show schedule, completed races show results
+                const isClickable = true;
                 
                 return (
                   <motion.div
                     key={`${selectedYear}-${race.EventName}`}
                     initial="hidden"
                     animate={isRacesInView ? "visible" : "hidden"}
-                    whileHover={isClickable ? "hover" : undefined}
+                    whileHover="hover"
                     custom={{ delay: index * 0.05 }}
                     variants={{
                       hidden: { opacity: 0, y: 30 },
@@ -357,25 +358,17 @@ const Races = () => {
                         transition: { duration: 0.3, ease: "easeOut" }
                       }
                     }}
-                    onClick={isClickable ? () => {
+                    onClick={() => {
                       handleRaceClick(race.EventName, selectedYear);
                       // Track race click event
                       const event = document.createElement('div');
                       event.setAttribute('data-umami-event', `Race Click - ${race.EventName} ${selectedYear}`);
                       document.body.appendChild(event);
                       event.remove();
-                    } : undefined}
-                    className={cn(
-                      "h-full",
-                      isClickable ? "cursor-pointer" : "opacity-60"
-                    )}
+                    }}
+                    className="h-full cursor-pointer"
                   >
-                    <Card className={cn(
-                      "bg-gray-900/70 border border-gray-800 hover:border-red-500/40 h-full",
-                      "backdrop-blur-sm rounded-xl overflow-hidden",
-                      "transition-all duration-300 ease-in-out",
-                      isClickable ? "hover:bg-gray-900/90 hover:shadow-[0_8px_30px_rgb(185,28,28,0.15)]" : "",
-                    )}>
+                    <Card className="bg-gray-900/70 border border-gray-800 hover:border-red-500/40 h-full backdrop-blur-sm rounded-xl overflow-hidden transition-all duration-300 ease-in-out hover:bg-gray-900/90 hover:shadow-[0_8px_30px_rgb(185,28,28,0.15)]">
                       <div className="h-full flex flex-col">
                         {/* Top section with flag */}
                         <div className="flex items-start justify-between p-4 border-b border-gray-800/60">
