@@ -53,6 +53,8 @@ export interface DetailedRaceResult {
     // Added fields for specific lap times from processor
     poleLapTimeValue?: string | null; // Formatted pole time (MM:SS.ms)
     fastestLapTimeValue?: string | null; // Formatted fastest lap time (MM:SS.ms)
+    time?: string | null; // Race finish time for winner, gap for others (e.g., "+5.123" or "1:32:15.456")
+    laps?: number | null; // Number of laps completed (for race sessions)
 }
 export interface LapPositionDataPoint {
     LapNumber: number;
@@ -63,6 +65,20 @@ export interface AvailableSession {
     name: string;
     type: string;
     startTime: string; // Note: This might not be directly available from the schedule endpoint
+}
+
+export interface SessionScheduleInfo {
+    name: string;
+    date: string; // ISO Date string
+    localTime: string | null; // HH:MM format
+}
+
+export interface EventSessionSchedule {
+    eventName: string;
+    location: string;
+    country: string;
+    eventFormat: string;
+    sessions: SessionScheduleInfo[];
 }
 
 // --- Stint Analysis Interfaces ---
@@ -569,6 +585,27 @@ export const getTeamDetails = async (teamId: string): Promise<TeamDetails> => {
     } catch (error) {
         console.error(`Error fetching team details for ${teamId}:`, error);
         // TODO: Potentially return mock data on error during development
+    throw error;
+  }
+};
+
+/** Fetches session schedule for a specific event. */
+export const fetchEventSessionSchedule = async (year: number, event: string): Promise<EventSessionSchedule> => {
+  const url = `${API_BASE_URL}/api/schedule/${year}/${event}/sessions`;
+  console.log(`Fetching event session schedule from: ${url}`);
+  try {
+    const response = await fetch(url, { headers: getHeaders() });
+    if (!response.ok) {
+      let errorDetail = `HTTP error! status: ${response.status}`;
+      try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignore */ }
+      console.error(`API Error: ${errorDetail}`);
+      throw new Error(errorDetail);
+    }
+    const data: EventSessionSchedule = await response.json();
+    console.log(`Successfully fetched session schedule for ${year} ${event}.`);
+    return data;
+  } catch (error) {
+    console.error(`Error fetching session schedule for ${year} ${event}:`, error);
     throw error;
   }
 };

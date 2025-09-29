@@ -17,7 +17,7 @@ import F1Card from '@/components/F1Card';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { fetchSpecificRaceResults, fetchAvailableSessions, DetailedRaceResult, AvailableSession } from '@/lib/api';
+import { fetchSpecificRaceResults, fetchAvailableSessions, fetchEventSessionSchedule, DetailedRaceResult, AvailableSession, EventSessionSchedule } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -110,7 +110,79 @@ const parseLapTime = (timeStr: string | null | undefined): number => {
   return Infinity; // Return Infinity if parsing fails
 };
 
-// Component for rendering the results table dynamically
+// Helper function to format race time for display
+const formatRaceTime = (timeStr: string | null | undefined, isWinner: boolean = false): string => {
+  if (!timeStr) return '-';
+  
+  // For winner's absolute time, convert "MMM:SS.ms" to "H:MM:SS.ms"
+  if (isWinner) {
+    try {
+      const parts = timeStr.split(/[:.]/); 
+      if (parts.length === 3) { // MMM:SS.ms format
+        const totalMinutes = parseInt(parts[0], 10);
+        const seconds = parseInt(parts[1], 10);
+        const milliseconds = parts[2];
+        
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds}`;
+      }
+    } catch (e) {
+      return timeStr; // Return original if parsing fails
+    }
+    return timeStr;
+  }
+  
+  // Handle status strings (DNF, Lapped, etc.)
+  if (timeStr.match(/^[A-Za-z]/)) {
+    return timeStr; // Return status as-is
+  }
+  
+  // For all non-winner times, ensure they have a + prefix and are in seconds.milliseconds format
+  let processedTime = timeStr;
+  
+  // Remove existing + if present
+  if (processedTime.startsWith('+')) {
+    processedTime = processedTime.substring(1);
+  }
+  
+  try {
+    const parts = processedTime.split(/[:.]/); 
+    if (parts.length === 3) { // MM:SS.ms format - convert to total seconds, then format appropriately
+      const minutes = parseInt(parts[0], 10);
+      const seconds = parseInt(parts[1], 10);
+      const milliseconds = parts[2];
+      const totalSeconds = minutes * 60 + seconds;
+      
+      // If total is 60+ seconds, show as +M:SS.ms, otherwise +SS.ms
+      if (totalSeconds >= 60) {
+        const displayMinutes = Math.floor(totalSeconds / 60);
+        const displaySeconds = totalSeconds % 60;
+        return `+${displayMinutes}:${displaySeconds.toString().padStart(2, '0')}.${milliseconds}`;
+      } else {
+        return `+${totalSeconds}.${milliseconds}`;
+      }
+    } else if (parts.length === 2) { // SS.ms format
+      const seconds = parseFloat(processedTime);
+      if (seconds >= 60) {
+        const displayMinutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        const milliseconds = Math.round((seconds % 1) * 1000).toString().padStart(3, '0');
+        return `+${displayMinutes}:${remainingSeconds.toString().padStart(2, '0')}.${milliseconds}`;
+      } else {
+        return `+${processedTime}`;
+      }
+    }
+  } catch (e) {
+    // If parsing fails, just add + prefix if it's numeric
+    if (processedTime.match(/^\d/)) {
+      return `+${processedTime}`;
+    }
+  }
+  
+  return timeStr; // Return as-is for other cases
+};// Component for rendering the results table dynamically
 const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType: string, year: number }> = ({ results, sessionType, year }) => {
   const isPractice = sessionType.startsWith('FP');
   const isQualifying = sessionType.startsWith('Q') || sessionType.startsWith('SQ');
@@ -140,8 +212,9 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
   ];
 
   if (isRaceOrSprint) {
+    columns.push({ key: 'time', label: 'Time', className: 'text-right text-sm' });
+    columns.push({ key: 'laps', label: 'Laps', className: 'text-center' });
     columns.push({ key: 'gridPosition', label: 'Grid', className: 'text-center' });
-    columns.push({ key: 'status', label: 'Status' });
     columns.push({ key: 'points', label: 'Points', className: 'text-right font-bold' });
   } else if (isQualifying) {
     // Remove Q1, Q2, Q3 columns
@@ -199,6 +272,10 @@ const SessionResultsTable: React.FC<{ results: DetailedRaceResult[], sessionType
                     </span>
                   ) : col.key === 'points' ? (
                      res.points ?? 0 // Default points to 0 if null/undefined
+                  ) : col.key === 'time' ? (
+                    formatRaceTime(res.time, res.position === 1) // Format race time with winner flag
+                  ) : col.key === 'laps' ? (
+                    res.laps ?? '-' // Show laps completed or dash if not available
                   ) : (
                     res[col.key as keyof DetailedRaceResult] ?? '-' // Access other keys directly
                   )}
@@ -262,6 +339,18 @@ const Race = () => {
     enabled: !!year && !!eventName,
   });
 
+  // Fetch session schedule for upcoming races (when no sessions are available)
+  const { data: sessionSchedule, isLoading: isLoadingSchedule } = useQuery<EventSessionSchedule>({
+    queryKey: ['sessionSchedule', year, eventSlug],
+    queryFn: () => {
+        if (!year || !eventSlug) throw new Error("Invalid year or event slug");
+        return fetchEventSessionSchedule(year, eventSlug);
+    },
+    staleTime: 1000 * 60 * 60 * 24, // Cache for a day
+    gcTime: 1000 * 60 * 60 * 24 * 7, // Keep for a week
+    enabled: !!year && !!eventSlug && !isLoadingSessions && (!fetchedAvailableSessions || fetchedAvailableSessions.length === 0),
+  });
+
   // Effect to update state when available sessions data is fetched
   useEffect(() => {
     if (fetchedAvailableSessions && fetchedAvailableSessions.length > 0) {
@@ -287,7 +376,7 @@ const Race = () => {
     staleTime: 1000 * 60 * 5, // Shorter stale time for potentially live data
     gcTime: 1000 * 60 * 15,
     retry: 1,
-    enabled: !!year && !!eventSlug && !!selectedSession,
+    enabled: !!year && !!eventSlug && !!selectedSession && (fetchedAvailableSessions && fetchedAvailableSessions.length > 0),
   });
 
   // --- Derived Data (Winner, Pole, Fastest Lap - specific to Race 'R') ---
@@ -333,7 +422,7 @@ const Race = () => {
   }, [sessionResults, selectedSession]);
 
   // --- Loading and Error States ---
-  const isLoading = isLoadingSessions || isLoadingResults;
+  const isLoading = isLoadingSessions || isLoadingResults || isLoadingSchedule;
 
   if (!year || !eventSlug) {
      // Render Invalid URL state
@@ -412,11 +501,76 @@ const Race = () => {
                             ))}
                      </SelectContent>
                  </Select>
+             ) : sessionSchedule ? (
+                 <div className="flex items-center gap-2 text-blue-400">
+                   <Clock className="w-4 h-4" />
+                   <span className="text-sm">Upcoming Race - See schedule below</span>
+                 </div>
              ) : (
                  <p className="text-sm text-gray-500">No sessions available.</p>
              )}
           </div>
         </header>
+
+        {/* Session Schedule for Upcoming Races */}
+        {sessionSchedule && (!fetchedAvailableSessions || fetchedAvailableSessions.length === 0) && (
+          <div className="mb-8">
+            <Card className="bg-gray-900/70 border border-gray-700/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-blue-400" />
+                  Race Weekend Schedule
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  {sessionSchedule.location}, {sessionSchedule.country} • {sessionSchedule.eventFormat}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3">
+                  {sessionSchedule.sessions.map((session, index) => {
+                    const sessionDate = new Date(session.date);
+                    const isToday = sessionDate.toDateString() === new Date().toDateString();
+                    const isPast = sessionDate < new Date();
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={cn(
+                          "flex items-center justify-between p-3 rounded-lg border transition-colors",
+                          isToday ? "bg-blue-500/10 border-blue-500/30" : 
+                          isPast ? "bg-gray-800/30 border-gray-700/50 opacity-60" : "bg-gray-800/50 border-gray-700/50"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-2 h-2 rounded-full",
+                            isToday ? "bg-blue-400" : isPast ? "bg-gray-500" : "bg-green-400"
+                          )} />
+                          <div>
+                            <p className="font-medium text-white">{session.name}</p>
+                            <p className="text-sm text-gray-400">
+                              {sessionDate.toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {session.localTime && (
+                            <p className="text-white font-mono">{session.localTime}</p>
+                          )}
+                          <p className="text-xs text-gray-500">Local Time</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Key Info Cards - Conditional Rendering */}
         {!isLoadingResults && sessionResults && sessionResults.length > 0 && ( // Only render if results are loaded and not empty
@@ -491,7 +645,8 @@ const Race = () => {
                  <Skeleton className="h-10 w-full bg-gray-800/60 rounded-lg" />
                  <Skeleton className="h-80 w-full bg-gray-800/60 rounded-lg" />
              </div>
-        ) : isError ? (
+        ) : isError && !sessionSchedule ? (
+             // Only show error if it's not an upcoming race (no session schedule available)
              <Card className="bg-red-900/20 border-red-500/50 text-red-300 mt-6">
                  <CardHeader>
                      <CardTitle className="flex items-center gap-2"><AlertCircle /> Error Loading Data</CardTitle>
@@ -503,16 +658,7 @@ const Race = () => {
                      </Button>
                  </CardContent>
              </Card>
-        ) : !sessionResults || sessionResults.length === 0 ? (
-             <Card className="bg-gray-900/50 border-gray-700 mt-6">
-                 <CardHeader>
-                     <CardTitle>No Data Available</CardTitle>
-                 </CardHeader>
-                 <CardContent>
-                     <p className="text-gray-400">No results data found for the selected session ({selectedSession}).</p>
-                 </CardContent>
-             </Card>
-        ) : (
+        ) : (!sessionSchedule || (fetchedAvailableSessions && fetchedAvailableSessions.length > 0)) ? (
           <Tabs defaultValue="results" className="mt-6">
             {/* Adjust grid columns based on number of tabs */}
             <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1 p-1 bg-gray-800/80 border border-gray-700 rounded-lg h-auto mb-6">
@@ -690,6 +836,15 @@ const Race = () => {
             </TabsContent>
 
           </Tabs>
+        ) : (
+          // Show message for upcoming races with no session data
+          <div className="mt-6 text-center py-12">
+            <Calendar className="w-16 h-16 mx-auto text-blue-400 mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">Race Weekend Awaits</h3>
+            <p className="text-gray-400">
+              This race hasn't started yet. Check the schedule above for session times.
+            </p>
+          </div>
         )}
       </div>
       
