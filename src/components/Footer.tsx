@@ -35,7 +35,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-black to-gray-950 border-t border-gray-800/30 mt-auto text-gray-400 relative overflow-hidden" style={{ zIndex: -1 }}>
+    <footer className="bg-gradient-to-b from-black to-gray-950 border-t border-gray-800/30 mt-auto text-gray-400 relative overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-600/0 via-red-600 to-red-600/0"></div>
       <div className="absolute -top-64 -left-64 w-[500px] h-[500px] rounded-full bg-red-900/5 blur-3xl pointer-events-none"></div>
